@@ -14,6 +14,12 @@ export async function POST(request) {
       description,
       words,
     };
+    if(!title || !targetLanguage || !description || !Array.isArray(words)){
+      return NextResponse.json(
+        { message: "Invalid input data" },
+        { status: 400 }
+      );
+    }
     if (edit) {
       const updateCardQuery = `
             UPDATE cards

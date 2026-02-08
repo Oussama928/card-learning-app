@@ -14,7 +14,7 @@ export async function GET(request) {
     //update is_read
     const updateNotifQuery = `
     UPDATE notifications
-    SET is_read = 1
+    SET is_read = TRUE
     WHERE user_id = $1;
   `;
     const notifResult = await db.queryAsync(

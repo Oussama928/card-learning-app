@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { FaArrowLeft } from "react-icons/fa";
-import { useParams } from "next/navigation";
+import { FaArrowLeft, FaHome } from "react-icons/fa";
+import { useParams, useRouter } from "next/navigation";
 import Loading from "../../components/loading";
 import { useSession } from "next-auth/react";
 
@@ -19,9 +19,12 @@ const Learning = () => {
   const [fillAnswer, setFillAnswer] = React.useState("");
   const [mcOptions, setMcOptions] = React.useState<string[]>([]);
   const [selectedOption, setSelectedOption] = React.useState("");
+  const [correctCount, setCorrectCount] = React.useState(0);
+  const [incorrectCount, setIncorrectCount] = React.useState(0);
 
   const { data: session } = useSession();
   const { id } = useParams();
+  const router = useRouter();
 
   React.useEffect(() => {
     const fetchCardData = async () => {
@@ -83,12 +86,19 @@ const Learning = () => {
 
   const handleNext = (isLearned: boolean) => {
     sendProgress(isLearned);
+    if (isLearned) {
+      setCorrectCount(prev => prev + 1);
+    } else {
+      setIncorrectCount(prev => prev + 1);
+    }
     setIndex((prev) => Math.min(prev + 1, terms.length - 1));
     setFillAnswer("");
   };
 
   if (loading) return <Loading />;
   const currentCard = terms[index];
+  const totalCards = terms.length - 1;
+  const accuracy = totalCards > 0 ? ((correctCount / totalCards) * 100).toFixed(1) : 0;
 
   return (
     <div
@@ -158,10 +168,42 @@ const Learning = () => {
 
       {index === terms.length - 1 ? (
         <div
-          className="text-center text-2xl"
+          className="text-center flex flex-col items-center gap-6 p-8 rounded-xl bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg border border-gray-600 max-w-md"
           style={{ fontFamily: "'Montserrat', sans-serif" }}
         >
-          You've completed the set!
+          <h2 className="text-3xl font-bold text-teal-300"> Congratulations!</h2>
+          <p className="text-xl text-gray-200">You've completed the set!</p>
+          
+          <div className="w-full space-y-4 mt-4">
+            <div className="flex justify-between items-center p-4 bg-gray-900 rounded-lg">
+              <span className="text-lg text-gray-300">Total Cards:</span>
+              <span className="text-2xl font-bold text-white">{totalCards}</span>
+            </div>
+            
+            <div className="flex justify-between items-center p-4 bg-green-900/30 rounded-lg border border-green-500/30">
+              <span className="text-lg text-gray-300">Correct:</span>
+              <span className="text-2xl font-bold text-green-400"> {correctCount}</span>
+            </div>
+            
+            <div className="flex justify-between items-center p-4 bg-red-900/30 rounded-lg border border-red-500/30">
+              <span className="text-lg text-gray-300">Incorrect:</span>
+              <span className="text-2xl font-bold text-red-400"> {incorrectCount}</span>
+            </div>
+            
+            <div className="flex justify-between items-center p-4 bg-blue-900/30 rounded-lg border border-blue-500/30">
+              <span className="text-lg text-gray-300">Accuracy:</span>
+              <span className="text-2xl font-bold text-blue-400">{accuracy}%</span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => router.push("/")}
+            className="mt-6 flex items-center gap-3 px-8 py-4 rounded-lg bg-teal-500 hover:bg-teal-600 transition duration-200 text-white font-semibold shadow-md text-lg"
+            style={{ fontFamily: "'Poppins', sans-serif" }}
+          >
+            <FaHome className="text-xl" />
+            Go to Home
+          </button>
         </div>
       ) : mode === "flashcard" ? (
         <>
