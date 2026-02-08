@@ -1,13 +1,23 @@
 import { jwtVerify } from 'jose';
+import { NextResponse } from 'next/server';
 
 export async function authenticateRequest(request) {
-  const authHeader = request.headers.get('authorization');
+  // Try Authorization header first
+  let token = request.headers.get('authorization')?.replace('Bearer ', '');
   
-  if (!authHeader?.startsWith('Bearer ')) {
-    throw new Error("Unauthorized - Missing token");
+  // Fallback to query param token (for SSE/WebSocket upgrades)
+  if (!token) {
+    const url = new URL(request.url);
+    token = url.searchParams.get('token');
+  }
+  
+  if (!token) {
+    const error = new Error("Unauthorized - Missing authentication token");
+    error.status = 401;
+    error.json = { error: "Unauthorized", message: "Missing authentication token" };
+    throw error;
   }
 
-  const token = authHeader.split(' ')[1];
   let decoded;
   
   try {
@@ -15,12 +25,18 @@ export async function authenticateRequest(request) {
     const { payload } = await jwtVerify(token, secret);
     decoded = payload;
   } catch (error) {
-    throw new Error("Unauthorized - Invalid token");
+    const authError = new Error("Unauthorized - Invalid or expired token");
+    authError.status = 401;
+    authError.json = { error: "Unauthorized", message: "Invalid or expired token" };
+    throw authError;
   }
 
   const userId = decoded.userId;
   if (!userId) {
-    throw new Error("Unauthorized - Invalid token payload");
+    const error = new Error("Unauthorized - Token missing userId");
+    error.status = 401;
+    error.json = { error: "Unauthorized", message: "Token missing userId claim" };
+    throw error;
   }
 
   return userId;

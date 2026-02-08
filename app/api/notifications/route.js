@@ -29,7 +29,7 @@ export async function POST(request) {
 
     const notifResult = await db.queryAsync(
       insertNotifQuery,
-      [type, content, 0, new Date()]
+      [type, content, FALSE, new Date()]
     );
     return NextResponse.json({
       message: "Notif added successfully",
@@ -49,7 +49,7 @@ export async function PATCH(request) {
     const { notifs } = await request.json();
     const updateNotifQuery = `
     UPDATE notifications
-    SET is_read = 1
+    SET is_read = TRUE
     WHERE id = $1;
   `;
     for (let i = 0; i < notifs.length; i++) {

@@ -34,12 +34,19 @@ export async function PATCH(request) {
     if (last_login_date === null) {
       lastLoginStr = null;
     } else {
-      const lastLoginDate = new Date(last_login_date);
-      const year = lastLoginDate.getFullYear();
-      const month = String(lastLoginDate.getMonth() + 1).padStart(2, '0');
-      const day = String(lastLoginDate.getDate()).padStart(2, '0');
-      const lastLoginUTC = new Date(`${year}-${month}-${day}T00:00:00Z`);
-      lastLoginStr = lastLoginUTC.toISOString().split('T')[0];
+      try {
+        const lastLoginDate = new Date(last_login_date);
+        if (isNaN(lastLoginDate.getTime())) {
+          lastLoginStr = null;
+        } else {
+          const year = lastLoginDate.getUTCFullYear();
+          const month = String(lastLoginDate.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(lastLoginDate.getUTCDate()).padStart(2, '0');
+          lastLoginStr = `${year}-${month}-${day}`;
+        }
+      } catch (e) {
+        lastLoginStr = null;
+      }
     }
 
     let newStreak = daily_streak;

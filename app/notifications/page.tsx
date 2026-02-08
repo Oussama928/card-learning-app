@@ -3,18 +3,23 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import classNames from "classnames";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { io, Socket } from "socket.io-client";
 
 interface Notification {
+  id: string;
   type: string;
   content: string;
+  created_at: string;
 }
 
 const NotificationsPage = () => {
   const { data: session, status } = useSession();
   const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    if (session) {
+    if (session?.user?.accessToken) {
+      // Initial fetch
       const retrieveNotifications = async () => {
         try {
           const response = await fetch("/api/notifications/getBig", {
@@ -26,7 +31,7 @@ const NotificationsPage = () => {
 
           if (response.ok) {
             const data = await response.json();
-            setNotifs(data.notifs);
+            setNotifs(data.notifs || []);
           } else {
             console.error("Failed to retrieve notifications");
           }
@@ -36,9 +41,34 @@ const NotificationsPage = () => {
       };
       
       retrieveNotifications();
-      console.log("here comes : ",notifs);
+
+      // WebSocket connection for real-time updates
+      const newSocket = io({
+        path: '/api/socket',
+        auth: {
+          token: session.user.accessToken,
+        },
+      });
+
+      newSocket.on('connect', () => {
+        console.log('Connected to notification socket');
+      });
+
+      newSocket.on('notification', (notification: Notification) => {
+        setNotifs((prev) => [notification, ...prev]);
+      });
+
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
+      });
+
+      setSocket(newSocket);
+
+      return () => {
+        newSocket.disconnect();
+      };
     }
-  }, [session, status]);
+  }, [session?.user?.accessToken]);
   
 
   if (status === "loading") {
@@ -65,9 +95,9 @@ const NotificationsPage = () => {
           "Content-Type": "application/json",
           authorization: `Bearer ${session.user.accessToken}`,
         },
-      });
-
-      if (response.ok) {
+      });) => (
+                <div
+                  key={item.id
         const data = await response.json();
         setNotifs((prevNotifs) => prevNotifs.filter((item) => item.id !== id));      } else {
         console.error("Failed to delete notification");
