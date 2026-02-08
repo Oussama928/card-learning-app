@@ -5,6 +5,17 @@ export async function GET(request, { params }) {
   const { id: userId } = await params;
 
   try {
+    const userExistsResult = await db.queryAsync(
+      `SELECT id FROM users WHERE id = $1`,
+      [userId]
+    );
+    if (userExistsResult.rowCount === 0) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
     const progressResult = await db.queryAsync(
       `
       SELECT 
@@ -46,14 +57,15 @@ export async function GET(request, { params }) {
       [userId]
     );
     const userStats = userStatsResult.rows[0] || { daily_streak: 0 };
-    const countryBio = await new Promise((resolve, reject) => {
-      db.query(
-        `SELECT country, bio,username,email FROM users WHERE id = ?`,
-        [userId],Result = await db.queryAsync(
-      `SELECT country, bio,username,email FROM users WHERE id = $1`,
+
+    const countryBioResult = await db.queryAsync(
+      `SELECT country, bio, username, email FROM users WHERE id = $1`,
       [userId]
     );
-    const countryBio = countryBioResult.rows[0] || { country: "", bio: "" }success: true,
+    const countryBio = countryBioResult.rows[0] || { country: "", bio: "", username: "", email: "" };
+
+    return NextResponse.json({
+      success: true,
       stats: {
         dailyStreak: userStats.daily_streak,
         totalTermsLearned,

@@ -211,41 +211,68 @@ const Card: React.FC<CardProps> = ({
           justifyContent: "space-between",
         }}
       >
-        <div className="cursor-pointer"
-      onClick={() => router.push(`/profile/${data.owner.id}`)} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <img
-          
-            width={40}
-            height={40}
-            src={data?.owner?.image ? data?.owner?.image : "/avatar.jpeg"}
-            alt="Avatar"
-            style={{
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "2px solid rgba(127,202,201,0.5)",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-            }}
-          />
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span
+        {data?.owner ? (
+          <div
+            className="cursor-pointer"
+            onClick={() => router.push(`/profile/${data.owner.id}`)}
+            style={{ display: "flex", alignItems: "center", gap: "12px" }}
+          >
+            <img
+              width={40}
+              height={40}
+              src={data.owner.image ? data.owner.image : "/avatar.jpeg"}
+              alt="Avatar"
               style={{
-                color: "rgba(255,255,255,0.8)",
-                fontSize: "0.85rem",
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "2px solid rgba(127,202,201,0.5)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
               }}
-            >
-              Created by
-            </span>
-            <span
-              style={{
-                color: "#7fcac9",
-                fontSize: "0.95rem",
-                fontWeight: 500,
-              }}
-            >
-              {data.owner.username}
-            </span>
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span
+                style={{
+                  color: "rgba(255,255,255,0.8)",
+                  fontSize: "0.85rem",
+                }}
+              >
+                Created by
+              </span>
+              <span
+                style={{
+                  color: "#7fcac9",
+                  fontSize: "0.95rem",
+                  fontWeight: 500,
+                }}
+              >
+                {data.owner.username}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <img
+              width={40}
+              height={40}
+              src="/avatar.jpeg"
+              alt="Avatar"
+              style={{
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "2px solid rgba(127,202,201,0.5)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+              }}
+            />
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.85rem" }}>
+                Created by
+              </span>
+              <span style={{ color: "#7fcac9", fontSize: "0.95rem", fontWeight: 500 }}>
+                Unknown
+              </span>
+            </div>
+          </div>
+        )}
         <Link href={`/learning/${data.id}`} style={{ textDecoration: "none" }}>
           <div
             style={{

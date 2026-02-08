@@ -67,20 +67,19 @@ export async function GET(req) {
   ];
   //last_login_date DATE
 
-  for (const query of queries) {
-    db.query(query, (err) => {
-      if (err) {
-        console.error(err);
-        return new Response(
-          JSON.stringify({ error: "Failed to create tables" }),
-          { status: 500 }
-        );
-      }
-    });
+  try {
+    for (const query of queries) {
+      await db.queryAsync(query, []);
+    }
+    return new Response(
+      JSON.stringify({ message: "Tables created successfully!" }),
+      { status: 200 }
+    );
+  } catch (err) {
+    console.error(err);
+    return new Response(
+      JSON.stringify({ error: "Failed to create tables" }),
+      { status: 500 }
+    );
   }
-
-  return new Response(
-    JSON.stringify({ message: "Tables created successfully!" }),
-    { status: 200 }
-  );
 }
