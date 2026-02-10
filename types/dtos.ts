@@ -5,6 +5,47 @@ export interface RegisterRequestDTO {
   username: string;
 }
 
+export interface SignupResponseDTO {
+  message: string;
+  userId?: string;
+  email?: string;
+  requiresVerification?: boolean;
+}
+
+export interface VerifyEmailRequestDTO {
+  email: string;
+  otp: string;
+}
+
+export interface VerifyEmailResponseDTO {
+  message: string;
+}
+
+export interface ResendOtpRequestDTO {
+  email: string;
+}
+
+export interface ResendOtpResponseDTO {
+  message: string;
+}
+
+export interface ForgotPasswordRequestDTO {
+  email: string;
+}
+
+export interface ForgotPasswordResponseDTO {
+  message: string;
+}
+
+export interface ResetPasswordRequestDTO {
+  token: string;
+  password: string;
+}
+
+export interface ResetPasswordResponseDTO {
+  message: string;
+}
+
 export interface PaginationDTO {
   page: number;
   limit: number;

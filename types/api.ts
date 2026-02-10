@@ -33,6 +33,15 @@ import type {
   ApiResponseDTO,
   PaginationDTO,
   NotificationType,
+  SignupResponseDTO,
+  VerifyEmailRequestDTO,
+  VerifyEmailResponseDTO,
+  ResendOtpRequestDTO,
+  ResendOtpResponseDTO,
+  ForgotPasswordRequestDTO,
+  ForgotPasswordResponseDTO,
+  ResetPasswordRequestDTO,
+  ResetPasswordResponseDTO,
 } from './dtos';
 
 
@@ -40,6 +49,15 @@ import type {
 
 // Auth
 export type RegisterRequest = RegisterRequestDTO;
+export type SignupResponse = SignupResponseDTO;
+export type VerifyEmailRequest = VerifyEmailRequestDTO;
+export type VerifyEmailResponse = VerifyEmailResponseDTO;
+export type ResendOtpRequest = ResendOtpRequestDTO;
+export type ResendOtpResponse = ResendOtpResponseDTO;
+export type ForgotPasswordRequest = ForgotPasswordRequestDTO;
+export type ForgotPasswordResponse = ForgotPasswordResponseDTO;
+export type ResetPasswordRequest = ResetPasswordRequestDTO;
+export type ResetPasswordResponse = ResetPasswordResponseDTO;
 
 // Card Operations
 export type AddCardRequest = CreateCardRequestDTO;
@@ -113,4 +131,13 @@ export type {
   ApiResponseDTO,
   PaginationDTO,
   NotificationType,
+  SignupResponseDTO,
+  VerifyEmailRequestDTO,
+  VerifyEmailResponseDTO,
+  ResendOtpRequestDTO,
+  ResendOtpResponseDTO,
+  ForgotPasswordRequestDTO,
+  ForgotPasswordResponseDTO,
+  ResetPasswordRequestDTO,
+  ResetPasswordResponseDTO,
 };

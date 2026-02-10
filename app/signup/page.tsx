@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
-import { PhotoIcon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { useState } from "react";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { redirect,useRouter } from 'next/navigation';
-import { signOut, signIn, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import type { ApiResponseDTO, SignupResponseDTO } from "@/types";
 
 export default function Example() {
   const [email, setEmail] = useState("");
@@ -11,6 +12,7 @@ export default function Example() {
   const [password, setPassword] = useState("");
   const [photopreview, setPhotoPreview] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -19,7 +21,9 @@ export default function Example() {
       redirect("/home");
     }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMessage("");
     const formData = new FormData();
     formData.append("email", email);
     formData.append("username", username);
@@ -35,18 +39,16 @@ export default function Example() {
         body: formData,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to sign up");
+      const data: ApiResponseDTO<SignupResponseDTO> = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to sign up");
       }
 
-      const data = await res.json();
       console.log("Signup successful:", data);
-      alert("Signup successful! You can now log in.");
-      router.push("/login");     
+      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (error) {
       console.error("Fetch error:", error);
-      alert(error.message);
+      setErrorMessage(error.message || "Signup failed");
     }
   };
 
@@ -65,7 +67,12 @@ export default function Example() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form action={handleSubmit} method="POST" className="space-y-6">
+          <form onSubmit={handleSubmit} method="POST" className="space-y-6">
+            {errorMessage && (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            )}
             <div>
               <label
                 htmlFor="email"

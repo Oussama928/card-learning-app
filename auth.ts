@@ -36,14 +36,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const password = credentials.password.trim();
       
           console.log("Querying user:", email);
-          const [user] = await db.queryAsync(
-            `SELECT id, email,role, password, username,image FROM users WHERE email = ?`, 
+          const userResult = await db.queryAsync(
+            `SELECT id, email, role, password, username, image, email_verified FROM users WHERE email = $1`,
             [email]
           );
+          const user = userResult.rows[0];
       
           if (!user) {
             console.log("User not found");
             return null;
+          }
+
+          if (!user.password) {
+            console.log("User has no password set");
+            return null;
+          }
+
+          if (!user.email_verified) {
+            console.log("Email not verified");
+            throw new Error("EMAIL_NOT_VERIFIED");
           }
       
           console.log("User found - ID:", user.id);
@@ -94,8 +105,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const idd = iddResult.rows[0];
           if (!idd) {
             const insertResult = await db.queryAsync(
-              `INSERT INTO users (email, username) VALUES ($1, $2)`,
-              [user.email, user.name] 
+              `INSERT INTO users (email, username, email_verified) VALUES ($1, $2, $3)`,
+              [user.email, user.name, true]
             );
         
             const newUserResult = await db.queryAsync(

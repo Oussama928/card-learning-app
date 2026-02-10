@@ -1,35 +1,39 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { signOut, signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 
 export default function Example() {
   const [isHovered, setIsHovered] = React.useState([false,false]);
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [errorMessage, setErrorMessage] = React.useState("");
   const { data: session } = useSession();
 
   if (session) {
     redirect("/home");
   }
   const handleSignInGithub = async () => {
-    const result = await signIn("github", { callbackUrl: "/callback" });
+    await signIn("github", { callbackUrl: "/callback" });
   };
   const handleSignInGoogle = async () => {
-    const result = await signIn("google", { callbackUrl: "/callback" });
+    await signIn("google", { callbackUrl: "/callback" });
   };
-  const handleSignIn = async (e) => {
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMessage("");
     const result = await signIn("credentials", {
       email,
       password,
       redirect: false,
     });
     if (result?.error) {
-      console.error("Login failed:", result.error);
+      if (result.error === "EMAIL_NOT_VERIFIED") {
+        setErrorMessage("Email not verified. Please verify your email first.");
+      } else {
+        setErrorMessage("Invalid email or password.");
+      }
     } else {
       console.log(result);
       alert("Login successful ?");
@@ -38,7 +42,6 @@ export default function Example() {
 
   return (
     <>
-      `
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
@@ -53,6 +56,11 @@ export default function Example() {
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form onSubmit={handleSignIn} className="space-y-6">
+            {errorMessage && (
+              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            )}
             <div>
               <label
                 htmlFor="email"
@@ -83,12 +91,12 @@ export default function Example() {
                   Password
                 </label>
                 <div className="text-sm">
-                  <a
-                    href="#"
+                  <Link
+                    href="/forgot-password"
                     className="font-semibold text-indigo-600 hover:text-indigo-500"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
               </div>
               <div className="mt-2">
@@ -115,7 +123,7 @@ export default function Example() {
             </div>
           </form>
           <p className="mt-10 text-center text-sm/6 text-gray-500">
-            don't have an account?{" "}
+            don&apos;t have an account?{" "}
             <Link
               href="/signup"
               className="font-semibold text-indigo-600 hover:text-indigo-500"
