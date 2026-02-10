@@ -4,25 +4,24 @@ import React, { useEffect } from "react";
 import Card from "../components/card";
 import Loading from "../components/loading";
 import { useSession } from "next-auth/react";
+import type { CardWithOwnerDTO } from "@/types";
+
 const favorites = () => {
   const [loading, setLoading] = React.useState(true);
-  const [cards, setCards] = React.useState(null);
-  const [Favorites, setFavorites] = React.useState([]);
+  const [cards, setCards] = React.useState<CardWithOwnerDTO[] | null>(null);
+  const [Favorites, setFavorites] = React.useState<string[]>([]);
   const { data: session } = useSession();
   console.log(session);
 
   useEffect(() => {
     const retrieveFavorites = async () => {
-      const res = await fetch(
-        `http://localhost:3000/api/getFavorites`,
-        {
-          method: "GET",
-          headers: {
-            authorization: `Bearer ${session?.user?.accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await fetch(`/api/getFavorites`, {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       const data = await res.json();
       console.log(data);
       setFavorites(() => {
@@ -51,12 +50,10 @@ const favorites = () => {
             <Card
               delete_item={false}
               setCards={setCards}
+              removeOnUnfavorite={true}
               key={index}
               data={cards[index]}
-              isfavorited={() => {
-                console.log(Favorites);
-                return Favorites.includes(cards[index].id);
-              }}
+              isfavorited={Favorites.includes(cards[index].id)}
             />
           ))}
         </div>

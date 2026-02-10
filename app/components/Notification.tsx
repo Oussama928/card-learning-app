@@ -3,13 +3,7 @@
 import { useState } from 'react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-
-interface NotificationProps {
-  text: string;
-  func: () => void;
-  cancel: (value: boolean) => void;
-  main_action: string;
-}
+import { NotificationProps } from '@/types'
 
 export default function Notification({ text, func, cancel, main_action }: NotificationProps) {
   const [open, setOpen] = useState(true);

@@ -5,32 +5,31 @@ import Card from "../components/card";
 import Loading from "../components/loading";
 import { useSession } from "next-auth/react";
 import Edit from "../cardAdd/page";
+import type { CardWithOwnerDTO } from "@/types";
+
 const Home = () => {
   const [loading, setLoading] = React.useState(true);
-  const [cards, setCards] = React.useState(null);
-  const [Favorites, setFavorites] = React.useState([]);
-    const [isEditing,setIsEditing] = React.useState([false,0]);
-  
+  const [cards, setCards] = React.useState<CardWithOwnerDTO[] | null>(null);
+  const [Favorites, setFavorites] = React.useState<string[]>([]);
+  const [isEditing, setIsEditing] = React.useState<[boolean, string]>([false, ""]);
+
   const { data: session } = useSession();
 
   useEffect(() => {
     const retrieveCards = async () => {
-      const res = await fetch(`http://localhost:3000/api/getCards/id/${session?.user?.id}`);
+      const res = await fetch(`/api/getCards/id/${session?.user?.id}`);
       const data = await res.json();
       console.log(data);
-      setCards(data);
+      setCards(data as CardWithOwnerDTO[]);
     };
     const retrieveFavorites = async () => {
-      const res = await fetch(
-        `http://localhost:3000/api/getFavorites`,
-        {
-          method: "GET",
-          headers: {
-            authorization: `Bearer ${session?.user?.accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await fetch(`/api/getFavorites`, {
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
       const data = await res.json();
       console.log(data);
       setFavorites(() => {
@@ -40,16 +39,18 @@ const Home = () => {
       console.log(Favorites);
     };
 
-    try {
-      retrieveCards();
-      retrieveFavorites();
-      setLoading(false);
-    } catch (error) {
-      console.log(error);
-    }
+    (async () => {
+      try {
+        await retrieveCards();
+        await retrieveFavorites();
+        setLoading(false);
+      } catch (error) {
+        console.log(error);
+      }
+    })();
   }, [session]);
-  if(isEditing[0]){
-    return <Edit Current={isEditing[1]}/>
+  if (isEditing[0]) {
+    return <Edit Current={isEditing[1]} />;
   }
   
 
@@ -66,10 +67,7 @@ const Home = () => {
             setIsEditing = {setIsEditing}
               key={index}
               data={cards[index]}
-              isfavorited={() => {
-                console.log(Favorites);
-                return Favorites.includes(cards[index].id);
-              }}
+              isfavorited={Favorites.includes(cards[index].id)}
             />
           ))}
         </div>

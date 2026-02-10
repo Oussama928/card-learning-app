@@ -1,19 +1,19 @@
 import { hash } from "bcryptjs";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import fs from "fs/promises";
 import path from "path";
-import { v4 as uuidv4 } from 'uuid';
-import sharp from 'sharp';
+import { v4 as uuidv4 } from "uuid";
+import sharp from "sharp";
 
-export async function POST(request) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const formData = await request.formData();
 
-    const email = formData.get("email");
-    const username = formData.get("username");
-    const password = formData.get("password");
-    const photoFile = formData.get("photo");
+    const email = formData.get("email") as string;
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+    const photoFile = formData.get("photo") as Blob | null;
 
     if (!email || !username || !password) {
       return NextResponse.json(
@@ -35,7 +35,7 @@ export async function POST(request) {
       );
     }
 
-    let photoUrl = null;
+    let photoUrl: string | null = null;
     if (photoFile instanceof Blob) {
       try {
         const buffer = Buffer.from(await photoFile.arrayBuffer());
@@ -45,12 +45,12 @@ export async function POST(request) {
           .toBuffer();
 
         const photoName = `${uuidv4()}.webp`;
-        const uploadDir = path.join(process.cwd(), 'public/uploads');
+        const uploadDir = path.join(process.cwd(), "public/uploads");
         await fs.mkdir(uploadDir, { recursive: true });
         const photoPath = path.join(uploadDir, photoName);
         await fs.writeFile(photoPath, processedImage);
         photoUrl = `/uploads/${photoName}`;
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error processing image:", error);
         return NextResponse.json(
           { error: "Failed to process image" },
@@ -74,8 +74,7 @@ export async function POST(request) {
       { user: { id: userId, email, username } },
       { status: 201 }
     );
-
-  } catch (error) {
+  } catch (error: any) {
     console.error("Signup error:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },

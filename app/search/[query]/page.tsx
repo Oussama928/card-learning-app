@@ -3,11 +3,13 @@ import { useParams } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { signOut, signIn, useSession } from "next-auth/react";
 import CardsPage from "../../components/cardsPage";
+import type { CardWithOwnerDTO, SearchResponseDTO } from "@/types";
 
 const page = () => {
-  const search = useParams().query;
+  const searchParam = useParams().query;
+  const search = Array.isArray(searchParam) ? searchParam.join(" ") : searchParam;
   const { data: session, status } = useSession();
-  const [cards, setCards] = useState([false]);
+  const [cards, setCards] = useState<CardWithOwnerDTO[]>([]);
 
   useEffect(() => {
     const handleSearch = async () => {
@@ -29,15 +31,17 @@ const page = () => {
         }
 
         console.log("Search success");
-        const data = await response.json();
+        const data: SearchResponseDTO = await response.json();
         console.log("srearch data : ", data);
-        setCards(data);
+        setCards(data.results || []);
       } catch (error) {
         console.error("Error:", error);
       }
     };
-    handleSearch();
-  }, [search]);
+    if (search) {
+      handleSearch();
+    }
+  }, [search, session?.user?.accessToken]);
   
   
 

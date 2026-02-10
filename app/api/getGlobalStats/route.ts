@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
+import type { ApiErrorResponseDTO, GetGlobalStatsResponseDTO } from "@/types";
 
-export async function GET(request) {
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<GetGlobalStatsResponseDTO | ApiErrorResponseDTO>> {
   try {
     const userId = await authenticateRequest(request);
+
     const topXpQuery = `
       SELECT users.username, users.id, user_stats.xp, users.image
       FROM users
@@ -14,14 +18,19 @@ export async function GET(request) {
     `;
     const topXpResult = await db.queryAsync(topXpQuery);
     const result = topXpResult.rows;
+
     return NextResponse.json({
       message: "Global stats retrieved successfully",
       topXpResult: result,
     });
-  } catch (error) {
-    console.error("Error in POST request:", error);
+  } catch (error: any) {
+    console.error("Error in GET request:", error);
     return NextResponse.json(
-      { message: "Error getting global stats", error: error.message },
+      {
+        success: false,
+        error: "Error getting global stats",
+        details: error.message,
+      },
       { status: 500 }
     );
   }

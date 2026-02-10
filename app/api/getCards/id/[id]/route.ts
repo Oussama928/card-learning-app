@@ -1,13 +1,24 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import db from "../../../../../lib/db";
 
-export async function GET(request, { params }) {
-  const { id } = await  params;
+interface CardWithOwner {
+  id: string;
+  title: string;
+  user_id: string;
+  owner: any;
+  [key: string]: any;
+}
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse> {
+  const { id } = await params;
 
   try {
     const getCardsQuery = `SELECT * FROM cards WHERE user_id = $1`;
     const cardsResult = await db.queryAsync(getCardsQuery, [id]);
-    const cards = cardsResult.rows;
+    const cards: CardWithOwner[] = cardsResult.rows;
 
     const userQuery = `SELECT id, username, email, image FROM users WHERE id = $1`;
     const userResult = await db.queryAsync(userQuery, [id]);
@@ -29,8 +40,8 @@ export async function GET(request, { params }) {
       owner: user[0],
     }));
 
-    return NextResponse.json(cardsWithOwner); 
-  } catch (error) {
+    return NextResponse.json(cardsWithOwner);
+  } catch (error: any) {
     console.error("Error fetching user cards:", error);
     return NextResponse.json(
       { error: "Failed to fetch user cards" },

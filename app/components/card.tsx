@@ -7,14 +7,7 @@ import IconButton from "@mui/material/IconButton";
 import { useSession } from "next-auth/react";
 import Edit from "../cardAdd/page";
 import { useRouter } from "next/navigation";
-interface CardProps {
-  data: {
-    title: string;
-    target_language: string;
-    total_words: number;
-    id: string;
-  };
-}
+import { CardProps } from "@/types";
 
 const Card: React.FC<CardProps> = ({
   data,
@@ -22,17 +15,17 @@ const Card: React.FC<CardProps> = ({
   setCards,
   delete_item,
   setIsEditing,
-
+  removeOnUnfavorite = false,
 }) => {
-  const [isFavorited, setIsFavorited] = useState(isfavorited);
+  const [isFavorited, setIsFavorited] = useState(Boolean(isfavorited));
   const { data: session } = useSession();
   const router = useRouter();
   useEffect(() => {
-    setIsFavorited(isfavorited);
+    setIsFavorited(Boolean(isfavorited));
   }, [isfavorited]);
 
   const handleClick = async () => {
-    if (isFavorited == true && setCards) {
+    if (isFavorited == true && setCards && removeOnUnfavorite) {
       setCards((prev) => {
         console.log("prev", prev);
         return prev.filter((card) => card.id !== data.id);
@@ -41,7 +34,6 @@ const Card: React.FC<CardProps> = ({
     const newIsFavorited = !isFavorited;
     setIsFavorited(newIsFavorited);
     const payload = {
-      user_id: parseInt(session?.user?.id, 10),
       card_id: data?.id,
       intent: newIsFavorited ? "add" : "remove",
     };
@@ -52,7 +44,7 @@ const Card: React.FC<CardProps> = ({
         method: "POST",
         body: JSON.stringify(payload),
         headers: {
-          authorization: `Bearer ${session?.user?.accessToken}`,
+          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
           "Content-Type": "application/json",
         },
       });
@@ -72,7 +64,7 @@ const Card: React.FC<CardProps> = ({
             method: "DELETE",
             body: JSON.stringify({ id: data.id }),
             headers: {
-              authorization: `Bearer ${session?.user?.accessToken}`,
+              authorization: `Bearer ${(session?.user as any)?.accessToken}`,
               "Content-Type": "application/json",
             },
           }
@@ -80,7 +72,7 @@ const Card: React.FC<CardProps> = ({
 
         const responseData = await res.json();
         console.log(responseData);
-        setCards((prev) => {
+        setCards?.((prev) => {
           return prev.filter((card) => card.id !== data.id);
         });
       } catch (error) {
@@ -183,7 +175,7 @@ const Card: React.FC<CardProps> = ({
                 />
               </IconButton>
               <IconButton
-                onClick={() => setIsEditing([true, data.id])}
+                onClick={() => setIsEditing?.([true, data.id])}
                 style={{
                   padding: "4px",
                   borderRadius: "50%",
@@ -214,13 +206,13 @@ const Card: React.FC<CardProps> = ({
         {data?.owner ? (
           <div
             className="cursor-pointer"
-            onClick={() => router.push(`/profile/${data.owner.id}`)}
+            onClick={() => router.push(`/profile/${data.owner?.id}`)}
             style={{ display: "flex", alignItems: "center", gap: "12px" }}
           >
             <img
               width={40}
               height={40}
-              src={data.owner.image ? data.owner.image : "/avatar.jpeg"}
+              src={data.owner?.image ? data.owner.image : "/avatar.jpeg"}
               alt="Avatar"
               style={{
                 borderRadius: "50%",
@@ -245,7 +237,7 @@ const Card: React.FC<CardProps> = ({
                   fontWeight: 500,
                 }}
               >
-                {data.owner.username}
+                {data.owner?.username}
               </span>
             </div>
           </div>

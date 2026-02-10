@@ -1,13 +1,6 @@
 import React from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-interface CardAddminiProps {
-  index: number;
-  words: string[][];
-  setWords: React.Dispatch<React.SetStateAction<string[][]>>;
-  seti: React.Dispatch<React.SetStateAction<number>>;
-  setGarbageCollector: React.Dispatch<React.SetStateAction<number[]>>;
-}
+import { CardAddminiProps } from "@/types";
 
 const CardAddmini: React.FC<CardAddminiProps> = ({ index, words, setWords, seti, setGarbageCollector }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {

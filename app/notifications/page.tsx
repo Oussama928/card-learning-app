@@ -4,28 +4,22 @@ import { useSession } from "next-auth/react";
 import classNames from "classnames";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { io, Socket } from "socket.io-client";
-
-interface Notification {
-  id: string;
-  type: string;
-  content: string;
-  created_at: string;
-}
+import type { NotificationItemDTO } from "@/types";
 
 const NotificationsPage = () => {
   const { data: session, status } = useSession();
-  const [notifs, setNotifs] = useState<Notification[]>([]);
+  const [notifs, setNotifs] = useState<NotificationItemDTO[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    if (session?.user?.accessToken) {
+    if (session?.user && (session.user as any)?.accessToken) {
       // Initial fetch
       const retrieveNotifications = async () => {
         try {
           const response = await fetch("/api/notifications/getBig", {
             method: "GET",
             headers: {
-              authorization: `Bearer ${session.user.accessToken}`,
+              authorization: `Bearer ${(session.user as any).accessToken}`,
             },
           });
 
@@ -46,7 +40,7 @@ const NotificationsPage = () => {
       const newSocket = io({
         path: '/api/socket',
         auth: {
-          token: session.user.accessToken,
+          token: (session.user as any).accessToken,
         },
       });
 
@@ -54,7 +48,7 @@ const NotificationsPage = () => {
         console.log('Connected to notification socket');
       });
 
-      newSocket.on('notification', (notification: Notification) => {
+      newSocket.on('notification', (notification: NotificationItemDTO) => {
         setNotifs((prev) => [notification, ...prev]);
       });
 
@@ -68,7 +62,7 @@ const NotificationsPage = () => {
         newSocket.disconnect();
       };
     }
-  }, [session?.user?.accessToken]);
+  }, [(session?.user as any)?.accessToken]);
   
 
   if (status === "loading") {
@@ -88,18 +82,19 @@ const NotificationsPage = () => {
   }
   const handleDelete = async (id: string) => {
     try {
-        console.log(id);
+      console.log(id);
       const response = await fetch(`/api/notifications/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          authorization: `Bearer ${session.user.accessToken}`,
+          authorization: `Bearer ${(session.user as any).accessToken}`,
         },
-      });) => (
-                <div
-                  key={item.id
+      });
+
+      if (response.ok) {
         const data = await response.json();
-        setNotifs((prevNotifs) => prevNotifs.filter((item) => item.id !== id));      } else {
+        setNotifs((prevNotifs) => prevNotifs.filter((item) => item.id !== id));
+      } else {
         console.error("Failed to delete notification");
       }
     } catch (error) {

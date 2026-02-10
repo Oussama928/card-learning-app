@@ -14,10 +14,7 @@ import {
   DocumentTextIcon,
   CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
-
-interface ExampleProps {
-  Current?: string;
-}
+import { CardAddPageProps } from "@/types";
 
 const validationSchema = object({
   title: string()
@@ -32,7 +29,7 @@ const validationSchema = object({
   agreed: boolean().oneOf([true], "You must agree to the policies"),
 });
 
-export default function Example({ Current }: ExampleProps) {
+export default function Example({ Current }: CardAddPageProps) {
   const [i, seti] = useState(1);
   const [ii, setii] = useState(1);
   const [words, setWords] = useState<string[][]>([["", "", ""]]);

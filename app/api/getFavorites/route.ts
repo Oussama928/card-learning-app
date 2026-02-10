@@ -1,11 +1,13 @@
 import db from "../../../lib/db";
-import { NextResponse } from "next/server";
-import { authenticateRequest } from '../authenticateRequest'; 
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateRequest } from "../authenticateRequest";
+import type { ApiErrorResponseDTO, CardWithOwnerDTO, FavoritesResponseDTO, OwnerSummaryDTO } from "@/types";
 
-export async function GET(request) {
-
+export async function GET(
+  request: NextRequest
+): Promise<NextResponse<FavoritesResponseDTO | ApiErrorResponseDTO>> {
   try {
-    const userId = await authenticateRequest(request); 
+    const userId = await authenticateRequest(request);
 
     const favoritesResult = await db.queryAsync(
       "SELECT card_id FROM favorites WHERE user_id = $1",
@@ -21,8 +23,10 @@ export async function GET(request) {
         fullFavorites: [],
       });
     }
-    const array = [];
-    const cards = [];
+
+    const array: string[] = [];
+    const cards: CardWithOwnerDTO[] = [];
+
     for (let i = 0; i < favorites.length; i++) {
       array.push(favorites[i].card_id);
       const cardResult = await db.queryAsync(
@@ -31,21 +35,24 @@ export async function GET(request) {
       );
       cards.push(cardResult.rows[0]);
     }
+
     const userIds = cards.map((card) => card.user_id);
-    const placeholders = userIds.map((_, i) => `$${i + 1}`).join(',');
+    const placeholders = userIds.map((_, i) => `$${i + 1}`).join(",");
     const getOwnersQuery = `
       SELECT * FROM users WHERE id IN (${placeholders})
     `;
     const ownersResult = await db.queryAsync(getOwnersQuery, userIds);
-    const owners = ownersResult.rows;
+    const owners: OwnerSummaryDTO[] = ownersResult.rows;
 
-    const ownersMap = owners.reduce((map, owner) => {
+    const ownersMap = owners.reduce((map: Record<string, OwnerSummaryDTO>, owner: OwnerSummaryDTO) => {
       map[owner.id] = owner;
       return map;
     }, {});
 
     for (const card of cards) {
-      card.owner = ownersMap[card.user_id];
+      if (card.user_id && ownersMap[card.user_id]) {
+        card.owner = ownersMap[card.user_id];
+      }
     }
 
     return NextResponse.json({
@@ -53,10 +60,10 @@ export async function GET(request) {
       favorites: array,
       fullFavorites: cards,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Database error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch card data" },
+      { success: false, error: "Failed to fetch card data" },
       { status: 500 }
     );
   }

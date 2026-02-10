@@ -1,19 +1,27 @@
-import { NextResponse } from 'next/server';
-import db from '../../../lib/db';
-import { authenticateRequest } from '../authenticateRequest'; 
+import { NextRequest, NextResponse } from "next/server";
+import db from "../../../lib/db";
+import { authenticateRequest } from "../authenticateRequest";
+import type { ApiErrorResponseDTO, UpdateStreakResponseDTO } from "@/types";
 
-export async function PATCH(request) {
+export async function PATCH(
+  request: NextRequest
+): Promise<NextResponse<UpdateStreakResponseDTO | ApiErrorResponseDTO>> {
   try {
-    const userId = await authenticateRequest(request); 
-
+    const userId = await authenticateRequest(request);
 
     const now = new Date();
-    const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    const todayStr = today.toISOString().split('T')[0];
+    const today = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate()
+      )
+    );
+    const todayStr = today.toISOString().split("T")[0];
 
     const yesterday = new Date(today);
     yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
 
     const currentStatsResult = await db.queryAsync(
       `SELECT daily_streak FROM user_stats WHERE user_id = $1`,
@@ -24,13 +32,13 @@ export async function PATCH(request) {
     if (!currentStats) {
       return NextResponse.json({
         success: false,
-        message: "User not found."
+        error: "User not found.",
       });
     }
 
     const { daily_streak, last_login_date } = currentStats;
-    
-    let lastLoginStr;
+
+    let lastLoginStr: string | null;
     if (last_login_date === null) {
       lastLoginStr = null;
     } else {
@@ -40,8 +48,11 @@ export async function PATCH(request) {
           lastLoginStr = null;
         } else {
           const year = lastLoginDate.getUTCFullYear();
-          const month = String(lastLoginDate.getUTCMonth() + 1).padStart(2, '0');
-          const day = String(lastLoginDate.getUTCDate()).padStart(2, '0');
+          const month = String(lastLoginDate.getUTCMonth() + 1).padStart(
+            2,
+            "0"
+          );
+          const day = String(lastLoginDate.getUTCDate()).padStart(2, "0");
           lastLoginStr = `${year}-${month}-${day}`;
         }
       } catch (e) {
@@ -59,23 +70,25 @@ export async function PATCH(request) {
       newStreak = 1;
     }
 
-    await db.queryAsync(`
+    await db.queryAsync(
+      `
       INSERT INTO user_stats (user_id, daily_streak, last_login_date)
       VALUES ($1, $2, $3)
       ON CONFLICT (user_id) DO UPDATE SET
         daily_streak = EXCLUDED.daily_streak,
         last_login_date = EXCLUDED.last_login_date
-    `, [userId, newStreak, todayStr]);
+    `,
+      [userId, newStreak, todayStr]
+    );
 
     return NextResponse.json({
       success: true,
-      streak: newStreak
+      streak: newStreak,
     });
-
-  } catch (error) {
+  } catch (error: any) {
     console.error("Streak update error:", error);
     return NextResponse.json(
-      { error: "Failed to update daily streak" },
+      { success: false, error: "Failed to update daily streak" },
       { status: 500 }
     );
   }
