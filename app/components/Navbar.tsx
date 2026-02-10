@@ -39,6 +39,7 @@ const Navbar = () => {
   const [searchAppear, setSearchAppear] = React.useState<boolean>(false);
   const [search, setSearch] = React.useState<string>("");
   const [streak, setStreak] = React.useState<number>(0);
+  const icon_paths = ["leaderboard","profile"];
   useEffect(() => {
     if (session) {
       console.log("Session:", session);
@@ -369,19 +370,23 @@ const Navbar = () => {
                       </MenuItem>
                     )}
 
-                    <MenuItem>
-                      {({ focus }) => (
-                        <Link
-                          href="/leaderboard"
-                          className={classNames(
-                            focus ? "bg-gray-100" : "",
-                            "block px-4 py-2 text-sm text-gray-700"
-                          )}
-                        >
-                          leaderboard
-                        </Link>
-                      )}
-                    </MenuItem>
+                    {
+                    icon_paths.map((path) => (
+                      <MenuItem key={path}>
+                        {({ focus }) => (
+                          <Link
+                            href={`/${path}`}
+                            className={classNames(
+                              focus ? "bg-gray-100" : "",
+                              "block px-4 py-2 text-sm text-gray-700"
+                            )}
+                          >
+                            {path}
+                          </Link>
+                        )}
+                      </MenuItem>
+                    ))
+                  }
                     <MenuItem>
                       {({ focus }) => (
                         <button
