@@ -2,9 +2,23 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import classNames from "classnames";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { FaTrash } from "react-icons/fa";
 import { io, Socket } from "socket.io-client";
 import type { NotificationItemDTO } from "@/types";
+import { deleteNotification, getBigNotifications } from "@/services/notificationService";
+
+const base64ToUint8Array = (base64String: string) => {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  return outputArray;
+};
 
 const NotificationsPage = () => {
   const { data: session, status } = useSession();
@@ -12,23 +26,43 @@ const NotificationsPage = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
-    if (session?.user && (session.user as any)?.accessToken) {
+    const subscribeToPush = async () => {
+      if (!session?.user?.accessToken) return;
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) return;
+
+      const registration = await navigator.serviceWorker.register("/push-sw.js");
+      const existing = await registration.pushManager.getSubscription();
+      const subscription =
+        existing ||
+        (await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: base64ToUint8Array(vapidPublicKey),
+        }));
+
+      await fetch("/api/notifications/push-subscription", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${session.user.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(subscription),
+      });
+    };
+
+    void subscribeToPush();
+  }, [session?.user?.accessToken]);
+
+  useEffect(() => {
+    if (session?.user?.accessToken) {
+      const token = session.user.accessToken;
       // Initial fetch
       const retrieveNotifications = async () => {
         try {
-          const response = await fetch("/api/notifications/getBig", {
-            method: "GET",
-            headers: {
-              authorization: `Bearer ${(session.user as any).accessToken}`,
-            },
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setNotifs(data.notifs || []);
-          } else {
-            console.error("Failed to retrieve notifications");
-          }
+          const data = await getBigNotifications(token);
+          setNotifs(data.notifs || []);
         } catch (error) {
           console.error("Error:", error);
         }
@@ -40,7 +74,7 @@ const NotificationsPage = () => {
       const newSocket = io({
         path: '/api/socket',
         auth: {
-          token: (session.user as any).accessToken,
+          token,
         },
       });
 
@@ -62,7 +96,7 @@ const NotificationsPage = () => {
         newSocket.disconnect();
       };
     }
-  }, [(session?.user as any)?.accessToken]);
+  }, [session?.user?.accessToken]);
   
 
   if (status === "loading") {
@@ -82,21 +116,9 @@ const NotificationsPage = () => {
   }
   const handleDelete = async (id: string) => {
     try {
-      console.log(id);
-      const response = await fetch(`/api/notifications/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${(session.user as any).accessToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setNotifs((prevNotifs) => prevNotifs.filter((item) => item.id !== id));
-      } else {
-        console.error("Failed to delete notification");
-      }
+      if (!session?.user?.accessToken) return;
+      await deleteNotification(id, session.user.accessToken);
+      setNotifs((prevNotifs) => prevNotifs.filter((item) => item.id !== id));
     } catch (error) {
       console.error("Error:", error);
     }
@@ -156,7 +178,7 @@ const NotificationsPage = () => {
                   </div>
                   <div>
                     <button onClick={()=>handleDelete(item.id)} className="hover:bg-slate-300 rounded-full p-1">
-                      <DeleteIcon className=" " color="primary" />
+                      <FaTrash className="text-slate-700" />
                     </button>
                   </div>
                 </div>

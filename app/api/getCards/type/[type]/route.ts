@@ -12,8 +12,9 @@ export async function GET(
     const userId = await authenticateRequest(request);
 
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "20", 10);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+    const requestedLimit = parseInt(url.searchParams.get("limit") || "20", 10);
+    const limit = Math.min(Math.max(requestedLimit, 1), 50);
     const offset = (page - 1) * limit;
 
     let getCardsQuery = "";
@@ -27,7 +28,13 @@ export async function GET(
         WHERE users.role = 'user'
       `;
       getCardsQuery = `
-        SELECT cards.* 
+        SELECT cards.*,
+               json_build_object(
+                 'id', users.id,
+                 'username', users.username,
+                 'email', users.email,
+                 'image', users.image
+               ) as owner
         FROM cards 
         LEFT JOIN users ON cards.user_id = users.id 
         WHERE users.role = 'user'
@@ -42,7 +49,13 @@ export async function GET(
         WHERE users.role = 'admin'
       `;
       getCardsQuery = `
-        SELECT cards.* 
+        SELECT cards.*,
+               json_build_object(
+                 'id', users.id,
+                 'username', users.username,
+                 'email', users.email,
+                 'image', users.image
+               ) as owner
         FROM cards 
         LEFT JOIN users ON cards.user_id = users.id 
         WHERE users.role = 'admin'
@@ -61,26 +74,6 @@ export async function GET(
 
     const cardsResult = await db.queryAsync(getCardsQuery, [limit, offset]);
     const cards: CardWithOwnerDTO[] = cardsResult.rows;
-
-    if (cards.length > 0) {
-      const userIds = cards.map((card) => card.user_id);
-      const placeholders = userIds.map((_, i) => `$${i + 1}`).join(",");
-      const getOwnersQuery = `SELECT * FROM users WHERE id IN (${placeholders})`;
-      const ownersResult = await db.queryAsync(getOwnersQuery, userIds);
-      const owners = ownersResult.rows;
-
-      const ownersMap = owners.reduce(
-        (map: Record<string, any>, owner: any) => {
-          map[owner.id] = owner;
-          return map;
-        },
-        {}
-      );
-
-      for (const card of cards) {
-        card.owner = ownersMap[card.user_id];
-      }
-    }
 
     return NextResponse.json({
       cards,

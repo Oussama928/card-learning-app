@@ -1,5 +1,5 @@
 import React from "react";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { FaTrash } from "react-icons/fa";
 import { CardAddminiProps } from "@/types";
 
 const CardAddmini: React.FC<CardAddminiProps> = ({ index, words, setWords, seti, setGarbageCollector }) => {
@@ -57,7 +57,7 @@ const CardAddmini: React.FC<CardAddminiProps> = ({ index, words, setWords, seti,
         </div>
       </div>
       <div className="flex items-center justify-center pt-7">
-        <DeleteIcon
+        <FaTrash
           className="h-6 w-6 cursor-pointer text-gray-400 hover:text-red-500 transition-colors"
           onClick={() => {
             const updatedWords = [...words];

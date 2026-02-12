@@ -145,7 +145,7 @@ export default function Example() {
             </Link>
           </p>
 
-          <div className="border-t mt-10 space-y-4  flex-col text-gray-400    border-black  pt-10 text-gray-900 flex justify-center items-center">
+          <div className="border-t mt-10 space-y-4 flex-col border-black pt-10 text-gray-900 flex justify-center items-center">
             <button
               onClick={handleSignInGithub}
               onMouseEnter={() => setIsHovered((prev)=>[true,prev[1]])}

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import FavoriteIcon from "@mui/icons-material/Favorite";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import IconButton from "@mui/material/IconButton";
+import Image from "next/image";
+import { FaHeart, FaTrash, FaEdit } from "react-icons/fa";
 import { useSession } from "next-auth/react";
-import Edit from "../cardAdd/page";
 import { useRouter } from "next/navigation";
 import { CardProps } from "@/types";
+import { deleteCard, toggleFavorite } from "@/services/cardService";
 
 const Card: React.FC<CardProps> = ({
   data,
@@ -27,7 +25,7 @@ const Card: React.FC<CardProps> = ({
   const handleClick = async () => {
     if (isFavorited == true && setCards && removeOnUnfavorite) {
       setCards((prev) => {
-        console.log("prev", prev);
+        if (!prev) return prev;
         return prev.filter((card) => card.id !== data.id);
       });
     }
@@ -40,46 +38,22 @@ const Card: React.FC<CardProps> = ({
     console.log(payload);
 
     try {
-      const res = await fetch("http://localhost:3000/api/handleFavorites", {
-        method: "POST",
-        body: JSON.stringify(payload),
-        headers: {
-          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const responseData = await res.json();
-      console.log(responseData);
+      const token = session?.user?.accessToken;
+      if (!token) return;
+      await toggleFavorite(data.id, newIsFavorited ? "add" : "remove", token);
     } catch (error) {
       console.error("Error:", error);
     }
   };
   const handleDelete = async () => {
-    const del = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:3000/api/deleteCard/${data.id}`,
-          {
-            method: "DELETE",
-            body: JSON.stringify({ id: data.id }),
-            headers: {
-              authorization: `Bearer ${(session?.user as any)?.accessToken}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        const responseData = await res.json();
-        console.log(responseData);
-        setCards?.((prev) => {
-          return prev.filter((card) => card.id !== data.id);
-        });
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-    del();
+    try {
+      const token = session?.user?.accessToken;
+      if (!token) return;
+      await deleteCard(data.id, token);
+      setCards?.((prev) => (prev ? prev.filter((card) => card.id !== data.id) : prev));
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
 
@@ -142,54 +116,50 @@ const Card: React.FC<CardProps> = ({
             </svg>
             {data.total_words} words
           </span>
-          <IconButton onClick={handleClick}>
-            <FavoriteIcon
+          <button
+            type="button"
+            onClick={handleClick}
+            className="rounded-full p-2 hover:bg-white/10 transition-colors"
+            aria-label={isFavorited ? "Remove favorite" : "Add favorite"}
+          >
+            <FaHeart
               style={{
                 color: isFavorited ? "red" : "gray",
                 transition: "color 0.3s",
               }}
             />
-          </IconButton>
+          </button>
           {delete_item && (
             <>
-              <IconButton
+              <button
+                type="button"
                 onClick={handleDelete}
                 style={{
                   padding: "4px",
                   borderRadius: "50%",
                   transition: "background-color 0.3s",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#92969c66")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
+                className="hover:bg-[#92969c66]"
               >
-                {" "}
-                <DeleteIcon
+                <FaTrash
                   style={{
                     color: "gray",
                     transition: "color 0.3s",
                   }}
                 />
-              </IconButton>
-              <IconButton
+              </button>
+              <button
+                type="button"
                 onClick={() => setIsEditing?.([true, data.id])}
                 style={{
                   padding: "4px",
                   borderRadius: "50%",
                   transition: "background-color 0.3s",
                 }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#92969c66")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "transparent")
-                }
+                className="hover:bg-[#92969c66]"
               >
-                <EditIcon style={{ color: "gray" }} />
-              </IconButton>
+                <FaEdit style={{ color: "gray" }} />
+              </button>
             </>
           )}
         </div>
@@ -209,7 +179,7 @@ const Card: React.FC<CardProps> = ({
             onClick={() => router.push(`/profile/${data.owner?.id}`)}
             style={{ display: "flex", alignItems: "center", gap: "12px" }}
           >
-            <img
+            <Image
               width={40}
               height={40}
               src={data.owner?.image ? data.owner.image : "/avatar.jpeg"}
@@ -243,7 +213,7 @@ const Card: React.FC<CardProps> = ({
           </div>
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <img
+            <Image
               width={40}
               height={40}
               src="/avatar.jpeg"

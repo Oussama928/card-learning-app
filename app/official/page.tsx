@@ -1,9 +1,12 @@
 import React from 'react'
 import CardsPage from "../components/cardsPage";
-const page = () => {
+
+export const revalidate = 300;
+
+const OfficialPage = () => {
   return (
     <CardsPage type={"official"} />
   )
 }
 
-export default page
+export default OfficialPage

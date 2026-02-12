@@ -7,7 +7,6 @@ import CardAddmini from "../components/cardAddmini";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormik } from "formik";
 import { cardAddSchema } from "@/types/validationSchemas";
 import {

@@ -2,18 +2,31 @@
 
 import React from "react";
 import { PaperClipIcon } from "@heroicons/react/20/solid";
-import { useSession, updateSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { profileUpdateSchema } from "@/types/validationSchemas";
 
-import EditIcon from "@mui/icons-material/Edit";
-import InfoIcon from "@mui/icons-material/Info";
+import { FaEdit, FaInfoCircle } from "react-icons/fa";
+
+interface ProfileStats {
+  username?: string;
+  email?: string;
+  country?: string;
+  bio?: string;
+  dailyStreak?: number;
+  totalTermsLearned?: number;
+  accuracy?: number;
+  xp?: number;
+}
+
+interface ProfileProps {
+  id?: string;
+}
 
 //update the other parts later (the ones besides stats)
-export default function Profile({ id }) {
+export default function Profile({ id }: ProfileProps) {
   const { data: session, update } = useSession();
-  const [stats, setStats] = React.useState("");
+  const [stats, setStats] = React.useState<ProfileStats | null>(null);
   const [edited, setEdited] = React.useState("");
-  const [country, setCountry] = React.useState(null);
   const [streakInfo, setStreakInfo] = React.useState(false);
   const [editIndex, setEditIndex] = React.useState([
     false,
@@ -44,7 +57,7 @@ export default function Profile({ id }) {
     getStats();
   }, [session]);
 
-  const handleSubmit = async (field) => {
+  const handleSubmit = async (field: "bio" | "country" | "username") => {
     // Basic validation before submitting
     if (!edited.trim()) {
       alert("Field cannot be empty");
@@ -74,8 +87,9 @@ export default function Profile({ id }) {
       }
     }
 
-    const updateField = async (field) => {
+    const updateField = async (field: "bio" | "country" | "username") => {
       try {
+        if (!session?.user?.accessToken) return;
         const res = await fetch(`/api/updateInfos/profile`, {
           method: "POST",
           headers: {
@@ -106,8 +120,8 @@ export default function Profile({ id }) {
     };
     if (field == "bio" || field == "country" || field == "username") {
       updateField(field);
-      field == "country" && setStats((prev) => ({ ...prev, country: edited }));
-      field == "bio" && setStats((prev) => ({ ...prev, bio: edited }));
+      field == "country" && setStats((prev) => ({ ...(prev ?? {}), country: edited }));
+      field == "bio" && setStats((prev) => ({ ...(prev ?? {}), bio: edited }));
     }
   };
 
@@ -181,7 +195,7 @@ export default function Profile({ id }) {
                         ))}
                       </select>
                       <button
-                        onClick={() => handleSubmit(item.label.toLowerCase())}
+                        onClick={() => handleSubmit("country")}
                         className="bg-black px-2 rounded-full"
                       >
                         submit
@@ -197,7 +211,7 @@ export default function Profile({ id }) {
                         placeholder={`Enter ${item.label.toLowerCase()}`}
                       />
                       <button
-                        onClick={() => handleSubmit(item.label.toLowerCase())}
+                        onClick={() => handleSubmit("username")}
                         className="bg-black px-2 rounded-full"
                       >
                         submit
@@ -210,7 +224,7 @@ export default function Profile({ id }) {
                       {item.value}
                     </div>
                     {(idx === 0 || idx === 2) && !id && (
-                      <EditIcon
+                      <FaEdit
                         onClick={() =>
                           setEditIndex((prev) =>
                             prev.map((_, i) => (i === idx ? true : false))
@@ -222,7 +236,7 @@ export default function Profile({ id }) {
                     {idx === 3 && (
                       <div className="flex items-center gap-2">
                         <img src="/flame.png" className="h-7 w-7 ml-5" />
-                        <InfoIcon
+                        <FaInfoCircle
                           onClick={() => setStreakInfo(true)}
                           className="ml-12 opacity-45 cursor-pointer"
                         />
@@ -279,7 +293,7 @@ export default function Profile({ id }) {
                     editIndex[4] === false && (
                       <>
                         {stats?.bio}
-                        <EditIcon
+                        <FaEdit
                           onClick={() =>
                             setEditIndex((prev) =>
                               prev.map((val, i) => (i === 4 ? true : val))

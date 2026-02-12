@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
 import type { CreateNotificationRequestDTO, NotificationItemDTO } from "@/types";
+import { emitNotificationToAll } from "@/lib/socketServer";
+import { sendPushNotification } from "@/lib/pushNotifications";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -28,6 +30,32 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     `;
 
     await db.queryAsync(insertNotifQuery, [type, content, false, new Date()]);
+
+    emitNotificationToAll({
+      type,
+      content,
+      created_at: new Date().toISOString(),
+    });
+
+    const subscriptionsResult = await db.queryAsync(
+      "SELECT endpoint, p256dh, auth FROM push_subscriptions"
+    );
+
+    await Promise.allSettled(
+      subscriptionsResult.rows.map((sub: any) =>
+        sendPushNotification(
+          {
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth },
+          },
+          {
+            title: "Card Learning",
+            body: content,
+            url: "/notifications",
+          }
+        )
+      )
+    );
 
     return NextResponse.json({
       message: "Notif added successfully",

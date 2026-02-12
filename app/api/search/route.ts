@@ -32,29 +32,28 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const countQuery = `
       SELECT COUNT(*) as total
       FROM cards
-      WHERE title LIKE $1 OR description LIKE $2
+      WHERE to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, ''))
+            @@ plainto_tsquery('simple', $1)
     `;
 
     const searchQueryQuery = `
-      SELECT * FROM cards 
-      WHERE title LIKE $1 OR description LIKE $2 
-      ORDER BY id DESC
-      LIMIT $3 OFFSET $4
+      SELECT *,
+             ts_rank(
+               to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, '')),
+               plainto_tsquery('simple', $1)
+             ) as rank
+      FROM cards
+      WHERE to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, ''))
+            @@ plainto_tsquery('simple', $1)
+      ORDER BY rank DESC, id DESC
+      LIMIT $2 OFFSET $3
     `;
     console.log(searchQuery);
 
-    const countResult = await db.queryAsync(countQuery, [
-      `%${searchQuery}%`,
-      `%${searchQuery}%`,
-    ]);
+    const countResult = await db.queryAsync(countQuery, [searchQuery]);
     const total = parseInt(countResult.rows[0]?.total || "0", 10);
 
-    const cardsResult = await db.queryAsync(searchQueryQuery, [
-      `%${searchQuery}%`,
-      `%${searchQuery}%`,
-      limit,
-      offset,
-    ]);
+    const cardsResult = await db.queryAsync(searchQueryQuery, [searchQuery, limit, offset]);
     const cards: CardWithOwnerDTO[] = cardsResult.rows;
 
     const results: CardWithOwnerDTO[] = cards.length ? cards : [];
