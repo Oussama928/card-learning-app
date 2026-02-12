@@ -4,53 +4,54 @@ import { UserCircleIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { redirect,useRouter } from 'next/navigation';
 import { useSession } from "next-auth/react";
+import { useFormik } from "formik";
+import { signupSchema } from "@/types/validationSchemas";
 import type { ApiResponseDTO, SignupResponseDTO } from "@/types";
 
 export default function Example() {
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [photopreview, setPhotoPreview] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const { data: session } = useSession();
   const router = useRouter();
 
-
-    if (session) {
-      redirect("/home");
-    }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setErrorMessage("");
-    const formData = new FormData();
-    formData.append("email", email);
-    formData.append("username", username);
-    formData.append("password", password);
-    
-    if (photoFile) {
-      formData.append("photo", photoFile);
-    }
-
-    try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data: ApiResponseDTO<SignupResponseDTO> = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to sign up");
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      username: "",
+      password: "",
+    },
+    validationSchema: signupSchema,
+    onSubmit: async (values) => {
+      setErrorMessage("");
+      const formData = new FormData();
+      formData.append("email", values.email);
+      formData.append("username", values.username);
+      formData.append("password", values.password);
+      
+      if (photoFile) {
+        formData.append("photo", photoFile);
       }
 
-      console.log("Signup successful:", data);
-      router.push(`/verify-email?email=${encodeURIComponent(email)}`);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      setErrorMessage(error.message || "Signup failed");
-    }
-  };
+      try {
+        const res = await fetch("/api/signup", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data: ApiResponseDTO<SignupResponseDTO> = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Failed to sign up");
+        }
+
+        console.log("Signup successful:", data);
+        router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+      } catch (error) {
+        console.error("Fetch error:", error);
+        setErrorMessage(error.message || "Signup failed");
+      }
+    },
+  });
 
   return (
     <>
@@ -67,7 +68,7 @@ export default function Example() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form onSubmit={handleSubmit} method="POST" className="space-y-6">
+          <form onSubmit={formik.handleSubmit} method="POST" className="space-y-6">
             {errorMessage && (
               <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
                 {errorMessage}
@@ -84,13 +85,17 @@ export default function Example() {
                 <input
                   id="email"
                   name="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   type="email"
                   required
                   autoComplete="email"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
+                {formik.touched.email && formik.errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                )}
               </div>
             </div>
             <div className="col-span-full">
@@ -152,14 +157,18 @@ export default function Example() {
               </label>
               <div className="mt-2">
                 <input
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={formik.values.username}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   id="username"
                   name="username"
                   type="username"
                   required
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
+                {formik.touched.username && formik.errors.username && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.username}</p>
+                )}
               </div>
             </div>
 
@@ -175,23 +184,28 @@ export default function Example() {
               <div className="mt-2">
                 <input
                   id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   name="password"
                   type="password"
                   required
                   autoComplete="current-password"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
+                {formik.touched.password && formik.errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+                )}
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled={formik.isSubmitting}
+                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign up
+                {formik.isSubmitting ? "Signing up..." : "Sign up"}
               </button>
             </div>
           </form>

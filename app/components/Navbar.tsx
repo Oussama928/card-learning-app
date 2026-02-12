@@ -9,6 +9,7 @@ import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRef } from "react";
+import { searchSchema } from "@/types/validationSchemas";
 
 import {
   Disclosure,
@@ -180,7 +181,13 @@ const Navbar = () => {
     }
   };
   const handleSearch = () => {
-    router.push(`/search/${search}`);
+    try {
+      searchSchema.validateSync({ search: search.trim() });
+      router.push(`/search/${encodeURIComponent(search.trim())}`);
+    } catch (error: any) {
+      alert(error.message);
+      return;
+    }
   };
 
   return (

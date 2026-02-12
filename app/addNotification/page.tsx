@@ -7,40 +7,49 @@ import CardAddmini from "../components/cardAddmini";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useFormik } from "formik";
+import { addNotificationSchema } from "@/types/validationSchemas";
 
 export default function Example() {
-  const [type, settype] = useState("");
-  const [content, setContent] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const { data: session } = useSession();
   const Router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const notificationData = {
-      type,
-      content,
-    };
+  const formik = useFormik({
+    initialValues: {
+      type: "",
+      content: "",
+    },
+    validationSchema: addNotificationSchema,
+    onSubmit: async (values) => {
+      setErrorMessage("");
+      setLoading(true);
 
-    try {
-      const response = await fetch("/api/notifications", {
-        method: "POST",
-        headers: {
-          authorization: `Bearer ${session?.user?.accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(notificationData),
-      });
+      try {
+        const response = await fetch("/api/notifications", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${session?.user?.accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        });
 
-      if (response.ok) {
-        console.log("Notification added successfully");
-        Router.push("/profile");
-      } else {
-        console.error("Failed to add notification");
+        if (response.ok) {
+          console.log("Notification added successfully");
+          Router.push("/profile");
+        } else {
+          setErrorMessage("Failed to add notification");
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        setErrorMessage("An error occurred while adding the notification");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
+    },
+  });
 
   return (
     <div className="bg-white px-6 py-24 sm:py-32 lg:px-8 h-full">
@@ -64,21 +73,27 @@ export default function Example() {
           summarise content as much as u can
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="mx-auto mt-16 max-w-xl sm:mt-20">
+      <form onSubmit={formik.handleSubmit} className="mx-auto mt-16 max-w-xl sm:mt-20">
+        {errorMessage && (
+          <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
         <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label
-              htmlFor="company"
+              htmlFor="type"
               className="block text-sm font-semibold text-gray-900"
             >
               Notification Type
             </label>
             <div className="mt-2.5">
               <select
-                value={type}
-                onChange={(e) => settype(e.target.value)}
-                id="company"
-                name="company"
+                value={formik.values.type}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                id="type"
+                name="type"
                 className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-indigo-600"
               >
                 <option value="" disabled>
@@ -88,23 +103,32 @@ export default function Example() {
                 <option value="feature">Feature</option>
                 <option value="reminder">Reminder</option>
               </select>
+              {formik.touched.type && formik.errors.type && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.type}</p>
+              )}
             </div>
           </div>
           <div className="sm:col-span-2">
             <label
-              htmlFor="email"
+              htmlFor="content"
               className="block text-sm font-semibold text-gray-900"
             >
               Content
             </label>
             <div className="mt-2.5">
               <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                id="email"
-                autoComplete="email"
+                value={formik.values.content}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                id="content"
+                name="content"
+                rows={4}
                 className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 outline-gray-300 placeholder:text-gray-400 focus:outline-indigo-600"
+                placeholder="Enter notification content..."
               />
+              {formik.touched.content && formik.errors.content && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.content}</p>
+              )}
             </div>
           </div>
         </div>
@@ -112,9 +136,10 @@ export default function Example() {
         <div className="mt-20">
           <button
             type="submit"
-            className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-indigo-600"
+            disabled={loading || formik.isSubmitting}
+            className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Let's GO
+            {loading || formik.isSubmitting ? "Adding..." : "Let's GO"}
           </button>
         </div>
       </form>

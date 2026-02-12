@@ -9,25 +9,14 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFormik } from "formik";
-import { object, string, boolean, array } from "yup";
+import { cardAddSchema } from "@/types/validationSchemas";
 import {
   DocumentTextIcon,
   CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { CardAddPageProps } from "@/types";
 
-const validationSchema = object({
-  title: string()
-    .required("Card title is required")
-    .min(3, "Title must be at least 3 characters"),
-  targetLanguage: string()
-    .required("Target language is required")
-    .min(2, "Language must be at least 2 characters"),
-  description: string()
-    .required("Description is required")
-    .min(10, "Description must be at least 10 characters"),
-  agreed: boolean().oneOf([true], "You must agree to the policies"),
-});
+const validationSchema = cardAddSchema;
 
 export default function Example({ Current }: CardAddPageProps) {
   const [i, seti] = useState(1);

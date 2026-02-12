@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useFormik } from "formik";
+import { verifyEmailSchema } from "@/types/validationSchemas";
 import type {
   ApiResponseDTO,
   VerifyEmailResponseDTO,
@@ -14,40 +16,44 @@ export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get("email") || "";
 
-  const [email, setEmail] = useState(initialEmail);
-  const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleVerify = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setMessage("");
-    setErrorMessage("");
-    setLoading(true);
+  const formik = useFormik({
+    initialValues: {
+      email: initialEmail,
+      otp: "",
+    },
+    validationSchema: verifyEmailSchema,
+    onSubmit: async (values) => {
+      setMessage("");
+      setErrorMessage("");
+      setLoading(true);
 
-    try {
-      const res = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
-      });
+      try {
+        const res = await fetch("/api/auth/verify-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: values.email, otp: values.otp }),
+        });
 
-      const data: ApiResponseDTO<VerifyEmailResponseDTO> = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to verify email");
+        const data: ApiResponseDTO<VerifyEmailResponseDTO> = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || "Failed to verify email");
+        }
+
+        setMessage(data.data?.message || "Email verified successfully");
+        router.push("/login");
+      } catch (error: unknown) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Verification failed"
+        );
+      } finally {
+        setLoading(false);
       }
-
-      setMessage(data.data?.message || "Email verified successfully");
-      router.push("/login");
-    } catch (error: unknown) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Verification failed"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   const handleResend = async () => {
     setMessage("");
@@ -58,7 +64,7 @@ export default function VerifyEmailPage() {
       const res = await fetch("/api/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: formik.values.email }),
       });
 
       const data: ApiResponseDTO<ResendOtpResponseDTO> = await res.json();
@@ -90,7 +96,7 @@ export default function VerifyEmailPage() {
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form onSubmit={handleVerify} className="space-y-6">
+        <form onSubmit={formik.handleSubmit} className="space-y-6">
           {message && (
             <div className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
               {message}
@@ -111,10 +117,14 @@ export default function VerifyEmailPage() {
                 id="email"
                 type="email"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
+              {formik.touched.email && formik.errors.email && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+              )}
             </div>
           </div>
 
@@ -127,19 +137,23 @@ export default function VerifyEmailPage() {
                 id="otp"
                 type="text"
                 required
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                value={formik.values.otp}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
                 className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               />
+              {formik.touched.otp && formik.errors.otp && (
+                <p className="mt-1 text-sm text-red-600">{formik.errors.otp}</p>
+              )}
             </div>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            disabled={loading || formik.isSubmitting}
+            className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Verifying..." : "Verify"}
+            {loading || formik.isSubmitting ? "Verifying..." : "Verify"}
           </button>
         </form>
 

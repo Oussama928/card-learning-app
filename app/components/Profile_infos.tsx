@@ -3,6 +3,7 @@
 import React from "react";
 import { PaperClipIcon } from "@heroicons/react/20/solid";
 import { useSession, updateSession } from "next-auth/react";
+import { profileUpdateSchema } from "@/types/validationSchemas";
 
 import EditIcon from "@mui/icons-material/Edit";
 import InfoIcon from "@mui/icons-material/Info";
@@ -44,6 +45,35 @@ export default function Profile({ id }) {
   }, [session]);
 
   const handleSubmit = async (field) => {
+    // Basic validation before submitting
+    if (!edited.trim()) {
+      alert("Field cannot be empty");
+      return;
+    }
+
+    if (field === "username") {
+      try {
+        await profileUpdateSchema.validateAt("username", { username: edited });
+      } catch (error: any) {
+        alert(error.message);
+        return;
+      }
+    } else if (field === "country") {
+      try {
+        await profileUpdateSchema.validateAt("country", { country: edited });
+      } catch (error: any) {
+        alert(error.message);
+        return;
+      }
+    } else if (field === "bio") {
+      try {
+        await profileUpdateSchema.validateAt("bio", { bio: edited });
+      } catch (error: any) {
+        alert(error.message);
+        return;
+      }
+    }
+
     const updateField = async (field) => {
       try {
         const res = await fetch(`/api/updateInfos/profile`, {

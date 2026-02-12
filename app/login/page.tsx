@@ -3,41 +3,45 @@ import React from "react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
+import { useFormik } from "formik";
+import { loginSchema } from "@/types/validationSchemas";
 
 export default function Example() {
   const [isHovered, setIsHovered] = React.useState([false,false]);
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
   const { data: session } = useSession();
 
-  if (session) {
-    redirect("/home");
-  }
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validationSchema: loginSchema,
+    onSubmit: async (values) => {
+      setErrorMessage("");
+      const result = await signIn("credentials", {
+        email: values.email,
+        password: values.password,
+        redirect: false,
+      });
+      if (result?.error) {
+        if (result.error === "EMAIL_NOT_VERIFIED") {
+          setErrorMessage("Email not verified. Please verify your email first.");
+        } else {
+          setErrorMessage("Invalid email or password.");
+        }
+      } else {
+        console.log(result);
+        alert("Login successful ?");
+      }
+    },
+  });
+
   const handleSignInGithub = async () => {
     await signIn("github", { callbackUrl: "/callback" });
   };
   const handleSignInGoogle = async () => {
     await signIn("google", { callbackUrl: "/callback" });
-  };
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setErrorMessage("");
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    if (result?.error) {
-      if (result.error === "EMAIL_NOT_VERIFIED") {
-        setErrorMessage("Email not verified. Please verify your email first.");
-      } else {
-        setErrorMessage("Invalid email or password.");
-      }
-    } else {
-      console.log(result);
-      alert("Login successful ?");
-    }
   };
 
   return (
@@ -55,7 +59,7 @@ export default function Example() {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form onSubmit={handleSignIn} className="space-y-6">
+          <form onSubmit={formik.handleSubmit} className="space-y-6">
             {errorMessage && (
               <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
                 {errorMessage}
@@ -73,12 +77,16 @@ export default function Example() {
                   id="email"
                   name="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   required
                   autoComplete="email"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
+                {formik.touched.email && formik.errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                )}
               </div>
             </div>
 
@@ -101,8 +109,9 @@ export default function Example() {
               </div>
               <div className="mt-2">
                 <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                   id="password"
                   name="password"
                   type="password"
@@ -110,15 +119,19 @@ export default function Example() {
                   autoComplete="current-password"
                   className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
+                {formik.touched.password && formik.errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+                )}
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled={formik.isSubmitting}
+                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign in
+                {formik.isSubmitting ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
