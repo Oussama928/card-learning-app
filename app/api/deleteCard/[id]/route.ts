@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { authenticateRequest } from "../../authenticateRequest";
+import { cache } from "@/lib/cache";
+import { handleApiError } from "@/lib/apiHandler";
+
+type CardOwnership = {
+  id: number;
+  role: "admin" | "user" | string;
+};
 
 export async function DELETE(
   request: NextRequest,
@@ -12,10 +19,15 @@ export async function DELETE(
     const userId = await authenticateRequest(request);
 
     const cardResult = await db.queryAsync(
-      `SELECT id FROM cards WHERE id = $1 AND user_id = $2`,
+      `
+      SELECT cards.id, users.role
+      FROM cards
+      INNER JOIN users ON users.id = cards.user_id
+      WHERE cards.id = $1 AND cards.user_id = $2
+      `,
       [id, userId]
     );
-    const card = cardResult.rows[0];
+    const card = cardResult.rows[0] as CardOwnership | undefined;
 
     if (!card) {
       return NextResponse.json(
@@ -35,19 +47,16 @@ export async function DELETE(
       );
     }
 
+    const cardsNamespace = card.role === "admin" ? "cards:official" : "cards:community";
+    await cache.bumpNamespaceVersion(cardsNamespace);
+    await cache.bumpNamespaceVersion("search");
+
     return NextResponse.json({
       success: true,
       message: "Card and all associated words deleted successfully",
       deletedCardId: id,
     });
   } catch (error: any) {
-    console.error("Card deletion error:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error.message,
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

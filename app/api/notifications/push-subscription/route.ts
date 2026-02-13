@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { authenticateRequest } from "@/app/api/authenticateRequest";
 import type { PushSubscriptionPayload } from "@/lib/pushNotifications";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(request: NextRequest) {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:push:subscribe",
+      points: 10,
+      duration: 60,
+      userId,
+    });
     const subscription = (await request.json()) as PushSubscriptionPayload;
 
     if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
@@ -22,16 +31,20 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: "Failed to register push subscription", details: error.message },
-      { status: error?.status || 500 }
-    );
+    return handleApiError(error, request);
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:push:unsubscribe",
+      points: 10,
+      duration: 60,
+      userId,
+    });
     const { endpoint } = (await request.json()) as { endpoint: string };
 
     if (!endpoint) {
@@ -45,9 +58,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: "Failed to remove push subscription", details: error.message },
-      { status: error?.status || 500 }
-    );
+    return handleApiError(error, request);
   }
 }

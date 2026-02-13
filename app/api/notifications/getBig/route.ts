@@ -2,12 +2,21 @@ import db from "../../../../lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../authenticateRequest";
 import type { ApiErrorResponseDTO, GetNotificationsResponseDTO, NotificationItemDTO } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function GET(
   request: NextRequest
 ): Promise<NextResponse<GetNotificationsResponseDTO | ApiErrorResponseDTO>> {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:notifications:getBig",
+      points: 60,
+      duration: 60,
+      userId,
+    });
 
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -45,8 +54,6 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    console.error("Database error:", error);
-
     if (error.status === 401) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
@@ -54,9 +61,6 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(
-      { success: false, error: "Failed to get notifications" },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

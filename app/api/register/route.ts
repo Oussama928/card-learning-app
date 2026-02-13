@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
 import type { RegisterRequest } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:auth:register",
+      points: 10,
+      duration: 60,
+    });
+
     const { email, username }: RegisterRequest = await request.json();
     console.log("Data:", email, username);
 
@@ -29,10 +38,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       result,
     });
   } catch (error: any) {
-    console.error("Error in POST request:", error);
-    return NextResponse.json(
-      { message: "Error registering user", error: error.message },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

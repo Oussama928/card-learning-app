@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../../lib/db";
+import { cache, cacheKeys } from "@/lib/cache";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function GET(
   request: NextRequest,
@@ -8,6 +11,21 @@ export async function GET(
   const { id } = await params;
 
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:user-stats",
+      points: 60,
+      duration: 60,
+      userId: id,
+    });
+
+    const cached = await cache.getJSON<{ message: string; stats: any }>(
+      cacheKeys.userStats(id)
+    );
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     // Fetch user basic info
     const userResult = await db.queryAsync(
       `SELECT id, username, email, image, country FROM users WHERE id = $1`,
@@ -38,9 +56,12 @@ export async function GET(
       lastLoginDate: statsRow.last_login_date || null,
     };
 
-    return NextResponse.json({ message: "Stats retrieved successfully", stats });
+    const response = { message: "Stats retrieved successfully", stats };
+
+    await cache.setJSON(cacheKeys.userStats(id), response, 60);
+
+    return NextResponse.json(response);
   } catch (error: any) {
-    console.error("getStats error:", error);
-    return NextResponse.json({ success: false, error: "Failed to fetch stats", details: error.message }, { status: 500 });
+    return handleApiError(error, request);
   }
 }

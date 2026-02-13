@@ -6,11 +6,20 @@ import type {
   ForgotPasswordRequestDTO,
   ForgotPasswordResponseDTO,
 } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ApiResponseDTO<ForgotPasswordResponseDTO>>> {
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:auth:forgot-password",
+      points: 5,
+      duration: 60,
+    });
+
     const { email }: ForgotPasswordRequestDTO = await request.json();
 
     if (!email) {
@@ -54,13 +63,6 @@ export async function POST(
       data: { message: "If the email exists, a reset link has been sent" },
     });
   } catch (error: unknown) {
-    console.error("Forgot password error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

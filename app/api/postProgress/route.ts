@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
 import type { UpdateProgressRequest } from "@/types";
+import { cache, cacheKeys } from "@/lib/cache";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -20,20 +22,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       [userId, word_id, is_learned]
     );
 
+    await cache.del(cacheKeys.userStats(userId));
+    await cache.del(cacheKeys.globalStats);
+
     return NextResponse.json({
       success: true,
       message: `Word marked as ${is_learned ? "learned" : "unlearned"}`,
     });
   } catch (error: any) {
-    console.error("Progress update error:", error);
-    return NextResponse.json(
-      {
-        error: "Progress update failed",
-        details: error.message.includes("foreign key constraint")
-          ? "Invalid user_id or word_id"
-          : "Database error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

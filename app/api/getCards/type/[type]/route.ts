@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../../../lib/db";
 import { authenticateRequest } from "../../../authenticateRequest";
 import type { ApiErrorResponseDTO, CardWithOwnerDTO, GetCardsResponse } from "@/types";
+import { cache, cacheKeys } from "@/lib/cache";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function GET(
   request: NextRequest,
@@ -10,12 +13,26 @@ export async function GET(
   try {
     const { type } = await params;
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:cards",
+      points: 120,
+      duration: 60,
+      userId,
+    });
 
     const url = new URL(request.url);
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
     const requestedLimit = parseInt(url.searchParams.get("limit") || "20", 10);
     const limit = Math.min(Math.max(requestedLimit, 1), 50);
     const offset = (page - 1) * limit;
+
+    const cardsVersion = await cache.getNamespaceVersion(`cards:${type}`);
+    const cacheKey = cacheKeys.cardsByType(type, page, limit, cardsVersion);
+    const cached = await cache.getJSON<GetCardsResponse>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
     let getCardsQuery = "";
     let countQuery = "";
@@ -75,7 +92,7 @@ export async function GET(
     const cardsResult = await db.queryAsync(getCardsQuery, [limit, offset]);
     const cards: CardWithOwnerDTO[] = cardsResult.rows;
 
-    return NextResponse.json({
+    const response: GetCardsResponse = {
       cards,
       pagination: {
         page,
@@ -83,10 +100,12 @@ export async function GET(
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
-  } catch (error: any) {
-    console.error("Error fetching cards:", error);
+    };
 
+    await cache.setJSON(cacheKey, response, 30);
+
+    return NextResponse.json(response);
+  } catch (error: any) {
     if (error.status === 401) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
@@ -94,9 +113,6 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch cards" },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

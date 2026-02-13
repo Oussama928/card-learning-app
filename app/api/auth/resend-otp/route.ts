@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { generateOtp, getOtpExpiry, hashOtp } from "@/lib/authTokens";
 import type { ApiResponseDTO, ResendOtpRequestDTO, ResendOtpResponseDTO } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ApiResponseDTO<ResendOtpResponseDTO>>> {
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:auth:resend-otp",
+      points: 5,
+      duration: 60,
+    });
+
     const { email }: ResendOtpRequestDTO = await request.json();
 
     if (!email) {
@@ -56,13 +65,6 @@ export async function POST(
       data: { message: "If the email exists, a new OTP has been sent" },
     });
   } catch (error: unknown) {
-    console.error("Resend OTP error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

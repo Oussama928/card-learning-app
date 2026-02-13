@@ -1,6 +1,8 @@
 import db from "../../../../lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "../../authenticateRequest";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 interface NotificationWithReadStatus {
   id: string;
@@ -13,6 +15,13 @@ interface NotificationWithReadStatus {
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:notifications:getSmall",
+      points: 120,
+      duration: 60,
+      userId,
+    });
 
     const notifsResult = await db.queryAsync(
       "SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 4",
@@ -32,10 +41,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json({ notifs, new: isThereNew });
   } catch (error: any) {
-    console.error("Database error:", error);
-    return NextResponse.json(
-      { error: "Failed to get notifs" },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

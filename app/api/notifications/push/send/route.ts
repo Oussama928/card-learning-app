@@ -2,10 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { authenticateRequest } from "@/app/api/authenticateRequest";
 import { sendPushNotification } from "@/lib/pushNotifications";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(request: NextRequest) {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:push:send",
+      points: 10,
+      duration: 60,
+      userId,
+    });
 
     const userRes = await db.queryAsync("SELECT role FROM users WHERE id = $1", [userId]);
     if (userRes.rows[0]?.role !== "admin") {
@@ -51,9 +60,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, sent: subsResult.rows.length });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: "Failed to send push notifications", details: error.message },
-      { status: error?.status || 500 }
-    );
+    return handleApiError(error, request);
   }
 }

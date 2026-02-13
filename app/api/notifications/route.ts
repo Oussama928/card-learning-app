@@ -4,10 +4,19 @@ import { authenticateRequest } from "../authenticateRequest";
 import type { CreateNotificationRequestDTO, NotificationItemDTO } from "@/types";
 import { emitNotificationToAll } from "@/lib/socketServer";
 import { sendPushNotification } from "@/lib/pushNotifications";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:notifications:send",
+      points: 10,
+      duration: 60,
+      userId,
+    });
     const { type, content }: CreateNotificationRequestDTO = await request.json();
 
     const checkUserResult = await db.queryAsync(
@@ -61,17 +70,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       message: "Notif added successfully",
     });
   } catch (error: any) {
-    console.error("Error in POST request:", error);
-    return NextResponse.json(
-      { message: "Error adding notif", error: error.message },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }
 
 export async function PATCH(request: NextRequest): Promise<NextResponse> {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:notifications:update",
+      points: 60,
+      duration: 60,
+      userId,
+    });
     const { notifs }: { notifs: NotificationItemDTO[] } = await request.json();
 
     const updateNotifQuery = `
@@ -88,10 +100,6 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       message: "sucessfully set the notifs to read",
     });
   } catch (error: any) {
-    console.error("Error in PATCH request:", error);
-    return NextResponse.json(
-      { message: "Error updating notifs", error: error.message },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

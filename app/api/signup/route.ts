@@ -14,11 +14,20 @@ import type {
   ApiResponseDTO,
   SignupResponseDTO,
 } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ApiResponseDTO<SignupResponseDTO>>> {
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:auth:signup",
+      points: 5,
+      duration: 60,
+    });
+
     const formData = await request.formData();
 
     const email = (formData.get("email") as string)?.trim().toLowerCase();
@@ -138,13 +147,6 @@ export async function POST(
       { status: 201 }
     );
   } catch (error: unknown) {
-    console.error("Signup error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

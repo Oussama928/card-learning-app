@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
 import type { AddCardRequest, AddCardResponse } from "@/types";
+import { cache } from "@/lib/cache";
+import { handleApiError } from "@/lib/apiHandler";
 
 interface WordPair extends Array<string | number | boolean> {
   0: string;
@@ -117,6 +119,16 @@ const validateWordsArray = (words: any[]): WordPair[] => {
   }
 
   return validatedWords;
+};
+
+const getCardsNamespaceForUser = async (
+  userId: string | number
+): Promise<"cards:community" | "cards:official"> => {
+  const roleResult = await db.queryAsync(`SELECT role FROM users WHERE id = $1`, [
+    userId,
+  ]);
+  const role = roleResult.rows[0]?.role;
+  return role === "admin" ? "cards:official" : "cards:community";
 };
 
 export async function POST(
@@ -254,6 +266,10 @@ export async function POST(
         }
       }
 
+      const cardsNamespace = await getCardsNamespaceForUser(userId);
+      await cache.bumpNamespaceVersion(cardsNamespace);
+      await cache.bumpNamespaceVersion("search");
+
       return NextResponse.json({
         success: true,
         message: "Card edited successfully",
@@ -313,6 +329,10 @@ export async function POST(
         await db.queryAsync(insertWordQuery, wordValues);
       }
 
+      const cardsNamespace = await getCardsNamespaceForUser(userId);
+      await cache.bumpNamespaceVersion(cardsNamespace);
+      await cache.bumpNamespaceVersion("search");
+
       return NextResponse.json({
         success: true,
         message: "Card added successfully",
@@ -320,8 +340,6 @@ export async function POST(
       });
     }
   } catch (error: any) {
-    console.error("Error in POST request:", error);
-
     if (
       error.message.includes("validation") ||
       error.message.includes("sanitization")
@@ -356,13 +374,6 @@ export async function POST(
       );
     }
 
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Error processing card data",
-        error: error.message,
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

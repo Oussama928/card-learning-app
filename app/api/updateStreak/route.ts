@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
 import type { ApiErrorResponseDTO, UpdateStreakResponseDTO } from "@/types";
+import { cache, cacheKeys } from "@/lib/cache";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function PATCH(
   request: NextRequest
@@ -81,15 +83,14 @@ export async function PATCH(
       [userId, newStreak, todayStr]
     );
 
+    await cache.del(cacheKeys.userStats(userId));
+    await cache.del(cacheKeys.globalStats);
+
     return NextResponse.json({
       success: true,
       streak: newStreak,
     });
   } catch (error: any) {
-    console.error("Streak update error:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to update daily streak" },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

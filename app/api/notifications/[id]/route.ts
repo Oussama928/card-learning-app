@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { authenticateRequest } from "../../authenticateRequest";
 import type { ApiErrorResponseDTO, DeleteNotificationResponseDTO } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function DELETE(
   request: NextRequest,
@@ -11,6 +13,13 @@ export async function DELETE(
 
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:notifications:delete",
+      points: 30,
+      duration: 60,
+      userId,
+    });
     const delQuery = `DELETE FROM notifications WHERE id = $1 AND user_id = $2`;
     const result = await db.queryAsync(delQuery, [id, userId]);
 
@@ -26,14 +35,6 @@ export async function DELETE(
       message: "notif deleted successfully",
     });
   } catch (error: any) {
-    console.error("notif deletion error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Internal server error",
-        details: error.message,
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

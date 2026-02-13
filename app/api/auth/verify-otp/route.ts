@@ -2,11 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { verifyOtp } from "@/lib/authTokens";
 import type { ApiResponseDTO, VerifyEmailRequestDTO, VerifyEmailResponseDTO } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ApiResponseDTO<VerifyEmailResponseDTO>>> {
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:auth:verify-otp",
+      points: 10,
+      duration: 60,
+    });
+
     const { email, otp }: VerifyEmailRequestDTO = await request.json();
 
     if (!email || !otp) {
@@ -69,13 +78,6 @@ export async function POST(
       data: { message: "Email verified successfully" },
     });
   } catch (error: unknown) {
-    console.error("Verify OTP error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

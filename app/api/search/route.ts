@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
 import type { CardWithOwnerDTO, SearchResponseDTO } from "@/types";
+import { cache, cacheKeys } from "@/lib/cache";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const userId = await authenticateRequest(request);
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:search",
+      points: 60,
+      duration: 60,
+      userId,
+    });
 
     const { searchQuery, page } = Object.fromEntries(
       new URL(request.url).searchParams
@@ -28,6 +38,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }
     const limit = 10;
     const offset = (pageNumber - 1) * limit;
+
+    const searchVersion = await cache.getNamespaceVersion("search");
+    const cacheKey = cacheKeys.search(searchQuery, pageNumber, limit, searchVersion);
+    const cached = await cache.getJSON<SearchResponseDTO>(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached);
+    }
 
     const countQuery = `
       SELECT COUNT(*) as total
@@ -95,7 +112,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       card.owner = ownersMap[card.user_id];
     }
 
-    return NextResponse.json({
+    const response: SearchResponseDTO = {
       results: results.map((card) => ({
         ...card,
         type: "cards",
@@ -106,12 +123,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         total,
         totalPages: Math.ceil(total / limit),
       },
-    } as SearchResponseDTO);
+    };
+
+    await cache.setJSON(cacheKey, response, 30);
+
+    return NextResponse.json(response);
   } catch (error: any) {
-    console.error("Error in GET request:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch cards", details: error.message },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }

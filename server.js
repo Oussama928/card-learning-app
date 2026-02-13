@@ -4,6 +4,8 @@ const next = require('next');
 const { initSocketServer } = require('./lib/socketServer');
 const db = require('./lib/db');
 const { env } = require('./lib/env');
+const logger = require('./lib/logger');
+const { initSentry, captureException } = require('./lib/sentry');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = env.host;
@@ -12,6 +14,8 @@ const port = env.port;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 let server;
+
+initSentry();
 
 const shutdown = async (signal) => {
   console.log(`Received ${signal}. Shutting down gracefully...`);
@@ -32,21 +36,33 @@ const shutdown = async (signal) => {
   }
 };
 
-process.on('SIGINT', () => {
-  void shutdown('SIGINT');
-});
+// process.on('SIGINT', () => {
+//   void shutdown('SIGINT');
+// });
 
-process.on('SIGTERM', () => {
-  void shutdown('SIGTERM');
-});
+// process.on('SIGTERM', () => {
+//   void shutdown('SIGTERM');
+// });
 
 app.prepare().then(() => {
   server = createServer(async (req, res) => {
+    const start = Date.now();
+    res.on('finish', () => {
+      logger.info('http_request', {
+        method: req.method,
+        url: req.url,
+        status: res.statusCode,
+        duration_ms: Date.now() - start,
+        ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      });
+    });
+
     try {
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
     } catch (err) {
-      console.error('Error handling request:', err);
+      logger.error('request_error', { message: err?.message, stack: err?.stack });
+      captureException(err, { url: req.url, method: req.method });
       res.statusCode = 500;
       res.end('Internal Server Error');
     }
@@ -56,7 +72,7 @@ app.prepare().then(() => {
   initSocketServer(server);
 
   server.listen(port, () => {
-    console.log(`> Ready on http://${hostname}:${port}`);
-    console.log(`> WebSocket server running at ws://${hostname}:${port}/api/socket`);
+    logger.info('server_ready', { url: `http://${hostname}:${port}` });
+    logger.info('socket_ready', { url: `ws://${hostname}:${port}/api/socket` });
   });
 });

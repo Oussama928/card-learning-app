@@ -7,11 +7,20 @@ import type {
   ResetPasswordRequestDTO,
   ResetPasswordResponseDTO,
 } from "@/types";
+import { rateLimitOrThrow } from "@/lib/rateLimit";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<ApiResponseDTO<ResetPasswordResponseDTO>>> {
   try {
+    await rateLimitOrThrow({
+      request,
+      keyPrefix: "rl:auth:reset-password",
+      points: 5,
+      duration: 60,
+    });
+
     const { token, password }: ResetPasswordRequestDTO = await request.json();
 
     if (!token || !password) {
@@ -56,13 +65,6 @@ export async function POST(
       data: { message: "Password reset successfully" },
     });
   } catch (error: unknown) {
-    console.error("Reset password error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 }
-    );
+    return handleApiError(error, request);
   }
 }
