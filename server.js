@@ -1,5 +1,7 @@
 const { createServer } = require('http');
 const { parse } = require('url');
+const helmet = require('helmet');
+const cors = require('cors');
 const next = require('next');
 const { initSocketServer } = require('./lib/socketServer');
 const db = require('./lib/db');
@@ -14,6 +16,28 @@ const port = env.port;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 let server;
+
+const corsMiddleware = cors({
+  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
+});
+
+const helmetMiddleware = helmet({
+  contentSecurityPolicy: false,
+});
+
+const runMiddleware = (middleware, req, res) => {
+  return new Promise((resolve, reject) => {
+    middleware(req, res, (result) => {
+      if (result instanceof Error) {
+        reject(result);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
 
 initSentry();
 
@@ -58,6 +82,9 @@ app.prepare().then(() => {
     });
 
     try {
+      await runMiddleware(corsMiddleware, req, res);
+      await runMiddleware(helmetMiddleware, req, res);
+
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
     } catch (err) {

@@ -1,10 +1,6 @@
 import { hash } from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
-import fs from "fs/promises";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
-import sharp from "sharp";
 import {
   generateOtp,
   getOtpExpiry,
@@ -16,6 +12,8 @@ import type {
 } from "@/types";
 import { rateLimitOrThrow } from "@/lib/rateLimit";
 import { handleApiError } from "@/lib/apiHandler";
+import { saveUpload } from "@/lib/uploads/service";
+import { sendTemplatedEmail } from "@/lib/email/service";
 
 export async function POST(
   request: NextRequest
@@ -71,18 +69,8 @@ export async function POST(
     let photoUrl: string | null = null;
     if (photoFile instanceof Blob) {
       try {
-        const buffer = Buffer.from(await photoFile.arrayBuffer());
-        const processedImage = await sharp(buffer)
-          .resize(500, 500)
-          .webp()
-          .toBuffer();
-
-        const photoName = `${uuidv4()}.webp`;
-        const uploadDir = path.join(process.cwd(), "public/uploads");
-        await fs.mkdir(uploadDir, { recursive: true });
-        const photoPath = path.join(uploadDir, photoName);
-        await fs.writeFile(photoPath, processedImage);
-        photoUrl = `/uploads/${photoName}`;
+        const uploaded = await saveUpload(photoFile);
+        photoUrl = uploaded.url;
       } catch (error: unknown) {
         console.error("Error processing image:", error);
         return NextResponse.json(

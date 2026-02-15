@@ -44,7 +44,7 @@ export const verifyEmailSchema = yup.object().shape({
 export const forgotPasswordSchema = yup.object().shape({
   email: yup
     .string()
-    .email("Invalid email address")
+    .matches(/^[^@\s]+@[^@\s]+\.[^@\s]+$/, "Invalid email address")
     .required("Email is required"),
 });
 

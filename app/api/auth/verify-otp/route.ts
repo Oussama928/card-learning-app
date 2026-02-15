@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { verifyOtp } from "@/lib/authTokens";
-import type { ApiResponseDTO, VerifyEmailRequestDTO, VerifyEmailResponseDTO } from "@/types";
+import type { ApiResponseDTO, VerifyEmailResponseDTO } from "@/types";
 import { rateLimitOrThrow } from "@/lib/rateLimit";
-import { handleApiError } from "@/lib/apiHandler";
+import { handleApiError, parseRequestBody } from "@/lib/apiHandler";
+import { verifyOtpSchema } from "@/lib/validation/schemas";
 
 export async function POST(
   request: NextRequest
@@ -16,14 +17,7 @@ export async function POST(
       duration: 60,
     });
 
-    const { email, otp }: VerifyEmailRequestDTO = await request.json();
-
-    if (!email || !otp) {
-      return NextResponse.json(
-        { success: false, error: "Email and OTP are required" },
-        { status: 400 }
-      );
-    }
+    const { email, otp } = await parseRequestBody(request, verifyOtpSchema);
 
     const userResult = await db.queryAsync(
       `SELECT id, email_verified, otp_code_hash, otp_expires_at FROM users WHERE email = $1`,

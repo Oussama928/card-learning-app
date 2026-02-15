@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 import { generateOtp, getOtpExpiry, hashOtp } from "@/lib/authTokens";
-import type { ApiResponseDTO, ResendOtpRequestDTO, ResendOtpResponseDTO } from "@/types";
+import type { ApiResponseDTO, ResendOtpResponseDTO } from "@/types";
 import { rateLimitOrThrow } from "@/lib/rateLimit";
-import { handleApiError } from "@/lib/apiHandler";
+import { handleApiError, parseRequestBody } from "@/lib/apiHandler";
+import { resendOtpSchema } from "@/lib/validation/schemas";
+import { sendTemplatedEmail } from "@/lib/email/service";
 
 export async function POST(
   request: NextRequest
@@ -16,14 +18,7 @@ export async function POST(
       duration: 60,
     });
 
-    const { email }: ResendOtpRequestDTO = await request.json();
-
-    if (!email) {
-      return NextResponse.json(
-        { success: false, error: "Email is required" },
-        { status: 400 }
-      );
-    }
+    const { email } = await parseRequestBody(request, resendOtpSchema);
 
     const normalizedEmail = email.toLowerCase();
 
@@ -56,9 +51,12 @@ export async function POST(
       [otpHash, otpExpiresAt, new Date(), user.id]
     );
 
-    if (process.env.NODE_ENV === "development") {
-      console.log(`[OTP] Resent verification code for ${normalizedEmail}: ${otp}`);
-    }
+    console.log("About to send email for OTP:", otp, "to", normalizedEmail);
+    await sendTemplatedEmail({
+      to: normalizedEmail,
+      template: "verify-email",
+      data: { otp },
+    });
 
     return NextResponse.json({
       success: true,

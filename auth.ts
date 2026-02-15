@@ -83,7 +83,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
       
         } catch (error) {
-          console.error("🔥 Authorization error:", error);
+          console.error("Authorization error:", error);
           return null;
         }
       }

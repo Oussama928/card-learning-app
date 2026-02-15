@@ -17,6 +17,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  webpack: (config) => {
+    config.ignoreWarnings = [
+      { module: /@opentelemetry\/instrumentation/ },
+      { module: /bullmq/ },
+      { module: /pg-native/ },
+    ];
+    return config;
+  },
 };
 
 export default nextConfig;

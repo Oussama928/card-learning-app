@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
-import type { CreateNotificationRequestDTO, NotificationItemDTO } from "@/types";
+import type { NotificationItemDTO } from "@/types";
 import { emitNotificationToAll } from "@/lib/socketServer";
-import { sendPushNotification } from "@/lib/pushNotifications";
 import { rateLimitOrThrow } from "@/lib/rateLimit";
-import { handleApiError } from "@/lib/apiHandler";
+import { handleApiError, parseRequestBody } from "@/lib/apiHandler";
+import { createNotificationSchema } from "@/lib/validation/schemas";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -17,7 +17,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       duration: 60,
       userId,
     });
-    const { type, content }: CreateNotificationRequestDTO = await request.json();
+    const { type, content } = await parseRequestBody(
+      request,
+      createNotificationSchema
+    );
 
     const checkUserResult = await db.queryAsync(
       `SELECT role FROM users WHERE id = $1`,
@@ -46,25 +49,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       created_at: new Date().toISOString(),
     });
 
-    const subscriptionsResult = await db.queryAsync(
-      "SELECT endpoint, p256dh, auth FROM push_subscriptions"
-    );
-
-    await Promise.allSettled(
-      subscriptionsResult.rows.map((sub: any) =>
-        sendPushNotification(
-          {
-            endpoint: sub.endpoint,
-            keys: { p256dh: sub.p256dh, auth: sub.auth },
-          },
-          {
-            title: "Card Learning",
-            body: content,
-            url: "/notifications",
-          }
-        )
-      )
-    );
 
     return NextResponse.json({
       message: "Notif added successfully",

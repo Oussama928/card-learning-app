@@ -257,3 +257,16 @@ export interface AddCardResponseDTO {
   cardId?: string;
   message?: string;
 }
+
+export type EmailTemplateDTO =
+  | 'verify-email'
+  | 'password-reset'
+  | 'notification-digest'
+  | 'daily-reminder';
+
+
+export interface UploadResponseDTO {
+  url: string;
+  mimeType: string;
+  size: number;
+}

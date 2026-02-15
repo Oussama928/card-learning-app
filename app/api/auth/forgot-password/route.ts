@@ -3,11 +3,12 @@ import db from "@/lib/db";
 import { generateResetToken, hashResetToken } from "@/lib/authTokens";
 import type {
   ApiResponseDTO,
-  ForgotPasswordRequestDTO,
   ForgotPasswordResponseDTO,
 } from "@/types";
 import { rateLimitOrThrow } from "@/lib/rateLimit";
-import { handleApiError } from "@/lib/apiHandler";
+import { handleApiError, parseRequestBody, AppError } from "@/lib/apiHandler";
+import { forgotPasswordSchema } from "@/lib/validation/schemas";
+import { sendTemplatedEmail } from "@/lib/email/service";
 
 export async function POST(
   request: NextRequest
@@ -20,14 +21,16 @@ export async function POST(
       duration: 60,
     });
 
-    const { email }: ForgotPasswordRequestDTO = await request.json();
+    const body = await request.json();
+    console.log("Request body:", body);
 
-    if (!email) {
-      return NextResponse.json(
-        { success: false, error: "Email is required" },
-        { status: 400 }
-      );
+    const result = forgotPasswordSchema.safeParse(body);
+    if (!result.success) {
+      console.log("Validation error:", result.error.issues);
+      throw new AppError("Invalid request body", 400, result.error.issues[0]?.message);
     }
+
+    const { email } = result.data;
 
     const normalizedEmail = email.toLowerCase();
 
@@ -37,7 +40,7 @@ export async function POST(
     );
     const user = userResult.rows[0];
 
-    if (!user || !user.email_verified) {
+    if (!user) {
       return NextResponse.json({
         success: true,
         data: { message: "If the email exists, a reset link has been sent" },
@@ -52,11 +55,12 @@ export async function POST(
       [tokenHash, expiresAt, new Date(), user.id]
     );
 
-    if (process.env.NODE_ENV === "development") {
-      const appUrl = process.env.APP_URL || "http://localhost:3000";
-      const resetLink = `${appUrl}/reset-password/${token}`;
-      console.log(`[RESET] Password reset link for ${normalizedEmail}: ${resetLink}`);
-    }
+    await sendTemplatedEmail({
+      to: normalizedEmail,
+      template: "password-reset",
+      data: { token },
+    });
+    console.error("sendTemplatedEmail returned for:", normalizedEmail);
 
     return NextResponse.json({
       success: true,
