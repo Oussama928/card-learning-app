@@ -10,7 +10,7 @@ const Learning = () => {
   const [index, setIndex] = React.useState(0);
   const [side, setSide] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
-  const [terms, setTerms] = React.useState<string[][]>([]); // [word, translation, id, learned?]
+  const [terms, setTerms] = React.useState<Array<[string, string, string | number, string | boolean, string | null]>>([]); // [word, translation, id, learned?, image]
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [mode, setMode] = React.useState<"flashcard" | "fill" | "mc">(
@@ -38,7 +38,7 @@ const Learning = () => {
         setDescription(data.description);
         setTerms(data.cardData || []);
         // Append a "done" card for completion indication
-        setTerms((prev) => [...prev, ["done", "done", "done", "done"]]);
+        setTerms((prev) => [...prev, ["done", "done", "done", "done", null]]);
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
@@ -207,6 +207,13 @@ const Learning = () => {
         </div>
       ) : mode === "flashcard" ? (
         <>
+          {currentCard?.[4] ? (
+            <img
+              src={String(currentCard[4])}
+              alt="Expression visual"
+              className="w-full max-w-md h-48 object-cover rounded-xl border border-white/20 shadow-md"
+            />
+          ) : null}
           <div
             onClick={() => setSide((prev) => (prev === 0 ? 1 : 0))}
             className="cursor-pointer mt-6 text-center flex justify-center items-center text-3xl w-full max-w-2xl rounded-xl transition-transform hover:scale-105"
@@ -291,6 +298,13 @@ const Learning = () => {
       ) : mode === "fill" ? (
         <>
           <div className="mt-6 text-center flex flex-col items-center justify-center w-full max-w-2xl rounded-xl p-8 transition-transform hover:scale-105 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg border border-gray-600">
+            {currentCard?.[4] ? (
+              <img
+                src={String(currentCard[4])}
+                alt="Expression visual"
+                className="w-full max-w-md h-44 object-cover rounded-xl border border-white/20 shadow-md mb-5"
+              />
+            ) : null}
             <h2
               className="mb-4 text-2xl font-semibold text-gray-200"
               style={{ fontFamily: "'Montserrat', sans-serif" }}
@@ -338,6 +352,13 @@ const Learning = () => {
       ) : mode === "mc" ? (
         <>
           <div className="mt-6 text-center flex flex-col items-center justify-center w-full max-w-2xl rounded-xl p-8 transition-transform hover:scale-105 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg border border-gray-600">
+            {currentCard?.[4] ? (
+              <img
+                src={String(currentCard[4])}
+                alt="Expression visual"
+                className="w-full max-w-md h-44 object-cover rounded-xl border border-white/20 shadow-md mb-5"
+              />
+            ) : null}
             <h2
               className="mb-4 text-2xl font-semibold text-gray-200"
               style={{ fontFamily: "'Montserrat', sans-serif" }}

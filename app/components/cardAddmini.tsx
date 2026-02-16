@@ -2,7 +2,15 @@ import React from "react";
 import { FaTrash } from "react-icons/fa";
 import { CardAddminiProps } from "@/types";
 
-const CardAddmini: React.FC<CardAddminiProps> = ({ index, words, setWords, seti, setGarbageCollector }) => {
+const CardAddmini: React.FC<CardAddminiProps> = ({
+  index,
+  words,
+  setWords,
+  seti,
+  setGarbageCollector,
+  onUploadWordImage,
+  isUploading,
+}) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const updatedWords = [...words];
     if (type === "word") {
@@ -10,9 +18,10 @@ const CardAddmini: React.FC<CardAddminiProps> = ({ index, words, setWords, seti,
     } else if (type === "translatedWord") {
       updatedWords[index][1] = e.target.value;
     }
-    updatedWords[index][2] = "";
     setWords(updatedWords);
   };
+
+  const currentImage = words[index]?.[3] || "";
 
   return (
     <div className="flex gap-x-4  items-center justify-center">
@@ -56,7 +65,41 @@ const CardAddmini: React.FC<CardAddminiProps> = ({ index, words, setWords, seti,
           />
         </div>
       </div>
-      <div className="flex items-center justify-center pt-7">
+      <div className="flex flex-col items-center justify-center pt-7 gap-2">
+        <label className="text-xs text-gray-600" htmlFor={`image-upload-${index}`}>
+          Expression Image
+        </label>
+        <input
+          id={`image-upload-${index}`}
+          type="file"
+          accept="image/*"
+          disabled={isUploading}
+          className="text-xs w-36"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            await onUploadWordImage(index, file);
+            e.currentTarget.value = "";
+          }}
+        />
+        {currentImage ? (
+          <img
+            src={currentImage}
+            alt="expression"
+            className="h-12 w-12 rounded object-cover border border-gray-200"
+          />
+        ) : null}
+        <button
+          type="button"
+          className="text-xs text-gray-500 hover:text-gray-700"
+          onClick={() => {
+            const updatedWords = [...words];
+            updatedWords[index][3] = "";
+            setWords(updatedWords);
+          }}
+        >
+          Remove image
+        </button>
         <FaTrash
           className="h-6 w-6 cursor-pointer text-gray-400 hover:text-red-500 transition-colors"
           onClick={() => {

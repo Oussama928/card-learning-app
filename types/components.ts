@@ -19,10 +19,12 @@ export interface CardProps {
 
 export interface CardAddminiProps {
   index: number;
-  words: string[][];
-  setWords: React.Dispatch<React.SetStateAction<string[][]>>;
+  words: Array<[string, string, (number | boolean | string)?, string?]>;
+  setWords: React.Dispatch<React.SetStateAction<Array<[string, string, (number | boolean | string)?, string?]>>>;
   seti: React.Dispatch<React.SetStateAction<number>>;
   setGarbageCollector: React.Dispatch<React.SetStateAction<number[]>>;
+  onUploadWordImage: (index: number, file: File) => Promise<void>;
+  isUploading: boolean;
 }
 
 

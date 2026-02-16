@@ -82,7 +82,7 @@ export interface CardDetailResponseDTO {
   title: string;
   targetLanguage: string;
   description: string;
-  cardData: Array<[string, string, number, boolean]>;
+  cardData: Array<[string, string, number, boolean, string | null]>;
 }
 
 export interface GetCardsResponseDTO {
@@ -95,11 +95,17 @@ export interface CreateCardRequestDTO {
   targetLanguage: string;
   description: string;
   agreed: boolean;
-  words?: string[][];
+  words?: Array<[string, string, (number | boolean | string)?, string?]>;
   fileContent?: string;
   edit?: boolean;
   id?: string;
   garbageCollector?: number[];
+}
+
+export interface ActivityHeatmapDayDTO {
+  date: string;
+  reviews: number;
+  correctReviews: number;
 }
 
 export interface CreateWordProgressRequestDTO {
@@ -136,6 +142,7 @@ export interface UserStatsDTO {
   accuracy: number;
   daily_streak?: number;
   total_xp?: number;
+  activityHeatmap?: ActivityHeatmapDayDTO[];
 }
 
 export interface GetStatsResponseDTO {

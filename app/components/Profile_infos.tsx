@@ -4,6 +4,7 @@ import React from "react";
 import { PaperClipIcon } from "@heroicons/react/20/solid";
 import { useSession } from "next-auth/react";
 import { profileUpdateSchema } from "@/types/validationSchemas";
+import PerformanceHeatmap from "./PerformanceHeatmap";
 
 import { FaEdit, FaInfoCircle } from "react-icons/fa";
 
@@ -16,6 +17,11 @@ interface ProfileStats {
   totalTermsLearned?: number;
   accuracy?: number;
   xp?: number;
+  activityHeatmap?: Array<{
+    date: string;
+    reviews: number;
+    correctReviews: number;
+  }>;
 }
 
 interface ProfileProps {
@@ -351,6 +357,8 @@ export default function Profile({ id }: ProfileProps) {
           </div>
         ))}
       </div>
+
+      <PerformanceHeatmap activityHeatmap={stats?.activityHeatmap} />
       {streakInfo && (
         <div
           className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm"

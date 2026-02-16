@@ -22,6 +22,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       [userId, word_id, is_learned]
     );
 
+    await db.queryAsync(
+      `
+      INSERT INTO study_activity (user_id, word_id, is_correct, reviewed_at)
+      VALUES ($1, $2, $3, NOW())
+      `,
+      [userId, word_id, is_learned]
+    );
+
     await cache.del(cacheKeys.userStats(userId));
     await cache.del(cacheKeys.globalStats);
 

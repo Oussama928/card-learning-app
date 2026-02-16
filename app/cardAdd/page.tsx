@@ -20,12 +20,15 @@ const validationSchema = cardAddSchema;
 export default function Example({ Current }: CardAddPageProps) {
   const [i, seti] = useState(1);
   const [ii, setii] = useState(1);
-  const [words, setWords] = useState<string[][]>([["", "", ""]]);
+  const [words, setWords] = useState<
+    Array<[string, string, (number | boolean | string)?, string?]>
+  >([["", "", false, ""]]);
   const [garbageCollector, setGarbageCollector] = useState<number[]>([]);
   const [fileError, setFileError] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [inputMethod, setInputMethod] = useState("manual"); // "manual" or "file"
+  const [uploadingWordIndex, setUploadingWordIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { data: session } = useSession();
   const Router = useRouter();
@@ -158,6 +161,38 @@ export default function Example({ Current }: CardAddPageProps) {
     }
   };
 
+  const uploadWordImage = async (index: number, file: File) => {
+    try {
+      setUploadingWordIndex(index);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/uploads", {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data?.data?.url) {
+        throw new Error(data?.error || "Failed to upload image");
+      }
+
+      setWords((prev) => {
+        const next = [...prev];
+        const current = next[index] || ["", "", false, ""];
+        next[index] = [current[0], current[1], current[2], data.data.url];
+        return next;
+      });
+    } catch (error: any) {
+      alert(error?.message || "Failed to upload image");
+    } finally {
+      setUploadingWordIndex(null);
+    }
+  };
+
   useEffect(() => {
     console.log(words);
   }, [words]);
@@ -176,7 +211,14 @@ export default function Example({ Current }: CardAddPageProps) {
         formik.setFieldValue("title", data.title);
         formik.setFieldValue("targetLanguage", data.targetLanguage);
         formik.setFieldValue("description", data.description);
-        setWords((data.cardData || []).map((subArray: any[]) => subArray.slice(0, 3)));
+        setWords(
+          (data.cardData || []).map((subArray: any[]) => [
+            subArray[0] || "",
+            subArray[1] || "",
+            subArray[2] || false,
+            subArray[4] || "",
+          ]),
+        );
         seti(data.cardData.length);
         setii(data.cardData.length);
         console.log(data);
@@ -368,7 +410,7 @@ export default function Example({ Current }: CardAddPageProps) {
                 }`}
                 onClick={() => {
                   setInputMethod("file");
-                  setWords([["", "", ""]]);
+                  setWords([["", "", false, ""]]);
                   seti(1);
                   setii(1);
                 }}
@@ -439,6 +481,8 @@ export default function Example({ Current }: CardAddPageProps) {
                       setWords={setWords}
                       seti={seti}
                       setGarbageCollector={setGarbageCollector}
+                      onUploadWordImage={uploadWordImage}
+                      isUploading={uploadingWordIndex === j}
                     />
                   </div>
                 ))}
@@ -447,7 +491,7 @@ export default function Example({ Current }: CardAddPageProps) {
                   <button
                     onClick={() => {
                       seti(i + 1);
-                      setWords([...words, ["", "", ""]]);
+                      setWords([...words, ["", "", false, ""]]);
                     }}
                     type="button"
                     className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"

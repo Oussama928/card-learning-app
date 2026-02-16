@@ -42,7 +42,8 @@ describe("post progress route", () => {
 
     expect(res.status).toBe(200);
     expect(json.success).toBe(true);
-    expect(queryAsync).toHaveBeenCalledTimes(1);
+    expect(queryAsync).toHaveBeenCalledTimes(2);
+    expect(queryAsync.mock.calls[1][0]).toContain("INSERT INTO study_activity");
     expect(del).toHaveBeenCalledWith("stats:user:1");
     expect(del).toHaveBeenCalledWith("stats:global");
   });

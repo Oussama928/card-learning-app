@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 const publicPaths = [
   '/',
@@ -22,12 +23,17 @@ export default function middleware(req: NextRequest) {
   );
 
   // Check for  session token
-  const sessionToken = req.cookies.get('next-auth.session-token')?.value ||
-                       req.cookies.get('__Secure-next-auth.session-token')?.value;
+  const sessionToken =
+    req.cookies.get('authjs.session-token')?.value ||
+    req.cookies.get('__Secure-authjs.session-token')?.value ||
+    req.cookies.get('next-auth.session-token')?.value ||
+    req.cookies.get('__Secure-next-auth.session-token')?.value;
 
   if (!sessionToken && !isPublic) {
-    return Response.redirect(new URL('/', req.url));
+    return NextResponse.redirect(new URL('/', req.url));
   }
+
+  return NextResponse.next();
 }
 
 export const config = {

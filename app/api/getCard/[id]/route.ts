@@ -50,6 +50,7 @@ export async function GET(
         w.id,
         w.word,
         w.translated_word,
+        w.image_url,
         COALESCE(up.is_learned, FALSE) as is_learned
       FROM words w
       LEFT JOIN user_progress up 
@@ -63,6 +64,7 @@ export async function GET(
       id: number;
       word: string;
       translated_word: string;
+      image_url: string | null;
       is_learned: boolean;
     }> = wordsResult.rows;
 
@@ -71,6 +73,7 @@ export async function GET(
       word.translated_word,
       word.id,
       Boolean(word.is_learned),
+      word.image_url || null,
     ]);
 
     return NextResponse.json({

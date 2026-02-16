@@ -38,6 +38,7 @@ export interface Word {
   id: number;
   word: string;
   translated_word: string;
+  image_url?: string | null;
   hint?: string;
   card_id: string;
   created_at?: string;

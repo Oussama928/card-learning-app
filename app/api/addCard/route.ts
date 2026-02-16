@@ -5,11 +5,7 @@ import type { AddCardRequest, AddCardResponse } from "@/types";
 import { cache } from "@/lib/cache";
 import { handleApiError } from "@/lib/apiHandler";
 
-interface WordPair extends Array<string | number | boolean> {
-  0: string;
-  1: string;
-  2?: number | boolean;
-}
+type WordPair = [string, string, number | boolean, string | null];
 
 // input sanitization and validation functions
 const sanitizeText = (text: string, maxLength: number = 200): string => {
@@ -22,6 +18,19 @@ const sanitizeText = (text: string, maxLength: number = 200): string => {
     .replace(/[<>"'&]/g, "")
     .replace(/\s+/g, " ")
     .substring(0, maxLength);
+};
+
+const sanitizeImageUrl = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  // allow local uploaded assets only
+  if (/^\/uploads\/[a-zA-Z0-9._-]+$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  throw new Error("Invalid image URL format. Expected /uploads/<filename>");
 };
 
 const parseFileContent = (fileContent: string): WordPair[] => {
@@ -52,7 +61,7 @@ const parseFileContent = (fileContent: string): WordPair[] => {
       throw new Error(`Empty expression or translation at line ${i + 1}`);
     }
 
-    parsedExpressions.push([expression, translation, false]);
+    parsedExpressions.push([expression, translation, false, null]);
   }
 
   if (parsedExpressions.length === 0) {
@@ -90,7 +99,20 @@ const validateWordPair = (wordPair: any, index: number): WordPair => {
     );
   }
 
-  return [sanitizedWord, sanitizedTranslation, wordPair[2] || false];
+  let identityOrFlag: number | boolean = wordPair[2] || false;
+  let imageUrl: string | null = null;
+
+  // backward compatibility: new rows may send [word, translation, imageUrl]
+  if (typeof wordPair[2] === "string") {
+    imageUrl = sanitizeImageUrl(wordPair[2]);
+    identityOrFlag = false;
+  }
+
+  if (wordPair.length > 3) {
+    imageUrl = sanitizeImageUrl(wordPair[3]);
+  }
+
+  return [sanitizedWord, sanitizedTranslation, identityOrFlag, imageUrl];
 };
 
 const validateWordsArray = (words: any[]): WordPair[] => {
@@ -237,21 +259,22 @@ export async function POST(
         if (typeof word[2] === "number") {
           const updateWordQuery = `
             UPDATE words
-            SET word = $1, translated_word = $2
-            WHERE words.id = $3
-              AND words.card_id IN (SELECT id FROM cards WHERE user_id = $4)
-              AND words.card_id = $5
+            SET word = $1, translated_word = $2, image_url = $3
+            WHERE words.id = $4
+              AND words.card_id IN (SELECT id FROM cards WHERE user_id = $5)
+              AND words.card_id = $6
           `;
           await db.queryAsync(updateWordQuery, [
             word[0],
             word[1],
+            word[3] ?? null,
             word[2],
             userId,
             id,
           ]);
         } else {
-          const insertQuery = `INSERT INTO words (word, translated_word, card_id) VALUES ($1, $2, $3)`;
-          await db.queryAsync(insertQuery, [word[0], word[1], id]);
+          const insertQuery = `INSERT INTO words (word, translated_word, card_id, image_url) VALUES ($1, $2, $3, $4)`;
+          await db.queryAsync(insertQuery, [word[0], word[1], id, word[3] ?? null]);
         }
       }
 
@@ -310,20 +333,21 @@ export async function POST(
         const insertWordQuery =
           `
           INSERT INTO words
-            (word, translated_word, card_id)
+            (word, translated_word, card_id, image_url)
           VALUES
         ` +
           filteredWords
             .map((_, i) => {
-              const baseIdx = i * 3;
-              return `($${baseIdx + 1}, $${baseIdx + 2}, $${baseIdx + 3})`;
+              const baseIdx = i * 4;
+              return `($${baseIdx + 1}, $${baseIdx + 2}, $${baseIdx + 3}, $${baseIdx + 4})`;
             })
             .join(", ");
 
-        const wordValues = filteredWords.flatMap(([word, translation]) => [
+        const wordValues = filteredWords.flatMap(([word, translation, _, imageUrl]) => [
           word.trim(),
           translation.trim(),
           cardId,
+          imageUrl ?? null,
         ]);
 
         await db.queryAsync(insertWordQuery, wordValues);
