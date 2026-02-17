@@ -1,14 +1,17 @@
-'use client';
-
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { auth } from '@/auth';
+import HomeDashboard from '@/app/components/HomeDashboard';
 
-export default function HomePage() {
-  const { data: session } = useSession();
+export default async function HomePage() {
+  const session = await auth();
 
   if (session?.user) {
-    redirect("/official");
+    return (
+      <HomeDashboard
+        accessToken={typeof session.user.accessToken === 'string' ? session.user.accessToken : undefined}
+        userName={typeof session.user.name === 'string' ? session.user.name : undefined}
+      />
+    );
   }
 
   return (

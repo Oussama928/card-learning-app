@@ -75,6 +75,11 @@ export interface LoadingProps {
   message?: string;
 }
 
+export interface HomeDashboardProps {
+  accessToken?: string;
+  userName?: string;
+}
+
 
 // page-levle props
 

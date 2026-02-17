@@ -42,6 +42,16 @@ import type {
   ForgotPasswordResponseDTO,
   ResetPasswordRequestDTO,
   ResetPasswordResponseDTO,
+  HomeOverviewDTO,
+  StudyGroupDTO,
+  CreateStudyGroupRequestDTO,
+  JoinStudyGroupRequestDTO,
+  StudyGroupAssignmentDTO,
+  CreateStudyGroupAssignmentRequestDTO,
+  StudyGroupPostDTO,
+  StudyGroupCommentDTO,
+  CreateStudyGroupPostRequestDTO,
+  CreateStudyGroupCommentRequestDTO,
 } from './dtos';
 
 
@@ -86,6 +96,20 @@ export type SearchResponse = SearchResponseDTO;
 // Profile
 export type UpdateProfileRequest = UpdateProfileRequestDTO;
 export type UpdateProfileResponse = UpdateProfileResponseDTO;
+
+// Home
+export type HomeOverviewResponse = HomeOverviewDTO;
+
+// Study Groups
+export type StudyGroup = StudyGroupDTO;
+export type CreateStudyGroupRequest = CreateStudyGroupRequestDTO;
+export type JoinStudyGroupRequest = JoinStudyGroupRequestDTO;
+export type StudyGroupAssignment = StudyGroupAssignmentDTO;
+export type CreateStudyGroupAssignmentRequest = CreateStudyGroupAssignmentRequestDTO;
+export type StudyGroupPost = StudyGroupPostDTO;
+export type StudyGroupComment = StudyGroupCommentDTO;
+export type CreateStudyGroupPostRequest = CreateStudyGroupPostRequestDTO;
+export type CreateStudyGroupCommentRequest = CreateStudyGroupCommentRequestDTO;
 
 // Generic
 export type ApiSuccess<T = any> = ApiSuccessResponseDTO<T>;
@@ -140,4 +164,14 @@ export type {
   ForgotPasswordResponseDTO,
   ResetPasswordRequestDTO,
   ResetPasswordResponseDTO,
+  HomeOverviewDTO,
+  StudyGroupDTO,
+  CreateStudyGroupRequestDTO,
+  JoinStudyGroupRequestDTO,
+  StudyGroupAssignmentDTO,
+  CreateStudyGroupAssignmentRequestDTO,
+  StudyGroupPostDTO,
+  StudyGroupCommentDTO,
+  CreateStudyGroupPostRequestDTO,
+  CreateStudyGroupCommentRequestDTO,
 };

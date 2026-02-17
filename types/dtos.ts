@@ -277,3 +277,106 @@ export interface UploadResponseDTO {
   mimeType: string;
   size: number;
 }
+
+export interface HomeStudySessionDTO {
+  id: number;
+  title: string;
+  description: string | null;
+  targetLanguage: string;
+  totalWords: number;
+  learnedWords: number;
+  lastReviewedAt: string;
+}
+
+export interface HomeOverviewDTO {
+  mode: 'continue' | 'retry' | 'empty';
+  unfinishedSessions: HomeStudySessionDTO[];
+  completedSessions: HomeStudySessionDTO[];
+}
+
+export type StudyGroupVisibility = 'public' | 'private';
+export type StudyGroupRole = 'teacher' | 'student';
+export type StudyGroupPostType = 'text' | 'link' | 'image';
+export type StudyAssignmentType = 'card' | 'class';
+
+export interface StudyGroupDTO {
+  id: number;
+  name: string;
+  description?: string | null;
+  teacherId: number;
+  teacherName?: string;
+  visibility: StudyGroupVisibility;
+  joinCode?: string | null;
+  role: StudyGroupRole;
+  createdAt: string;
+}
+
+export interface CreateStudyGroupRequestDTO {
+  name: string;
+  description?: string;
+  visibility: StudyGroupVisibility;
+}
+
+export interface JoinStudyGroupRequestDTO {
+  groupId?: number;
+  joinCode?: string;
+}
+
+export interface StudyGroupAssignmentDTO {
+  id: number;
+  groupId: number;
+  assignmentType: StudyAssignmentType;
+  cardId?: number | null;
+  classId?: number | null;
+  title?: string | null;
+  dueAt?: string | null;
+  assignedBy: number;
+  assignedByName?: string;
+  createdAt: string;
+}
+
+export interface CreateStudyGroupAssignmentRequestDTO {
+  assignmentType: StudyAssignmentType;
+  cardId?: number;
+  classId?: number;
+  title?: string;
+  dueAt?: string;
+}
+
+export interface StudyGroupCommentDTO {
+  id: number;
+  postId: number;
+  parentCommentId?: number | null;
+  authorUserId: number;
+  authorName?: string;
+  authorRole: StudyGroupRole;
+  content: string;
+  createdAt: string;
+  replies: StudyGroupCommentDTO[];
+}
+
+export interface StudyGroupPostDTO {
+  id: number;
+  groupId: number;
+  authorUserId: number;
+  authorName?: string;
+  authorRole?: StudyGroupRole;
+  postType: StudyGroupPostType;
+  content: string;
+  linkUrl?: string | null;
+  imageUrl?: string | null;
+  createdAt: string;
+  comments: StudyGroupCommentDTO[];
+}
+
+export interface CreateStudyGroupPostRequestDTO {
+  postType: StudyGroupPostType;
+  content: string;
+  linkUrl?: string;
+  imageUrl?: string;
+}
+
+export interface CreateStudyGroupCommentRequestDTO {
+  content: string;
+  parentCommentId?: number;
+}
