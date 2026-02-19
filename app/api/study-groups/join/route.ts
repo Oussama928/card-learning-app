@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (Number(groupRow.teacher_user_id) === userId) {
-      return NextResponse.json({ message: "Teacher already in group", role: "teacher" });
+      return NextResponse.json({ message: "Teacher already in group", role: "teacher", groupId });
     }
 
     const visibility = groupRow.visibility === "public" ? "public" : "private";

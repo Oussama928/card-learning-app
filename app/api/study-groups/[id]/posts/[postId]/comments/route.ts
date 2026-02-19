@@ -38,14 +38,17 @@ export async function POST(
       return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
     }
 
-    if (!parentCommentId && access.role !== "student") {
+    // student  post top-level comment, techer reply to comments
+    const isTopLevelComment = !parentCommentId;
+
+    if (isTopLevelComment && access.role !== "student") {
       return NextResponse.json(
-        { error: "Top-level comments are for students. Teachers should reply in thread." },
+        { error: "Only students can post top-level comments." },
         { status: 403 }
       );
     }
 
-    if (parentCommentId && access.role !== "teacher") {
+    if (!isTopLevelComment && access.role !== "teacher") {
       return NextResponse.json(
         { error: "Only teachers can post replies." },
         { status: 403 }

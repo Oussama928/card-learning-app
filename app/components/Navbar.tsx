@@ -154,6 +154,11 @@ const Navbar = () => {
       href: "/created",
       current: router.pathname === "/created",
     },
+    {
+      name: "groups",
+      href: "/study-groups",
+      current: router.pathname === "/study-groups",
+    },
   ];
 
   function classNames(...classes: string[]) {
@@ -394,6 +399,19 @@ const Navbar = () => {
                       </MenuItem>
                     ))
                   }
+                    <MenuItem>
+                      {({ focus }) => (
+                        <Link
+                          href="/settings"
+                          className={classNames(
+                            focus ? "bg-gray-100" : "",
+                            "block px-4 py-2 text-sm text-gray-700"
+                          )}
+                        >
+                          settings
+                        </Link>
+                      )}
+                    </MenuItem>
                     <MenuItem>
                       {({ focus }) => (
                         <button

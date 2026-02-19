@@ -5,6 +5,10 @@ import type {
   CardResponseDTO,
   CardWithOwnerDTO,
   CardDetailResponseDTO,
+  StudyCardTermDTO,
+  StudyCardProgressDTO,
+  SpacedRepetitionStateDTO,
+  SpacedRepetitionNextReviewDTO,
   GetCardsResponseDTO,
   CreateWordProgressRequestDTO,
   ProgressItemDTO,
@@ -52,6 +56,14 @@ import type {
   StudyGroupCommentDTO,
   CreateStudyGroupPostRequestDTO,
   CreateStudyGroupCommentRequestDTO,
+  GetStudyGroupsResponseDTO,
+  CreateStudyGroupResponseDTO,
+  JoinStudyGroupResponseDTO,
+  GetStudyGroupAssignmentsResponseDTO,
+  CreateStudyGroupAssignmentResponseDTO,
+  GetStudyGroupPostsResponseDTO,
+  CreateStudyGroupPostResponseDTO,
+  CreateStudyGroupCommentResponseDTO,
 } from './dtos';
 
 
@@ -110,6 +122,14 @@ export type StudyGroupPost = StudyGroupPostDTO;
 export type StudyGroupComment = StudyGroupCommentDTO;
 export type CreateStudyGroupPostRequest = CreateStudyGroupPostRequestDTO;
 export type CreateStudyGroupCommentRequest = CreateStudyGroupCommentRequestDTO;
+export type GetStudyGroupsResponse = GetStudyGroupsResponseDTO;
+export type CreateStudyGroupResponse = CreateStudyGroupResponseDTO;
+export type JoinStudyGroupResponse = JoinStudyGroupResponseDTO;
+export type GetStudyGroupAssignmentsResponse = GetStudyGroupAssignmentsResponseDTO;
+export type CreateStudyGroupAssignmentResponse = CreateStudyGroupAssignmentResponseDTO;
+export type GetStudyGroupPostsResponse = GetStudyGroupPostsResponseDTO;
+export type CreateStudyGroupPostResponse = CreateStudyGroupPostResponseDTO;
+export type CreateStudyGroupCommentResponse = CreateStudyGroupCommentResponseDTO;
 
 // Generic
 export type ApiSuccess<T = any> = ApiSuccessResponseDTO<T>;
@@ -127,6 +147,10 @@ export type {
   CardResponseDTO,
   CardWithOwnerDTO,
   CardDetailResponseDTO,
+  StudyCardTermDTO,
+  StudyCardProgressDTO,
+  SpacedRepetitionStateDTO,
+  SpacedRepetitionNextReviewDTO,
   GetCardsResponseDTO,
   CreateWordProgressRequestDTO,
   ProgressItemDTO,
@@ -174,4 +198,12 @@ export type {
   StudyGroupCommentDTO,
   CreateStudyGroupPostRequestDTO,
   CreateStudyGroupCommentRequestDTO,
+  GetStudyGroupsResponseDTO,
+  CreateStudyGroupResponseDTO,
+  JoinStudyGroupResponseDTO,
+  GetStudyGroupAssignmentsResponseDTO,
+  CreateStudyGroupAssignmentResponseDTO,
+  GetStudyGroupPostsResponseDTO,
+  CreateStudyGroupPostResponseDTO,
+  CreateStudyGroupCommentResponseDTO,
 };

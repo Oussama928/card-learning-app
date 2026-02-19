@@ -54,7 +54,11 @@ export interface UserProgress {
   is_learned: boolean;
   correct_count?: number;
   incorrect_count?: number;
+  repetitions?: number;
+  interval_days?: number;
+  ease_factor?: number;
   last_reviewed?: string;
+  next_review_at?: string;
   created_at?: string;
   updated_at?: string;
 }

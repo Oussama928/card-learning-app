@@ -82,7 +82,42 @@ export interface CardDetailResponseDTO {
   title: string;
   targetLanguage: string;
   description: string;
-  cardData: Array<[string, string, number, boolean, string | null]>;
+  cardData: StudyCardTermDTO[];
+  progress?: StudyCardProgressDTO[];
+}
+
+export type StudyCardTermDTO = [
+  string,
+  string,
+  number,
+  boolean,
+  string | null
+];
+
+export interface StudyCardProgressDTO {
+  word_id: number;
+  is_learned: boolean;
+  correct_count: number;
+  incorrect_count: number;
+  repetitions: number;
+  interval_days: number;
+  ease_factor: number;
+  last_reviewed?: string | null;
+  next_review_at?: string | null;
+}
+
+export interface SpacedRepetitionStateDTO {
+  repetitions: number;
+  intervalDays: number;
+  easeFactor: number;
+  correctCount: number;
+  incorrectCount: number;
+  lastReviewedAt?: string | null;
+  nextReviewAt?: string | null;
+}
+
+export interface SpacedRepetitionNextReviewDTO extends SpacedRepetitionStateDTO {
+  isCorrect: boolean;
 }
 
 export interface GetCardsResponseDTO {
@@ -120,7 +155,11 @@ export interface ProgressItemDTO {
   is_learned: boolean;
   correct_count?: number;
   incorrect_count?: number;
-  lastReviewed?: string;
+  repetitions?: number;
+  interval_days?: number;
+  ease_factor?: number;
+  lastReviewed?: string | null;
+  nextReviewAt?: string | null;
 }
 
 export interface GetProgressResponseDTO {
@@ -379,4 +418,45 @@ export interface CreateStudyGroupPostRequestDTO {
 export interface CreateStudyGroupCommentRequestDTO {
   content: string;
   parentCommentId?: number;
+}
+
+export interface GetStudyGroupsResponseDTO {
+  message: string;
+  groups: StudyGroupDTO[];
+}
+
+export interface CreateStudyGroupResponseDTO {
+  message: string;
+  group: StudyGroupDTO;
+}
+
+export interface JoinStudyGroupResponseDTO {
+  message: string;
+  role: StudyGroupRole;
+  groupId: number;
+}
+
+export interface GetStudyGroupAssignmentsResponseDTO {
+  message: string;
+  assignments: StudyGroupAssignmentDTO[];
+}
+
+export interface CreateStudyGroupAssignmentResponseDTO {
+  message: string;
+  assignment: StudyGroupAssignmentDTO;
+}
+
+export interface GetStudyGroupPostsResponseDTO {
+  message: string;
+  posts: StudyGroupPostDTO[];
+}
+
+export interface CreateStudyGroupPostResponseDTO {
+  message: string;
+  post: StudyGroupPostDTO;
+}
+
+export interface CreateStudyGroupCommentResponseDTO {
+  message: string;
+  comment: Omit<StudyGroupCommentDTO, 'replies'>;
 }

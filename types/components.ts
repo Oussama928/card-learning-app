@@ -1,6 +1,7 @@
 //these types are used for typing React component properties
 
 import type { CardWithOwnerDTO } from './dtos';
+import type { StudyGroupCommentDTO } from './dtos';
 
 
 
@@ -78,6 +79,12 @@ export interface LoadingProps {
 export interface HomeDashboardProps {
   accessToken?: string;
   userName?: string;
+}
+
+export interface StudyGroupCommentNodeProps {
+  comment: StudyGroupCommentDTO;
+  canReply: boolean;
+  onReply: (parentCommentId: number, content: string) => Promise<void>;
 }
 
 

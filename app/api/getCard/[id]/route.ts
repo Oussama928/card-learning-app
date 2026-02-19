@@ -51,7 +51,14 @@ export async function GET(
         w.word,
         w.translated_word,
         w.image_url,
-        COALESCE(up.is_learned, FALSE) as is_learned
+        COALESCE(up.is_learned, FALSE) as is_learned,
+        COALESCE(up.correct_count, 0) AS correct_count,
+        COALESCE(up.incorrect_count, 0) AS incorrect_count,
+        COALESCE(up.repetitions, 0) AS repetitions,
+        COALESCE(up.interval_days, 0) AS interval_days,
+        COALESCE(up.ease_factor, 2.5) AS ease_factor,
+        up.last_reviewed AS last_reviewed,
+        up.next_review_at AS next_review_at
       FROM words w
       LEFT JOIN user_progress up 
         ON w.id = up.word_id 
@@ -76,10 +83,23 @@ export async function GET(
       word.image_url || null,
     ]);
 
+    const progress = words.map((word) => ({
+      word_id: word.id,
+      is_learned: Boolean(word.is_learned),
+      correct_count: Number(word.correct_count || 0),
+      incorrect_count: Number(word.incorrect_count || 0),
+      repetitions: Number(word.repetitions || 0),
+      interval_days: Number(word.interval_days || 0),
+      ease_factor: Number(word.ease_factor || 2.5),
+      last_reviewed: word.last_reviewed ? String(word.last_reviewed) : null,
+      next_review_at: word.next_review_at ? String(word.next_review_at) : null,
+    }));
+
     return NextResponse.json({
       message: "Card retrieved successfully",
       id,
       cardData: wordPairs,
+      progress,
       title: card.title,
       description: card.description,
       targetLanguage: card.target_language,

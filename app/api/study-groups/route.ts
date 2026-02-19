@@ -48,8 +48,9 @@ export async function GET(request: NextRequest) {
     if (error instanceof AuthRequestError) {
       return NextResponse.json(error.json, { status: error.status });
     }
-
-    return NextResponse.json({ error: "Failed to load study groups" }, { status: 500 });
+    console.error("Error loading study groups:", error);
+    const detail = (error && (error as any).message) || String(error);
+    return NextResponse.json({ error: "Failed to load study groups", detail }, { status: 500 });
   }
 }
 
