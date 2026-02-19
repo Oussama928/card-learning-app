@@ -36,8 +36,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const insertNotifQuery = `
-      INSERT INTO notifications (user_id, type, content, is_read, created_at)
-      SELECT id, $1, $2, $3, $4
+      INSERT INTO notifications (user_id, type, content, is_read, created_at, metadata)
+      SELECT id, $1, $2, $3, $4, NULL
       FROM users;
     `;
 

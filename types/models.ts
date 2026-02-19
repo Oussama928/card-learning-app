@@ -69,10 +69,34 @@ export interface UserProgress {
 export interface Notification {
   id: string;
   user_id?: string; // NULL means broadcast to all users btw
-  type: 'reminder' | 'feature' | 'system' | 'streak';
+  type: 'reminder' | 'feature' | 'system' | 'streak' | 'tier' | 'achievement';
   content: string;
   is_read?: boolean;
+  metadata?: {
+    popupType?: 'tier_unlock' | 'achievement_unlock';
+    tierName?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Titanium' | 'Legendary' | 'Godlike';
+    achievementKey?: string;
+  } | null;
   created_at?: string;
+}
+
+export interface Achievement {
+  id: number;
+  key: string;
+  name: string;
+  description: string;
+  image_url?: string | null;
+  condition_type: 'cards_studied_total' | 'cards_created_total';
+  condition_value: number;
+  xp_reward?: number;
+  created_at?: string;
+}
+
+export interface UserAchievement {
+  id: number;
+  user_id: number;
+  achievement_id: number;
+  unlocked_at?: string;
 }
 
 
@@ -93,6 +117,7 @@ export interface UserStats {
   total_terms_learned: number;
   accuracy: number;
   xp: number;
+  current_tier?: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | 'Titanium' | 'Legendary' | 'Godlike';
   daily_streak?: number;
   last_active?: string;
   created_at?: string;

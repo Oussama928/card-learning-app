@@ -10,6 +10,7 @@ interface NotificationWithReadStatus {
   content: string;
   is_read: boolean | number;
   created_at: string;
+  metadata?: Record<string, unknown> | null;
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

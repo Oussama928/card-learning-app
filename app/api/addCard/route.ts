@@ -4,6 +4,13 @@ import { authenticateRequest } from "../authenticateRequest";
 import type { AddCardRequest, AddCardResponse } from "@/types";
 import { cache } from "@/lib/cache";
 import { handleApiError } from "@/lib/apiHandler";
+import {
+  applyXpAction,
+  buildAchievementUnlockNotification,
+  buildTierUnlockNotification,
+  evaluateAchievements,
+} from "@/lib/progressionService";
+import { notifyUser } from "@/lib/notificationEvents";
 
 type WordPair = [string, string, number | boolean, string | null];
 
@@ -351,6 +358,31 @@ export async function POST(
         ]);
 
         await db.queryAsync(insertWordQuery, wordValues);
+      }
+
+      const progressionResult = await applyXpAction(userId, "card_created");
+      const achievementResult = await evaluateAchievements(userId);
+
+      if (progressionResult.unlockedTier) {
+        const tierNotification = buildTierUnlockNotification(
+          progressionResult.unlockedTier
+        );
+        await notifyUser(
+          userId,
+          tierNotification.type,
+          tierNotification.content,
+          tierNotification.metadata
+        );
+      }
+
+      for (const badge of achievementResult.unlockedBadges) {
+        const achievementNotification = buildAchievementUnlockNotification(badge);
+        await notifyUser(
+          userId,
+          achievementNotification.type,
+          achievementNotification.content,
+          achievementNotification.metadata
+        );
       }
 
       const cardsNamespace = await getCardsNamespaceForUser(userId);

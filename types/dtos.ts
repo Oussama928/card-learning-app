@@ -1,4 +1,80 @@
-export type NotificationType = 'reminder' | 'feature' | 'system' | 'streak';
+export type NotificationType = 'reminder' | 'feature' | 'system' | 'streak' | 'tier' | 'achievement';
+
+export type TierNameDTO =
+  | 'Bronze'
+  | 'Silver'
+  | 'Gold'
+  | 'Platinum'
+  | 'Titanium'
+  | 'Legendary'
+  | 'Godlike';
+
+export interface TierDefinitionDTO {
+  name: TierNameDTO;
+  thresholdXp: number;
+  logoUrl?: string | null;
+}
+
+export interface TierUnlockDTO {
+  tier: TierDefinitionDTO;
+  xpRemaining: number;
+}
+
+export interface UserTierProgressDTO {
+  currentTier: TierDefinitionDTO;
+  currentXp: number;
+  percentileRanking: number;
+  nextUnlock: TierUnlockDTO | null;
+}
+
+export type AchievementConditionTypeDTO =
+  | 'cards_studied_total'
+  | 'cards_created_total';
+
+export interface AchievementBadgeDTO {
+  key: string;
+  name: string;
+  description: string;
+  imageUrl?: string | null;
+  conditionType: AchievementConditionTypeDTO;
+  target: number;
+  progress: number;
+  unlocked: boolean;
+  unlockedAt?: string | null;
+}
+
+export interface AchievementDefinitionDTO {
+  id: number;
+  key: string;
+  name: string;
+  description: string;
+  imageUrl?: string | null;
+  conditionType: AchievementConditionTypeDTO;
+  target: number;
+  xpReward: number;
+  createdAt: string;
+}
+
+export interface CreateAchievementRequestDTO {
+  name: string;
+  description: string;
+  conditionType: AchievementConditionTypeDTO;
+  target: number;
+  imageUrl?: string | null;
+  xpReward?: number;
+}
+
+export interface CreateAchievementResponseDTO {
+  success: boolean;
+  achievement: AchievementDefinitionDTO;
+  notifiedUsers: number;
+}
+
+export interface NotificationMetadataDTO {
+  popupType?: 'tier_unlock' | 'achievement_unlock';
+  tierName?: TierNameDTO;
+  achievementKey?: string;
+}
 
 export interface RegisterRequestDTO {
   email: string;
@@ -182,10 +258,30 @@ export interface UserStatsDTO {
   daily_streak?: number;
   total_xp?: number;
   activityHeatmap?: ActivityHeatmapDayDTO[];
+  progression?: UserTierProgressDTO;
+  achievements?: AchievementBadgeDTO[];
+}
+
+export interface ProfileStatsDTO {
+  username: string;
+  email: string;
+  image?: string | null;
+  country?: string | null;
+  bio?: string | null;
+  totalTermsLearned: number;
+  totalWords: number;
+  learnedWords: number;
+  accuracy: number;
+  xp: number;
+  dailyStreak: number;
+  lastLoginDate?: string | null;
+  activityHeatmap: ActivityHeatmapDayDTO[];
+  progression: UserTierProgressDTO;
+  achievements: AchievementBadgeDTO[];
 }
 
 export interface GetStatsResponseDTO {
-  stats: UserStatsDTO;
+  stats: UserStatsDTO | ProfileStatsDTO;
   card_id?: string;
 }
 
@@ -213,6 +309,7 @@ export interface NotificationItemDTO {
   content: string;
   created_at: string;
   is_read?: boolean;
+  metadata?: NotificationMetadataDTO | null;
 }
 
 export interface CreateNotificationRequestDTO {

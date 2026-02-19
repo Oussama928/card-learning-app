@@ -2,6 +2,7 @@
 
 import type { CardWithOwnerDTO } from './dtos';
 import type { StudyGroupCommentDTO } from './dtos';
+import type { NotificationMetadataDTO } from './dtos';
 
 
 
@@ -36,6 +37,13 @@ export interface NotificationProps {
   func: () => void;
   cancel: (value: boolean) => void;
   main_action: string;
+}
+
+export interface ProgressionPopupProps {
+  title: string;
+  message: string;
+  metadata?: NotificationMetadataDTO | null;
+  onClose: () => void;
 }
 
 

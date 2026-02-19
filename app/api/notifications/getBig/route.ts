@@ -30,7 +30,7 @@ export async function GET(
     const total = parseInt(countResult.rows[0]?.total || "0", 10);
 
     const notifsResult = await db.queryAsync(
-      `SELECT id, type, content, is_read, created_at 
+      `SELECT id, type, content, is_read, created_at, metadata 
        FROM notifications 
        WHERE user_id = $1 
        ORDER BY created_at DESC 

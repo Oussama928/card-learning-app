@@ -5,6 +5,23 @@ import type { UpdateProgressRequest } from "@/types";
 import { cache, cacheKeys } from "@/lib/cache";
 import { handleApiError } from "@/lib/apiHandler";
 import { computeNextReview, normalizeProgressState } from "@/lib/spacedRepetition";
+import {
+  applyXpAction,
+  buildAchievementUnlockNotification,
+  buildTierUnlockNotification,
+  evaluateAchievements,
+} from "@/lib/progressionService";
+import { notifyUser } from "@/lib/notificationEvents";
+
+interface ExistingProgressRow {
+  correct_count?: number;
+  incorrect_count?: number;
+  repetitions?: number;
+  interval_days?: number;
+  ease_factor?: number;
+  last_reviewed?: string | null;
+  next_review_at?: string | null;
+}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -21,17 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       [userId, word_id]
     );
 
-    const existing = existingResult.rows[0] as
-      | {
-          correct_count?: number;
-          incorrect_count?: number;
-          repetitions?: number;
-          interval_days?: number;
-          ease_factor?: number;
-          last_reviewed?: string | null;
-          next_review_at?: string | null;
-        }
-      | undefined;
+    const existing = existingResult.rows[0] as ExistingProgressRow | undefined;
 
     const normalized = normalizeProgressState({
       correctCount: existing?.correct_count ?? 0,
@@ -81,6 +88,31 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       `,
       [userId, word_id, is_learned]
     );
+
+    const progressionResult = await applyXpAction(userId, "study_review");
+    const achievementResult = await evaluateAchievements(userId);
+
+    if (progressionResult.unlockedTier) {
+      const tierNotification = buildTierUnlockNotification(
+        progressionResult.unlockedTier
+      );
+      await notifyUser(
+        userId,
+        tierNotification.type,
+        tierNotification.content,
+        tierNotification.metadata
+      );
+    }
+
+    for (const badge of achievementResult.unlockedBadges) {
+      const achievementNotification = buildAchievementUnlockNotification(badge);
+      await notifyUser(
+        userId,
+        achievementNotification.type,
+        achievementNotification.content,
+        achievementNotification.metadata
+      );
+    }
 
     await cache.del(cacheKeys.userStats(userId));
     await cache.del(cacheKeys.globalStats);

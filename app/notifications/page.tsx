@@ -159,6 +159,10 @@ const NotificationsPage = () => {
                                 ? "⚙️"
                                 : item.type === "streak"
                                   ? "🔥"
+                                  : item.type === "tier"
+                                    ? "🏆"
+                                    : item.type === "achievement"
+                                      ? "🎖️"
                                   : "🔔"}
                         </span>
                       </div>

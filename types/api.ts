@@ -64,6 +64,17 @@ import type {
   GetStudyGroupPostsResponseDTO,
   CreateStudyGroupPostResponseDTO,
   CreateStudyGroupCommentResponseDTO,
+  TierNameDTO,
+  TierDefinitionDTO,
+  TierUnlockDTO,
+  UserTierProgressDTO,
+  AchievementConditionTypeDTO,
+  AchievementBadgeDTO,
+  AchievementDefinitionDTO,
+  CreateAchievementRequestDTO,
+  CreateAchievementResponseDTO,
+  NotificationMetadataDTO,
+  ProfileStatsDTO,
 } from './dtos';
 
 
@@ -96,6 +107,10 @@ export type GetStatsResponse = GetStatsResponseDTO;
 // Notifications
 export type NotificationResponse = GetNotificationsResponseDTO;
 export type DeleteNotificationResponse = DeleteNotificationResponseDTO;
+
+// Achievements
+export type CreateAchievementRequest = CreateAchievementRequestDTO;
+export type CreateAchievementResponse = CreateAchievementResponseDTO;
 
 // Favorites
 export type HandleFavoritesRequest = HandleFavoritesRequestDTO;
@@ -206,4 +221,15 @@ export type {
   GetStudyGroupPostsResponseDTO,
   CreateStudyGroupPostResponseDTO,
   CreateStudyGroupCommentResponseDTO,
+  TierNameDTO,
+  TierDefinitionDTO,
+  TierUnlockDTO,
+  UserTierProgressDTO,
+  AchievementConditionTypeDTO,
+  AchievementBadgeDTO,
+  AchievementDefinitionDTO,
+  CreateAchievementRequestDTO,
+  CreateAchievementResponseDTO,
+  NotificationMetadataDTO,
+  ProfileStatsDTO,
 };

@@ -57,7 +57,7 @@ export default function GlobalStats() {
 
       <div className="mt-6">
         <div className="space-y-4">
-          {topUsers.map((user, index) => (
+          {topUsers.sort((a, b) => b.xp - a.xp).map((user, index) => (
             <div
               key={user.id}
               className="flex items-center justify-between p-4 rounded-lg hover:bg-white/5 transition-colors"

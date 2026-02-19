@@ -5,24 +5,9 @@ import { PaperClipIcon } from "@heroicons/react/20/solid";
 import { useSession } from "next-auth/react";
 import { profileUpdateSchema } from "@/types/validationSchemas";
 import PerformanceHeatmap from "./PerformanceHeatmap";
+import type { AchievementBadgeDTO, ProfileStatsDTO } from "@/types";
 
 import { FaEdit, FaInfoCircle } from "react-icons/fa";
-
-interface ProfileStats {
-  username?: string;
-  email?: string;
-  country?: string;
-  bio?: string;
-  dailyStreak?: number;
-  totalTermsLearned?: number;
-  accuracy?: number;
-  xp?: number;
-  activityHeatmap?: Array<{
-    date: string;
-    reviews: number;
-    correctReviews: number;
-  }>;
-}
 
 interface ProfileProps {
   id?: string;
@@ -31,7 +16,7 @@ interface ProfileProps {
 //update the other parts later (the ones besides stats)
 export default function Profile({ id }: ProfileProps) {
   const { data: session, update } = useSession();
-  const [stats, setStats] = React.useState<ProfileStats | null>(null);
+  const [stats, setStats] = React.useState<ProfileStatsDTO | null>(null);
   const [edited, setEdited] = React.useState("");
   const [streakInfo, setStreakInfo] = React.useState(false);
   const [editIndex, setEditIndex] = React.useState([
@@ -53,7 +38,7 @@ export default function Profile({ id }: ProfileProps) {
         if (!session) return;
         const res = await fetch(`/api/getStats/${idd}`);
         const data = await res.json();
-        setStats(data.stats);
+        setStats(data.stats as ProfileStatsDTO);
         console.log("here here bro : ", data);
       } catch (err) {
         console.error(err);
@@ -359,6 +344,86 @@ export default function Profile({ id }: ProfileProps) {
       </div>
 
       <PerformanceHeatmap activityHeatmap={stats?.activityHeatmap} />
+
+      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div
+          className="rounded-xl p-5"
+          style={{
+            background: "rgba(127,202,201,0.08)",
+            border: "1px solid rgba(127,202,201,0.2)",
+          }}
+        >
+          <h4 className="text-lg font-semibold mb-3" style={{ color: "#7fcac9" }}>
+            Tier Progression
+          </h4>
+          <div className="space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
+            <p>
+              Current tier: <span className="font-semibold">{stats.progression?.currentTier?.name ?? "Bronze"}</span>
+            </p>
+            <p>
+              Current XP: <span className="font-semibold">{stats.progression?.currentXp ?? 0}</span>
+            </p>
+            <p>
+              Percentile ranking: <span className="font-semibold">{stats.progression?.percentileRanking ?? 0}%</span>
+            </p>
+            <p>
+              Next unlock:{" "}
+              <span className="font-semibold">
+                {stats.progression?.nextUnlock
+                  ? `${stats.progression.nextUnlock.tier.name} (${stats.progression.nextUnlock.xpRemaining} XP remaining)`
+                  : "Max tier reached"}
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="rounded-xl p-5"
+          style={{
+            background: "rgba(127,202,201,0.08)",
+            border: "1px solid rgba(127,202,201,0.2)",
+          }}
+        >
+          <h4 className="text-lg font-semibold mb-3" style={{ color: "#7fcac9" }}>
+            Achievement Badges
+          </h4>
+
+          {(stats.achievements || []).length === 0 ? (
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
+              No badges available yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(stats.achievements || []).map((badge: AchievementBadgeDTO) => (
+                <div
+                  key={badge.key}
+                  className="rounded-lg p-3"
+                  style={{
+                    background: badge.unlocked ? "rgba(127,202,201,0.18)" : "rgba(255,255,255,0.04)",
+                    border: badge.unlocked
+                      ? "1px solid rgba(127,202,201,0.35)"
+                      : "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div className="text-sm font-semibold" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.85)" }}>
+                    {badge.name}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+                    {badge.description}
+                  </div>
+                  <div className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.8)" }}>
+                    Progress: {Math.min(badge.progress, badge.target)}/{badge.target}
+                  </div>
+                  <div className="text-xs mt-1" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.6)" }}>
+                    {badge.unlocked ? "Unlocked" : "Locked"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {streakInfo && (
         <div
           className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm"

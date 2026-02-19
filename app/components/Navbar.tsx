@@ -4,12 +4,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { signOut, signIn, useSession } from "next-auth/react";
 import Notification from "./Notification";
+import ProgressionPopup from "./ProgressionPopup";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRef } from "react";
 import { searchSchema } from "@/types/validationSchemas";
+import { io, Socket } from "socket.io-client";
+import type { NotificationItemDTO, NotificationMetadataDTO } from "@/types";
 
 import {
   Disclosure,
@@ -27,19 +30,26 @@ import {
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
+interface ProgressionPopupState {
+  title: string;
+  message: string;
+  metadata?: NotificationMetadataDTO | null;
+}
+
 const Navbar = () => {
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [notification, setNotification] = React.useState<boolean | null>(null);
   const { data: session, status } = useSession();
-  const [picked, setPicked] = React.useState<boolean>("");
+  const [picked, setPicked] = React.useState<string>("");
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [notifs, setNotifs] = React.useState<any>([]);
+  const [notifs, setNotifs] = React.useState<NotificationItemDTO[]>([]);
   const [neww, setNeww] = React.useState<boolean>(false);
   const [searchAppear, setSearchAppear] = React.useState<boolean>(false);
   const [search, setSearch] = React.useState<string>("");
   const [streak, setStreak] = React.useState<number>(0);
+  const [progressionPopup, setProgressionPopup] = React.useState<ProgressionPopupState | null>(null);
   const icon_paths = ["leaderboard","profile"];
   useEffect(() => {
     if (session) {
@@ -123,6 +133,41 @@ const Navbar = () => {
     }
   }, [session, router, pathname]);
 
+  useEffect(() => {
+    if (!session?.user?.accessToken) return;
+
+    const token = session.user.accessToken;
+    const socket: Socket = io({
+      path: "/api/socket",
+      auth: { token },
+    });
+
+    socket.on("notification", (incoming: NotificationItemDTO) => {
+      setNotifs((prev) => [incoming, ...prev].slice(0, 4));
+      setNeww(true);
+
+      if (incoming.metadata?.popupType === "tier_unlock") {
+        setProgressionPopup({
+          title: "Tier Unlocked",
+          message: incoming.content,
+          metadata: incoming.metadata,
+        });
+      }
+
+      if (incoming.metadata?.popupType === "achievement_unlock") {
+        setProgressionPopup({
+          title: "Achievement Unlocked",
+          message: incoming.content,
+          metadata: incoming.metadata,
+        });
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [session?.user?.accessToken]);
+
   const handleSignOut = () => {
     Cookies.remove("streakUpdated");
     signOut({ callbackUrl: "/" });
@@ -132,32 +177,32 @@ const Navbar = () => {
     {
       name: "Favorites",
       href: "/favorites",
-      current: router.pathname === "/favorites",
+      current: pathname === "/favorites",
     },
     {
       name: "official",
       href: "/official",
-      current: router.pathname === "/official",
+      current: pathname === "/official",
     },
     {
       name: "community",
       href: "/community",
-      current: router.pathname === "/community",
+      current: pathname === "/community",
     },
     {
       name: "create",
       href: "/cardAdd",
-      current: router.pathname === "/cardAdd",
+      current: pathname === "/cardAdd",
     },
     {
       name: "created",
       href: "/created",
-      current: router.pathname === "/created",
+      current: pathname === "/created",
     },
     {
       name: "groups",
       href: "/study-groups",
-      current: router.pathname === "/study-groups",
+      current: pathname === "/study-groups",
     },
   ];
 
@@ -166,6 +211,8 @@ const Navbar = () => {
   }
   const handleView = async () => {
     try {
+      if (!session?.user?.accessToken) return;
+
       const response = await fetch("/api/notifications/", {
         method: "PATCH",
         headers: {
@@ -196,7 +243,7 @@ const Navbar = () => {
   };
 
   return (
-    <Disclosure as="nav" className="bg-gray-800 shadow-md relative">
+    <Disclosure as="nav" className="bg-gray-800 shadow-md sticky top-0 w-full z-50">
       {searchAppear && (
         <div className="absolute text-black  left-0 top-14 w-full h-full bg-opacity-90 z-50">
           <form
@@ -367,6 +414,7 @@ const Navbar = () => {
 
                   <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     {session?.user?.role === "admin" && (
+                      <>
                       <MenuItem>
                         {({ focus }) => (
                           <button
@@ -380,6 +428,20 @@ const Navbar = () => {
                           </button>
                         )}
                       </MenuItem>
+                      <MenuItem>
+                        {({ focus }) => (
+                          <button
+                            onClick={() => router.push("/addAchievement")}
+                            className={classNames(
+                              focus ? "bg-gray-100" : "",
+                              "block w-full text-left px-4 py-2 text-sm text-gray-700"
+                            )}
+                          >
+                            add achievement
+                          </button>
+                        )}
+                      </MenuItem>
+                      </>
                     )}
 
                     {
@@ -477,6 +539,15 @@ const Navbar = () => {
           text="Are you sure you want to sign out?"
           cancel={setNotification}
           main_action="sign out"
+        />
+      )}
+
+      {progressionPopup && (
+        <ProgressionPopup
+          title={progressionPopup.title}
+          message={progressionPopup.message}
+          metadata={progressionPopup.metadata}
+          onClose={() => setProgressionPopup(null)}
         />
       )}
     </Disclosure>
