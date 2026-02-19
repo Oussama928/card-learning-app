@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../../../lib/db";
-
-interface CardWithOwner {
-  id: string;
-  title: string;
-  user_id: string;
-  owner: any;
-  [key: string]: any;
-}
+import type { CardWithOwnerDTO, OwnerSummaryDTO } from "@/types";
 
 export async function GET(
   request: NextRequest,
@@ -18,13 +11,13 @@ export async function GET(
   try {
     const getCardsQuery = `SELECT * FROM cards WHERE user_id = $1`;
     const cardsResult = await db.queryAsync(getCardsQuery, [id]);
-    const cards: CardWithOwner[] = cardsResult.rows;
+    const cards = (cardsResult.rows || []) as CardWithOwnerDTO[];
 
     const userQuery = `SELECT id, username, email, image FROM users WHERE id = $1`;
     const userResult = await db.queryAsync(userQuery, [id]);
-    const user = userResult.rows;
+    const user = userResult.rows[0] as OwnerSummaryDTO | undefined;
 
-    if (user.length === 0) {
+    if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
@@ -35,13 +28,13 @@ export async function GET(
       );
     }
 
-    const cardsWithOwner = cards.map((card) => ({
+    const cardsWithOwner: CardWithOwnerDTO[] = cards.map((card) => ({
       ...card,
-      owner: user[0],
+      owner: user,
     }));
 
     return NextResponse.json(cardsWithOwner);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching user cards:", error);
     return NextResponse.json(
       { error: "Failed to fetch user cards" },

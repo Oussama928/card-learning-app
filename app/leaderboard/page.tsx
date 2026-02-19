@@ -78,25 +78,26 @@ export default function GlobalStats() {
                 </div>
                 <div className="flex items-center gap-3">
                   <Image
-                    src={user.image || "/default-avatar.png"}
-                    alt={user.username}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
+                  src={user.image || "/default-avatar.png"}
+                  alt={user.username}
+                  width={40}
+                  height={40}
+                  className="rounded-full object-cover"
+                  style={{ width: "40px", height: "40px" }}
                   />
                   <div>
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: "rgba(255,255,255,0.8)" }}
-                    >
-                      {user.username}
-                    </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.6)" }}
-                    >
-                      ID: {user.id}
-                    </p>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "rgba(255,255,255,0.8)" }}
+                  >
+                    {user.username}
+                  </p>
+                  <p
+                    className="text-xs"
+                    style={{ color: "rgba(255,255,255,0.6)" }}
+                  >
+                    ID: {user.id}
+                  </p>
                   </div>
                 </div>
               </div>

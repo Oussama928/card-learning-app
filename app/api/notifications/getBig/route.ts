@@ -53,8 +53,8 @@ export async function GET(
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error: any) {
-    if (error.status === 401) {
+  } catch (error: unknown) {
+    if ((error as { status?: number }).status === 401) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 }

@@ -19,6 +19,7 @@ export default function Profile({ id }: ProfileProps) {
   const [stats, setStats] = React.useState<ProfileStatsDTO | null>(null);
   const [edited, setEdited] = React.useState("");
   const [streakInfo, setStreakInfo] = React.useState(false);
+  const [tierInfo, setTierInfo] = React.useState(false);
   const [editIndex, setEditIndex] = React.useState([
     false,
     false,
@@ -58,21 +59,21 @@ export default function Profile({ id }: ProfileProps) {
     if (field === "username") {
       try {
         await profileUpdateSchema.validateAt("username", { username: edited });
-      } catch (error: any) {
+      } catch (error: unknown) {
         alert(error.message);
         return;
       }
     } else if (field === "country") {
       try {
         await profileUpdateSchema.validateAt("country", { country: edited });
-      } catch (error: any) {
+      } catch (error: unknown) {
         alert(error.message);
         return;
       }
     } else if (field === "bio") {
       try {
         await profileUpdateSchema.validateAt("bio", { bio: edited });
-      } catch (error: any) {
+      } catch (error: unknown) {
         alert(error.message);
         return;
       }
@@ -353,10 +354,27 @@ export default function Profile({ id }: ProfileProps) {
             border: "1px solid rgba(127,202,201,0.2)",
           }}
         >
-          <h4 className="text-lg font-semibold mb-3" style={{ color: "#7fcac9" }}>
-            Tier Progression
-          </h4>
-          <div className="space-y-2 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
+          <div className="flex items-center justify-between mb-3">
+            <h4
+              className="text-lg font-semibold"
+              style={{ color: "#7fcac9" }}
+            >
+              Tier Progression
+              <img
+                src={`/tiers/${stats.progression?.currentXp >= 12000 ? "godlike" : stats.progression?.currentXp >= 8000 ? "legendary" : stats.progression?.currentXp >= 5000 ? "titanium" : stats.progression?.currentXp >= 3000 ? "platinum" : stats.progression?.currentXp >= 1500 ? "gold" : stats.progression?.currentXp >= 500 ? "silver" : "bronze"}.png`}
+                alt={stats.progression?.currentTier?.name ?? "tier icon"}
+                className="ml-2 inline-block w-8 h-8"
+              />
+            </h4>
+            <FaInfoCircle
+              onClick={() => setTierInfo(true)}
+              className="opacity-45 cursor-pointer text-white"
+            />
+          </div>
+          <div
+            className="space-y-2 text-sm"
+            style={{ color: "rgba(255,255,255,0.85)" }}
+          >
             <p>
               Current tier: <span className="font-semibold">{stats.progression?.currentTier?.name ?? "Bronze"}</span>
             </p>
@@ -426,11 +444,11 @@ export default function Profile({ id }: ProfileProps) {
 
       {streakInfo && (
         <div
-          className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm"
+          className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm px-4"
           style={{ zIndex: 1000 }}
         >
           <div
-            className="p-8 rounded-lg"
+            className="p-8 rounded-lg max-w-lg w-full"
             style={{
               background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
               border: "1px solid rgba(127,202,201,0.2)",
@@ -475,6 +493,84 @@ export default function Profile({ id }: ProfileProps) {
             </p>
             <button
               onClick={() => setStreakInfo(false)}
+              className="mt-6 w-full py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                background: "rgba(127,202,201,0.1)",
+                color: "#7fcac9",
+                border: "1px solid rgba(127,202,201,0.2)",
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {tierInfo && (
+        <div
+          className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm px-4"
+          style={{ zIndex: 1000 }}
+        >
+          <div
+            className="p-8 rounded-lg max-w-lg w-full"
+            style={{
+              background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
+              border: "1px solid rgba(127,202,201,0.2)",
+              boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
+            }}
+          >
+            <h3
+              className="text-2xl font-bold mb-6 text-center"
+              style={{ color: "#7fcac9" }}
+            >
+              Tier Requirements
+            </h3>
+            <div className="space-y-4">
+              {[
+                { name: "Bronze", xp: 0, img: "/tiers/bronze.png" },
+                { name: "Silver", xp: 500, img: "/tiers/silver.png" },
+                { name: "Gold", xp: 1500, img: "/tiers/gold.png" },
+                { name: "Platinum", xp: 3000, img: "/tiers/platinum.png" },
+                { name: "Titanium", xp: 5000, img: "/tiers/titanium.png" },
+                { name: "Legendary", xp: 8000, img: "/tiers/legendary.png" },
+                { name: "Godlike", xp: 12000, img: "/tiers/godlike.png" },
+              ].sort((a, b) => a.xp < b.xp).map((tier, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-2 rounded-lg"
+                  style={{ background: "rgba(127,202,201,0.05)" }}
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={tier.img}
+                      alt={tier.name}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <span
+                      className="font-medium"
+                      style={{ color: "rgba(255,255,255,0.9)" }}
+                    >
+                      {tier.name}
+                    </span>
+                  </div>
+                  <span
+                    className="text-sm"
+                    style={{ color: "rgba(127,202,201,0.8)" }}
+                  >
+                    {tier.xp} XP
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p
+              className="mt-6 text-center text-sm"
+              style={{ color: "rgba(255,255,255,0.7)" }}
+            >
+              Earn XP by completing reviews and learning new words to rank up
+              through the tiers and unlock exclusive achievements.
+            </p>
+            <button
+              onClick={() => setTierInfo(false)}
               className="mt-6 w-full py-2 rounded-lg text-sm font-medium transition-colors"
               style={{
                 background: "rgba(127,202,201,0.1)",

@@ -13,16 +13,16 @@ import {
   DocumentTextIcon,
   CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
-import { CardAddPageProps } from "@/types";
+import { CardAddPageProps, CreateCardRequestDTO } from "@/types";
 
 const validationSchema = cardAddSchema;
+
+type WordTuple = [string, string, (number | boolean | string)?, string?];
 
 export default function Example({ Current }: CardAddPageProps) {
   const [i, seti] = useState(1);
   const [ii, setii] = useState(1);
-  const [words, setWords] = useState<
-    Array<[string, string, (number | boolean | string)?, string?]>
-  >([["", "", false, ""]]);
+  const [words, setWords] = useState<WordTuple[]>([["", "", false, ""]]);
   const [garbageCollector, setGarbageCollector] = useState<number[]>([]);
   const [fileError, setFileError] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
@@ -61,7 +61,7 @@ export default function Example({ Current }: CardAddPageProps) {
         return;
       }
 
-      const cardData: any = {
+      const cardData: CreateCardRequestDTO = {
         ...values,
         edit: Boolean(Current),
         garbageCollector: garbageCollector,
@@ -74,7 +74,7 @@ export default function Example({ Current }: CardAddPageProps) {
         const filteredWords = words.filter(
           ([word, trans]) => word.trim() && trans.trim(),
         );
-        cardData.words = filteredWords;
+        cardData.words = filteredWords as [string, string, (string | number | boolean)?, string?][];
       }
 
       if (Current) {
@@ -86,7 +86,7 @@ export default function Example({ Current }: CardAddPageProps) {
         const response = await fetch("/api/addCard", {
           method: "POST",
           headers: {
-            authorization: `Bearer ${(session?.user as any)?.accessToken}`,
+            authorization: `Bearer ${session?.user?.accessToken}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify(cardData),
@@ -170,7 +170,7 @@ export default function Example({ Current }: CardAddPageProps) {
       const res = await fetch("/api/uploads", {
         method: "POST",
         headers: {
-          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
+          authorization: `Bearer ${session?.user?.accessToken}`,
         },
         body: formData,
       });
@@ -186,7 +186,7 @@ export default function Example({ Current }: CardAddPageProps) {
         next[index] = [current[0], current[1], current[2], data.data.url];
         return next;
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       alert(error?.message || "Failed to upload image");
     } finally {
       setUploadingWordIndex(null);
@@ -212,11 +212,11 @@ export default function Example({ Current }: CardAddPageProps) {
         formik.setFieldValue("targetLanguage", data.targetLanguage);
         formik.setFieldValue("description", data.description);
         setWords(
-          (data.cardData || []).map((subArray: any[]) => [
-            subArray[0] || "",
-            subArray[1] || "",
-            subArray[2] || false,
-            subArray[4] || "",
+          (data.cardData || []).map((subArray: (string | number | boolean)[]) => [
+            String(subArray[0] || ""),
+            String(subArray[1] || ""),
+            (subArray[2] as string | number | boolean) || false,
+            String(subArray[4] || ""),
           ]),
         );
         seti(data.cardData.length);

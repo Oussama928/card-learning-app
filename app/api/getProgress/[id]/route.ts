@@ -44,9 +44,23 @@ export async function GET(
     );
     const words = wordsResult.rows;
 
+    interface RawProgressRow {
+      id: number;
+      word: string;
+      translated_word: string;
+      is_learned: boolean;
+      correct_count: number;
+      incorrect_count: number;
+      repetitions: number;
+      interval_days: number;
+      ease_factor: number;
+      last_reviewed: Date | string | null;
+      next_review_at: Date | string | null;
+    }
+
     return NextResponse.json({
       message: "Progress retrieved successfully",
-      progress: words.map((word: any) => ({
+      progress: (words as RawProgressRow[]).map((word) => ({
         word_id: word.id,
         original: word.word,
         translation: word.translated_word,
@@ -60,7 +74,7 @@ export async function GET(
         nextReviewAt: word.next_review_at ? String(word.next_review_at) : null,
       })),
     } as GetProgressResponse);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Progress fetch error:", error);
     return NextResponse.json(
       { error: "Failed to load progress" },

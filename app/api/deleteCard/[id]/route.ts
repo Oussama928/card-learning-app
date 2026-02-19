@@ -3,11 +3,7 @@ import db from "@/lib/db";
 import { authenticateRequest } from "../../authenticateRequest";
 import { cache } from "@/lib/cache";
 import { handleApiError } from "@/lib/apiHandler";
-
-type CardOwnership = {
-  id: number;
-  role: "admin" | "user" | string;
-};
+import type { CardOwnership } from "@/types";
 
 export async function DELETE(
   request: NextRequest,
@@ -56,7 +52,7 @@ export async function DELETE(
       message: "Card and all associated words deleted successfully",
       deletedCardId: id,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

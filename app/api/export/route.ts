@@ -26,10 +26,11 @@ export async function GET(request: NextRequest) {
       progress: progressResult.rows,
       favorites: favoritesResult.rows,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; status?: number };
     return NextResponse.json(
-      { error: "Failed to export user data", details: error.message },
-      { status: error?.status || 500 }
+      { error: "Failed to export user data", details: err.message },
+      { status: err.status || 500 }
     );
   }
 }

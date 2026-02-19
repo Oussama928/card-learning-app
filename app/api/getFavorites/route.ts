@@ -60,7 +60,7 @@ export async function GET(
       favorites: array,
       fullFavorites: cards,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Database error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch card data" },

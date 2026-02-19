@@ -12,7 +12,7 @@ export type TierNameDTO =
 export interface TierDefinitionDTO {
   name: TierNameDTO;
   thresholdXp: number;
-  logoUrl?: string | null;
+  imageUrl?: string | null;
 }
 
 export interface TierUnlockDTO {

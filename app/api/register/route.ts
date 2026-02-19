@@ -37,7 +37,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       message: "User registered successfully",
       result,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

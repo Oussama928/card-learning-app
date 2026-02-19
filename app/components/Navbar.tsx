@@ -49,8 +49,10 @@ const Navbar = () => {
   const [searchAppear, setSearchAppear] = React.useState<boolean>(false);
   const [search, setSearch] = React.useState<string>("");
   const [streak, setStreak] = React.useState<number>(0);
-  const [progressionPopup, setProgressionPopup] = React.useState<ProgressionPopupState | null>(null);
-  const icon_paths = ["leaderboard","profile"];
+  const [tierName, setTierName] = React.useState<string>("bronze");
+  const [progressionPopup, setProgressionPopup] =
+    React.useState<ProgressionPopupState | null>(null);
+  const icon_paths = ["leaderboard", "profile"];
   useEffect(() => {
     if (session) {
       console.log("Session:", session);
@@ -122,6 +124,10 @@ const Navbar = () => {
           if (response.ok) {
             const data = await response.json();
             setStreak(data.stats?.dailyStreak || 0);
+            setTierName(
+              data.stats?.progression?.currentTier?.name?.toLowerCase() ||
+                "bronze",
+            );
           } else {
             console.error("Failed to retrieve streak");
           }
@@ -236,14 +242,19 @@ const Navbar = () => {
     try {
       searchSchema.validateSync({ search: search.trim() });
       router.push(`/search/${encodeURIComponent(search.trim())}`);
-    } catch (error: any) {
-      alert(error.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message);
+      }
       return;
     }
   };
 
   return (
-    <Disclosure as="nav" className="bg-gray-800 shadow-md sticky top-0 w-full z-50">
+    <Disclosure
+      as="nav"
+      className="bg-gray-800 shadow-md sticky top-0 w-full z-50"
+    >
       {searchAppear && (
         <div className="absolute text-black  left-0 top-14 w-full h-full bg-opacity-90 z-50">
           <form
@@ -315,7 +326,7 @@ const Navbar = () => {
                         item.name === picked
                           ? "bg-gray-900 text-gray-200 text-l "
                           : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                        "rounded-md px-3 py-2 text-sm font-medium"
+                        "rounded-md px-3 py-2 text-sm font-medium",
                       )}
                       aria-current={item.current ? "page" : undefined}
                     >
@@ -328,9 +339,21 @@ const Navbar = () => {
 
           <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 flex-nowrap">
             {session?.user && (
-              <div className="flex items-center gap-1 text-white whitespace-nowrap shrink-0">
-                <img src="/flame.png" className="h-5 w-5" />
-                <span className="text-sm font-semibold">{streak}</span>
+              <div className="flex items-center gap-3 text-white whitespace-nowrap shrink-0">
+                <div className="flex flex-col items-center gap-0">
+                  <img
+                    src={`/tiers/${tierName}.png`}
+                    className="h-7 w-7 rounded-full object-cover"
+                    alt={`${tierName} tier icon`}
+                  />
+                  <span className="text-xs font-semibold capitalize text-white" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    {tierName}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 border border-gray-600 rounded-lg px-1 py-1 bg-gray-900" style={{ backgroundColor: 'rgb(24 32 47)' }}>
+                  <img src="/flame.png" className="h-6 w-6" />
+                  <span className="text-sm font-semibold">{streak}</span>
+                </div>
               </div>
             )}
 
@@ -339,7 +362,8 @@ const Navbar = () => {
                 setSearchAppear(true);
                 setTimeout(() => {
                   inputRef.current?.focus();
-                }, 0);            }}
+                }, 0);
+              }}
               className="h-6 w-6 text-gray-400 cursor-pointer shrink-0"
             />
             {session?.user ? (
@@ -365,7 +389,7 @@ const Navbar = () => {
                             className={classNames(
                               focus ? "bg-gray-100" : "",
                               "block w-full text-left px-6 py-3 text-sm text-gray-700 rounded-md transition-colors duration-200",
-                              "hover:bg-gray-200 hover:text-gray-900"
+                              "hover:bg-gray-200 hover:text-gray-900",
                             )}
                           >
                             <div className="font-semibold text-gray-800">
@@ -387,7 +411,7 @@ const Navbar = () => {
                           className={classNames(
                             focus ? "bg-gray-100 text-center " : "",
                             "block w-full text-center border-t-2   px-6 py-2 text-sm text-gray-700 rounded-md transition-colors duration-200",
-                            "hover:bg-gray-200 hover:text-gray-900"
+                            "hover:bg-gray-200 hover:text-gray-900",
                           )}
                         >
                           <div className="font-semibold  text-gray-800">
@@ -415,59 +439,57 @@ const Navbar = () => {
                   <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     {session?.user?.role === "admin" && (
                       <>
-                      <MenuItem>
-                        {({ focus }) => (
-                          <button
-                            onClick={() => router.push("/addNotification")}
-                            className={classNames(
-                              focus ? "bg-gray-100" : "",
-                              "block w-full text-left px-4 py-2 text-sm text-gray-700"
-                            )}
-                          >
-                            add notification
-                          </button>
-                        )}
-                      </MenuItem>
-                      <MenuItem>
-                        {({ focus }) => (
-                          <button
-                            onClick={() => router.push("/addAchievement")}
-                            className={classNames(
-                              focus ? "bg-gray-100" : "",
-                              "block w-full text-left px-4 py-2 text-sm text-gray-700"
-                            )}
-                          >
-                            add achievement
-                          </button>
-                        )}
-                      </MenuItem>
+                        <MenuItem>
+                          {({ focus }) => (
+                            <button
+                              onClick={() => router.push("/addNotification")}
+                              className={classNames(
+                                focus ? "bg-gray-100" : "",
+                                "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                              )}
+                            >
+                              add notification
+                            </button>
+                          )}
+                        </MenuItem>
+                        <MenuItem>
+                          {({ focus }) => (
+                            <button
+                              onClick={() => router.push("/addAchievement")}
+                              className={classNames(
+                                focus ? "bg-gray-100" : "",
+                                "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                              )}
+                            >
+                              add achievement
+                            </button>
+                          )}
+                        </MenuItem>
                       </>
                     )}
 
-                    {
-                    icon_paths.map((path) => (
+                    {icon_paths.map((path) => (
                       <MenuItem key={path}>
                         {({ focus }) => (
                           <Link
                             href={`/${path}`}
                             className={classNames(
                               focus ? "bg-gray-100" : "",
-                              "block px-4 py-2 text-sm text-gray-700"
+                              "block px-4 py-2 text-sm text-gray-700",
                             )}
                           >
                             {path}
                           </Link>
                         )}
                       </MenuItem>
-                    ))
-                  }
+                    ))}
                     <MenuItem>
                       {({ focus }) => (
                         <Link
                           href="/settings"
                           className={classNames(
                             focus ? "bg-gray-100" : "",
-                            "block px-4 py-2 text-sm text-gray-700"
+                            "block px-4 py-2 text-sm text-gray-700",
                           )}
                         >
                           settings
@@ -480,7 +502,7 @@ const Navbar = () => {
                           onClick={() => setNotification(true)}
                           className={classNames(
                             focus ? "bg-gray-100" : "",
-                            "block w-full text-left px-4 py-2 text-sm text-gray-700"
+                            "block w-full text-left px-4 py-2 text-sm text-gray-700",
                           )}
                         >
                           Sign out
@@ -514,7 +536,7 @@ const Navbar = () => {
                   item.current
                     ? "bg-gray-900 text-white"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                  "block rounded-md px-3 py-2 text-base font-medium"
+                  "block rounded-md px-3 py-2 text-base font-medium",
                 )}
                 aria-current={item.current ? "page" : undefined}
               >

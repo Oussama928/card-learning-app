@@ -6,7 +6,7 @@ import { AppError, handleApiError, parseRequestBody } from "@/lib/apiHandler";
 import { createAchievementSchema } from "@/lib/validation/schemas";
 import { notifyUser } from "@/lib/notificationEvents";
 import { awardNewAchievementToQualifiedUsers } from "@/lib/progressionService";
-import type { ApiErrorResponseDTO, CreateAchievementResponseDTO } from "@/types";
+import type { ApiErrorResponseDTO, CreateAchievementResponseDTO, AchievementInsertRow } from "@/types";
 
 const slugifyKey = (value: string) =>
   value
@@ -39,18 +39,6 @@ async function generateAchievementKey(name: string): Promise<string> {
     const truncatedBase = base.slice(0, KEY_MAX_LENGTH - suffixValue.length);
     candidate = `${truncatedBase}${suffixValue}`;
   }
-}
-
-interface AchievementInsertRow {
-  id: number;
-  key: string;
-  name: string;
-  description: string;
-  image_url: string | null;
-  condition_type: "cards_studied_total" | "cards_created_total";
-  condition_value: number;
-  xp_reward: number;
-  created_at: string;
 }
 
 export async function POST(
@@ -126,7 +114,7 @@ export async function POST(
       },
       notifiedUsers: qualifyingUserIds.length,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

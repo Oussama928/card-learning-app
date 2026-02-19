@@ -98,10 +98,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     `;
 
     const ownersResult = await db.queryAsync(getOwnersQuery, userIds);
-    const owners = ownersResult.rows;
+    const owners = ownersResult.rows as { id: string; username: string; email: string; image: string }[];
 
     const ownersMap = owners.reduce(
-      (map: Record<string, any>, owner: any) => {
+      (map: Record<string, { id: string; username: string; email: string; image: string }>, owner) => {
         map[owner.id] = owner;
         return map;
       },
@@ -109,7 +109,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     );
 
     for (const card of results) {
-      card.owner = ownersMap[card.user_id];
+      if (card.user_id) {
+        card.owner = ownersMap[card.user_id];
+      }
     }
 
     const response: SearchResponseDTO = {
@@ -128,7 +130,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     await cache.setJSON(cacheKey, response, 30);
 
     return NextResponse.json(response);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

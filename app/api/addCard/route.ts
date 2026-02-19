@@ -82,14 +82,14 @@ const parseFileContent = (fileContent: string): WordPair[] => {
   return parsedExpressions;
 };
 
-const validateWordPair = (wordPair: any, index: number): WordPair => {
+const validateWordPair = (wordPair: unknown, index: number): WordPair => {
   if (!Array.isArray(wordPair) || wordPair.length < 2) {
     throw new Error(
       `Invalid expression pair at index ${index}: must be an array with at least 2 elements`
     );
   }
 
-  const [word, translation] = wordPair;
+  const [word, translation] = wordPair as [unknown, unknown];
 
   if (typeof word !== "string" || typeof translation !== "string") {
     throw new Error(
@@ -106,7 +106,7 @@ const validateWordPair = (wordPair: any, index: number): WordPair => {
     );
   }
 
-  let identityOrFlag: number | boolean = wordPair[2] || false;
+  let identityOrFlag: number | boolean = (wordPair[2] as number | boolean) || false;
   let imageUrl: string | null = null;
 
   // backward compatibility: new rows may send [word, translation, imageUrl]
@@ -122,7 +122,7 @@ const validateWordPair = (wordPair: any, index: number): WordPair => {
   return [sanitizedWord, sanitizedTranslation, identityOrFlag, imageUrl];
 };
 
-const validateWordsArray = (words: any[]): WordPair[] => {
+const validateWordsArray = (words: unknown): WordPair[] => {
   if (!Array.isArray(words)) {
     throw new Error("Words must be an array");
   }
@@ -140,9 +140,10 @@ const validateWordsArray = (words: any[]): WordPair[] => {
     try {
       const validatedPair = validateWordPair(words[i], i);
       validatedWords.push(validatedPair);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
       throw new Error(
-        `Expression pair validation failed: ${error.message}`
+        `Expression pair validation failed: ${message}`
       );
     }
   }
@@ -197,11 +198,12 @@ export async function POST(
     if (fileContent) {
       try {
         validatedWords = parseFileContent(fileContent);
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
         return NextResponse.json(
           {
             success: false,
-            message: "File parsing error: " + error.message,
+            message: "File parsing error: " + message,
           },
           { status: 400 }
         );
@@ -209,11 +211,12 @@ export async function POST(
     } else if (words) {
       try {
         validatedWords = validateWordsArray(words);
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
         return NextResponse.json(
           {
             success: false,
-            message: error.message,
+            message: message,
           },
           { status: 400 }
         );
@@ -395,16 +398,18 @@ export async function POST(
         cardId,
       });
     }
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    
     if (
-      error.message.includes("validation") ||
-      error.message.includes("sanitization")
+      message.includes("validation") ||
+      message.includes("sanitization")
     ) {
       return NextResponse.json(
         {
           success: false,
           message: "Input validation failed",
-          error: error.message,
+          error: message,
         },
         { status: 400 }
       );
@@ -430,6 +435,6 @@ export async function POST(
       );
     }
 
-    return handleApiError(error, request);
+    return handleApiError(err, request);
   }
 }

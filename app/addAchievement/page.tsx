@@ -119,7 +119,8 @@ export default function AddAchievementPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        setMessage(data?.error || data?.message || "Failed to create achievement.");
+        const errorMessage = data?.details ? `${data.error}: ${data.details}` : (data?.error || data?.message || "Failed to create achievement.");
+        setMessage(errorMessage);
         return;
       }
 

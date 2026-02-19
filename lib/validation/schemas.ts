@@ -23,7 +23,7 @@ export const createAchievementSchema = z.object({
   description: z.string().min(3).max(1000).trim(),
   conditionType: z.enum(["cards_studied_total", "cards_created_total"]),
   target: z.number().int().min(1),
-  imageUrl: z.string().url().max(511).optional().nullable(),
+  imageUrl: z.string().max(511).optional().nullable(),
   xpReward: z.number().int().min(0).optional(),
 });
 

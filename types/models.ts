@@ -191,3 +191,79 @@ export interface StudyGroupPostComment {
   created_at?: string;
   updated_at?: string;
 }
+
+// Internal Database Row Types
+export interface UserStatsProgressRow {
+  xp: number;
+  current_tier: string;
+}
+
+export interface TierPercentileRow {
+  xp: number;
+  percentile: number;
+}
+
+export interface AchievementRow {
+  id: number;
+  key: string;
+  name: string;
+  description: string;
+  image_url: string | null;
+  condition_type: string;
+  condition_value: number;
+  unlocked_at: string | null;
+}
+
+export interface CountRow {
+  total: string | number;
+}
+
+export interface UserRow {
+  id: number;
+  username: string;
+  email: string;
+  image?: string | null;
+  country?: string | null;
+  bio?: string | null;
+}
+
+export interface UserStatsRow {
+  total_terms_learned?: number;
+  accuracy?: number;
+  xp?: number;
+  daily_streak?: number;
+  last_login_date?: string | null;
+}
+
+export interface ActivityRow {
+  day: string;
+  reviews: number;
+  correct_reviews: number;
+}
+
+export interface AchievementInsertRow {
+  id: number;
+  key: string;
+  name: string;
+  description: string;
+  image_url: string | null;
+  condition_type: "cards_studied_total" | "cards_created_total";
+  condition_value: number;
+  xp_reward: number;
+  created_at: string;
+}
+
+export interface ExistingProgressRow {
+  correct_count?: number;
+  incorrect_count?: number;
+  repetitions?: number;
+  interval_days?: number;
+  ease_factor?: number;
+  last_reviewed?: string | null;
+  next_review_at?: string | null;
+}
+
+export interface CardOwnership {
+  id: number;
+  role: "admin" | "user" | string;
+}

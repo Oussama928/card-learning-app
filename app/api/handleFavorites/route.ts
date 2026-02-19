@@ -36,10 +36,15 @@ export async function POST(
       { success: false, message: "Invalid intent" },
       { status: 400 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorWithMsg = error as { message?: string };
     console.error("Error in POST request:", error);
     return NextResponse.json(
-      { success: false, message: "Error adding card", error: error.message },
+      {
+        success: false,
+        message: "Error adding card",
+        error: errorWithMsg.message || "Unknown error",
+      },
       { status: 500 }
     );
   }

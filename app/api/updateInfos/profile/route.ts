@@ -28,7 +28,7 @@ export async function POST(
       message: "Profile updated successfully",
       updated_user: updated,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("User info update error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to update user info" },

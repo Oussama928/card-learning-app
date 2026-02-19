@@ -6,32 +6,11 @@ import type {
   TierDefinitionDTO,
   TierNameDTO,
   UserTierProgressDTO,
+  UserStatsProgressRow,
+  TierPercentileRow,
+  AchievementRow,
+  CountRow,
 } from "@/types";
-
-interface UserStatsProgressRow {
-  xp: number;
-  current_tier: TierNameDTO;
-}
-
-interface TierPercentileRow {
-  xp: number;
-  percentile: number;
-}
-
-interface AchievementRow {
-  id: number;
-  key: string;
-  name: string;
-  description: string;
-  image_url: string | null;
-  condition_type: AchievementConditionTypeDTO;
-  condition_value: number;
-  unlocked_at: string | null;
-}
-
-interface CountRow {
-  total: string | number;
-}
 
 interface ProgressionActionResult {
   xpAwarded: number;
@@ -74,13 +53,13 @@ const XP_ACTIONS = {
 export type XpAction = keyof typeof XP_ACTIONS;
 
 export const PROGRESSION_TIERS: TierDefinitionDTO[] = [
-  { name: "Bronze", thresholdXp: 0, logoUrl: "/tiers/bronze.png" },
-  { name: "Silver", thresholdXp: 500, logoUrl: "/tiers/silver.png" },
-  { name: "Gold", thresholdXp: 1500, logoUrl: "/tiers/gold.png" },
-  { name: "Platinum", thresholdXp: 3000, logoUrl: "/tiers/platinum.png" },
-  { name: "Titanium", thresholdXp: 5000, logoUrl: "/tiers/titanium.png" },
-  { name: "Legendary", thresholdXp: 8000, logoUrl: "/tiers/legendary.png" },
-  { name: "Godlike", thresholdXp: 12000, logoUrl: "/tiers/godlike.png" },
+  { name: "Bronze", thresholdXp: 0, imageUrl: "/tiers/bronze.png" },
+  { name: "Silver", thresholdXp: 500, imageUrl: "/tiers/silver.png" },
+  { name: "Gold", thresholdXp: 1500, imageUrl: "/tiers/gold.png" },
+  { name: "Platinum", thresholdXp: 3000, imageUrl: "/tiers/platinum.png" },
+  { name: "Titanium", thresholdXp: 5000, imageUrl: "/tiers/titanium.png" },
+  { name: "Legendary", thresholdXp: 8000, imageUrl: "/tiers/legendary.png" },
+  { name: "Godlike", thresholdXp: 12000, imageUrl: "/tiers/godlike.png" },
 ];
 
 export function resolveTierByXp(xp: number): TierDefinitionDTO {

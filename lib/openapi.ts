@@ -12,6 +12,10 @@ export const openApiSpec = {
     { name: "Stats" },
     { name: "Search" },
     { name: "Notifications" },
+    { name: "Achievements" },
+    { name: "StudyGroups" },
+    { name: "UserPreferences" },
+    { name: "Uploads" },
     { name: "Health" },
   ],
   components: {
@@ -91,6 +95,81 @@ export const openApiSpec = {
           success: { type: "boolean" },
           message: { type: "string" },
           cardId: { type: "integer" },
+        },
+      },
+      TierDefinition: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          thresholdXp: { type: "integer" },
+          imageUrl: { type: "string" },
+        },
+      },
+      UserTierProgress: {
+        type: "object",
+        properties: {
+          currentTier: { $ref: "#/components/schemas/TierDefinition" },
+          currentXp: { type: "number" },
+          percentileRanking: { type: "number" },
+          nextUnlock: {
+            type: "object",
+            nullable: true,
+            properties: {
+              tier: { $ref: "#/components/schemas/TierDefinition" },
+              xpRemaining: { type: "integer" },
+            },
+          },
+        },
+      },
+      AchievementBadge: {
+        type: "object",
+        properties: {
+          key: { type: "string" },
+          name: { type: "string" },
+          description: { type: "string" },
+          imageUrl: { type: "string", nullable: true },
+          unlocked: { type: "boolean" },
+          unlockedAt: { type: "string", format: "date-time", nullable: true },
+          progress: { type: "integer" },
+          target: { type: "integer" },
+        },
+      },
+      UploadResponse: {
+        type: "object",
+        properties: {
+          success: { type: "boolean" },
+          message: { type: "string" },
+          data: {
+            type: "object",
+            properties: {
+              url: { type: "string" },
+              filename: { type: "string" },
+              mimetype: { type: "string" },
+              size: { type: "integer" },
+            },
+          },
+        },
+      },
+      StudyGroup: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          name: { type: "string" },
+          description: { type: "string", nullable: true },
+          role: { type: "string", enum: ["teacher", "student"] },
+          visibility: { type: "string", enum: ["public", "private"] },
+          joinCode: { type: "string", nullable: true },
+          memberCount: { type: "integer" },
+          createdAt: { type: "string", format: "date-time" },
+        },
+      },
+      UserPreferences: {
+        type: "object",
+        properties: {
+          emailNotifications: { type: "boolean" },
+          pushNotifications: { type: "boolean" },
+          studyReminders: { type: "boolean" },
+          theme: { type: "string", enum: ["light", "dark", "system"] },
         },
       },
       UpdateProgressRequest: {
@@ -204,6 +283,40 @@ export const openApiSpec = {
           pagination: { $ref: "#/components/schemas/Pagination" },
         },
       },
+      HomeOverview: {
+        type: "object",
+        properties: {
+          mode: { type: "string", enum: ["continue", "retry", "empty"] },
+          unfinishedSessions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "integer" },
+                title: { type: "string" },
+                description: { type: "string", nullable: true },
+                totalWords: { type: "integer" },
+                learnedWords: { type: "integer" },
+                lastReviewedAt: { type: "string", format: "date-time" },
+              },
+            },
+          },
+          completedSessions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "integer" },
+                title: { type: "string" },
+                description: { type: "string", nullable: true },
+                totalWords: { type: "integer" },
+                learnedWords: { type: "integer" },
+                lastReviewedAt: { type: "string", format: "date-time" },
+              },
+            },
+          },
+        },
+      },
       StatsResponse: {
         type: "object",
         properties: {
@@ -221,6 +334,22 @@ export const openApiSpec = {
               xp: { type: "number" },
               dailyStreak: { type: "integer" },
               lastLoginDate: { type: "string", nullable: true },
+              progression: { $ref: "#/components/schemas/UserTierProgress" },
+              achievements: {
+                type: "array",
+                items: { $ref: "#/components/schemas/AchievementBadge" },
+              },
+              activityHeatmap: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    date: { type: "string", format: "date" },
+                    reviews: { type: "integer" },
+                    correctReviews: { type: "integer" },
+                  },
+                },
+              },
             },
           },
         },
@@ -275,6 +404,20 @@ export const openApiSpec = {
           "503": { description: "Degraded", content: { "application/json": { schema: { $ref: "#/components/schemas/HealthResponse" } } } },
         },
       },
+    },
+    "/api/home/overview": {
+      get: {
+        tags: ["Home"],
+        summary: "Dashboard overview info",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "OK",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/HomeOverview" } } }
+          },
+          "401": { description: "Unauthorized" }
+        }
+      }
     },
     "/api/getGlobalStats": {
       get: {
@@ -447,6 +590,138 @@ export const openApiSpec = {
         ],
         responses: { "200": { description: "OK" }, "404": { description: "Not found" } },
       },
+    },
+    "/api/notifications": {
+      post: {
+        tags: ["Notifications"],
+        summary: "Send notification to all users (admin)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", properties: { type: { type: "string" }, content: { type: "string" } }, required: ["type", "content"] } } }
+        },
+        responses: { "200": { description: "OK" } }
+      }
+    },
+    "/api/notifications/getSmall": {
+      get: {
+        tags: ["Notifications"],
+        summary: "Get compact notifications list",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "OK" } }
+      }
+    },
+    "/api/notifications/getBig": {
+      get: {
+        tags: ["Notifications"],
+        summary: "Get full notifications list",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "OK" } }
+      }
+    },
+    "/api/achievements": {
+      post: {
+        tags: ["Achievements"],
+        summary: "Create or award achievement (admin)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                  conditionType: { type: "string" },
+                  conditionValue: { type: "integer" },
+                  xpReward: { type: "integer" },
+                },
+                required: ["name", "conditionType", "conditionValue"]
+              }
+            }
+          }
+        },
+        responses: { "200": { description: "OK" } }
+      }
+    },
+    "/api/study-groups": {
+      get: {
+        tags: ["StudyGroups"],
+        summary: "List user study groups",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          "200": {
+            description: "OK",
+            content: { "application/json": { schema: { type: "object", properties: { groups: { type: "array", items: { $ref: "#/components/schemas/StudyGroup" } } } } } }
+          }
+        }
+      },
+      post: {
+        tags: ["StudyGroups"],
+        summary: "Create a study group",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { type: "object", properties: { name: { type: "string" }, description: { type: "string" }, visibility: { type: "string", enum: ["public", "private"] } }, required: ["name"] } } }
+        },
+        responses: { "201": { description: "Created" } }
+      }
+    },
+    "/api/study-groups/{id}/posts": {
+      get: {
+        tags: ["StudyGroups"],
+        summary: "Get group posts",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { description: "OK" } }
+      },
+      post: {
+        tags: ["StudyGroups"],
+        summary: "Create group post",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "multipart/form-data": { schema: { type: "object", properties: { content: { type: "string" }, file: { type: "string", format: "binary" } }, required: ["content"] } } }
+        },
+        responses: { "201": { description: "Created" } }
+      }
+    },
+    "/api/userPreferences": {
+      get: {
+        tags: ["UserPreferences"],
+        summary: "Get preferences",
+        security: [{ bearerAuth: [] }],
+        responses: { "200": { content: { "application/json": { schema: { $ref: "#/components/schemas/UserPreferences" } } } } }
+      },
+      patch: {
+        tags: ["UserPreferences"],
+        summary: "Update preferences",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: { $ref: "#/components/schemas/UserPreferences" } } }
+        },
+        responses: { "200": { description: "OK" } }
+      }
+    },
+    "/api/uploads": {
+      post: {
+        tags: ["Uploads"],
+        summary: "Upload image",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: { "multipart/form-data": { schema: { type: "object", properties: { file: { type: "string", format: "binary" } } } } }
+        },
+        responses: {
+          "200": {
+            description: "OK",
+            content: { "application/json": { schema: { $ref: "#/components/schemas/UploadResponse" } } }
+          }
+        }
+      }
     },
     "/api/postProgress": {
       post: {

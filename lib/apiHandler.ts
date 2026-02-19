@@ -106,10 +106,12 @@ export const handleApiError = <T>(error: unknown, request: NextRequest) => {
     ) as NextResponse<T>;
   }
 
-  const err = error as { message?: string; stack?: string };
+  const message = error instanceof Error ? error.message : "Unknown error";
+  const stack = error instanceof Error ? error.stack : undefined;
+
   logger.error("api_error", {
-    message: err?.message || "Unknown error",
-    stack: err?.stack,
+    message,
+    stack,
     path: request.nextUrl?.pathname,
     method: request.method,
   });

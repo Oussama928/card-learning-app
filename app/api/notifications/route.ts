@@ -26,9 +26,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       `SELECT role FROM users WHERE id = $1`,
       [userId]
     );
-    const userResult = checkUserResult.rows;
+    const userResult = checkUserResult.rows as { role: string }[];
 
-    if (userResult[0].role !== "admin") {
+    if (!userResult[0] || userResult[0].role !== "admin") {
       return NextResponse.json(
         { message: "You are not authorized to add a notif" },
         { status: 401 }
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       message: "Notif added successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       duration: 60,
       userId,
     });
-    const { notifs }: { notifs: NotificationItemDTO[] } = await request.json();
+    const { notifs }: { notifs: { id: string | number }[] } = await request.json();
 
     const updateNotifQuery = `
       UPDATE notifications
@@ -76,14 +76,14 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       WHERE id = $1;
     `;
 
-    for (let i = 0; i < notifs.length; i++) {
-      await db.queryAsync(updateNotifQuery, [notifs[i].id]);
+    for (const notif of notifs) {
+      await db.queryAsync(updateNotifQuery, [notif.id]);
     }
 
     return NextResponse.json({
       message: "sucessfully set the notifs to read",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

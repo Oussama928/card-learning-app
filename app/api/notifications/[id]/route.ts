@@ -34,7 +34,7 @@ export async function DELETE(
       success: true,
       message: "notif deleted successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

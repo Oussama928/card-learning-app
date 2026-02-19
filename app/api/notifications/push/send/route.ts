@@ -28,11 +28,17 @@ export async function POST(request: NextRequest) {
       url?: string;
     };
 
-    const params: any[] = [];
+    const params: (number | string)[] = [];
     let where = "";
     if (body.userId) {
       params.push(body.userId);
       where = `WHERE user_id = $${params.length}`;
+    }
+
+    interface PushSubscriptionRow {
+      endpoint: string;
+      p256dh: string;
+      auth: string;
     }
 
     const subsResult = await db.queryAsync(
@@ -46,8 +52,10 @@ export async function POST(request: NextRequest) {
       url: body.url || "/notifications",
     };
 
+    const subs = subsResult.rows as PushSubscriptionRow[];
+
     await Promise.allSettled(
-      subsResult.rows.map((sub: any) =>
+      subs.map((sub) =>
         sendPushNotification(
           {
             endpoint: sub.endpoint,
@@ -59,7 +67,7 @@ export async function POST(request: NextRequest) {
     );
 
     return NextResponse.json({ success: true, sent: subsResult.rows.length });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

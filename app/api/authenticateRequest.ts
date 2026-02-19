@@ -26,19 +26,15 @@ export async function authenticateRequest(request: NextRequest): Promise<number>
 
   const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "secret");
 
-  let payload: Record<string, unknown>;
-
   try {
-    const verified = await jwtVerify(token, secret);
-    payload = verified.payload;
-  } catch {
-    throw new AuthRequestError("Invalid or expired token", 401);
+    const { payload } = await jwtVerify(token, secret);
+    const userId = Number(payload.userId);
+    if (Number.isNaN(userId)) {
+      throw new AuthRequestError("Token missing valid userId claim", 401);
+    }
+    return userId;
+  } catch (err: unknown) {
+    if (err instanceof AuthRequestError) throw err;
+    throw new AuthRequestError("Invalid or expired authentication token", 401);
   }
-
-  const userId = Number(payload.userId);
-  if (Number.isNaN(userId)) {
-    throw new AuthRequestError("Token missing userId claim", 401);
-  }
-
-  return userId;
 }

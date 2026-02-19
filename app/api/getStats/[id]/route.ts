@@ -116,7 +116,7 @@ export async function GET(
     await cache.setJSON(cacheKeys.userStats(id), response, 60);
 
     return NextResponse.json(response);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

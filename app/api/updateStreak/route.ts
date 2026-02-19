@@ -90,7 +90,7 @@ export async function PATCH(
       success: true,
       streak: newStreak,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

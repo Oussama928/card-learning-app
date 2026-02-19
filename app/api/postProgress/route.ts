@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../lib/db";
 import { authenticateRequest } from "../authenticateRequest";
-import type { UpdateProgressRequest } from "@/types";
+import type { UpdateProgressRequest, ExistingProgressRow } from "@/types";
 import { cache, cacheKeys } from "@/lib/cache";
 import { handleApiError } from "@/lib/apiHandler";
 import { computeNextReview, normalizeProgressState } from "@/lib/spacedRepetition";
@@ -12,16 +12,6 @@ import {
   evaluateAchievements,
 } from "@/lib/progressionService";
 import { notifyUser } from "@/lib/notificationEvents";
-
-interface ExistingProgressRow {
-  correct_count?: number;
-  incorrect_count?: number;
-  repetitions?: number;
-  interval_days?: number;
-  ease_factor?: number;
-  last_reviewed?: string | null;
-  next_review_at?: string | null;
-}
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -121,7 +111,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       success: true,
       message: `Word marked as ${is_learned ? "learned" : "unlearned"}`,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }

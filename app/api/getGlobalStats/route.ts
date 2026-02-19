@@ -42,7 +42,7 @@ export async function GET(
     await cache.setJSON(cacheKeys.globalStats, response, 60);
 
     return NextResponse.json(response);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return handleApiError(error, request);
   }
 }
