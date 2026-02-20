@@ -93,6 +93,8 @@ export interface StudyGroupCommentNodeProps {
   comment: StudyGroupCommentDTO;
   canReply: boolean;
   onReply: (parentCommentId: number, content: string) => Promise<void>;
+  canDelete?: boolean;
+  onDelete?: (commentId: number) => Promise<void>;
 }
 
 

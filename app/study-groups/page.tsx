@@ -3,8 +3,18 @@
 import React from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import type { CreateStudyGroupRequestDTO, JoinStudyGroupRequestDTO, StudyGroupDTO } from "@/types";
-import { createStudyGroup, getStudyGroups, joinStudyGroup } from "@/services/studyGroupService";
+import type {
+  CreateStudyGroupRequestDTO,
+  JoinStudyGroupRequestDTO,
+  PublicStudyGroupDTO,
+  StudyGroupDTO,
+} from "@/types";
+import {
+  createStudyGroup,
+  getPublicStudyGroups,
+  getStudyGroups,
+  joinStudyGroup,
+} from "@/services/studyGroupService";
 import { Pagination } from "../components/Pagination";
 
 export default function StudyGroupsPage() {
@@ -14,6 +24,14 @@ export default function StudyGroupsPage() {
   const [error, setError] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(1);
   const pageSize = 8;
+
+  const [publicQuery, setPublicQuery] = React.useState("");
+  const [publicGroups, setPublicGroups] = React.useState<PublicStudyGroupDTO[]>([]);
+  const [publicLoading, setPublicLoading] = React.useState(false);
+  const [publicError, setPublicError] = React.useState<string | null>(null);
+  const [publicPage, setPublicPage] = React.useState(1);
+  const [publicTotalPages, setPublicTotalPages] = React.useState(1);
+  const publicPageSize = 12;
 
   const [createName, setCreateName] = React.useState("");
   const [createDescription, setCreateDescription] = React.useState("");
@@ -55,6 +73,12 @@ export default function StudyGroupsPage() {
       setPage(totalPages);
     }
   }, [page, totalPages]);
+
+  React.useEffect(() => {
+    if (publicPage > publicTotalPages) {
+      setPublicPage(publicTotalPages);
+    }
+  }, [publicPage, publicTotalPages]);
 
   const handleCreateGroup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -110,6 +134,56 @@ export default function StudyGroupsPage() {
     }
   };
 
+  const searchPublicGroups = React.useCallback(
+    async (pageToLoad = 1) => {
+      if (!accessToken) return;
+      const trimmed = publicQuery.trim();
+      if (!trimmed) {
+        setPublicGroups([]);
+        setPublicTotalPages(1);
+        return;
+      }
+
+      try {
+        setPublicLoading(true);
+        setPublicError(null);
+        const data = await getPublicStudyGroups(
+          { query: trimmed, page: pageToLoad, limit: publicPageSize },
+          accessToken
+        );
+        setPublicGroups(data.groups || []);
+        setPublicTotalPages(data.pagination?.totalPages || 1);
+      } catch (err) {
+        setPublicError(err instanceof Error ? err.message : "Failed to search public groups");
+      } finally {
+        setPublicLoading(false);
+      }
+    },
+    [accessToken, publicQuery, publicPageSize]
+  );
+
+  React.useEffect(() => {
+    if (!publicQuery.trim()) return;
+    void searchPublicGroups(publicPage);
+  }, [publicPage, publicQuery, searchPublicGroups]);
+
+  const handlePublicSearch = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPublicPage(1);
+    await searchPublicGroups(1);
+  };
+
+  const handleJoinPublicGroup = async (groupId: number) => {
+    if (!accessToken) return;
+    try {
+      await joinStudyGroup({ groupId }, accessToken);
+      await loadGroups();
+      await searchPublicGroups(publicPage);
+    } catch (err) {
+      setPublicError(err instanceof Error ? err.message : "Failed to join group");
+    }
+  };
+
   if (status === "loading") {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -136,60 +210,13 @@ export default function StudyGroupsPage() {
           <div className="mt-6 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200">{error}</div>
         ) : null}
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <form onSubmit={handleCreateGroup} className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <h2 className="text-xl font-semibold text-cyan-200">Create Group</h2>
-            <div className="mt-4 space-y-3">
-              <input
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="Group name"
-                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
-              />
-              <textarea
-                value={createDescription}
-                onChange={(e) => setCreateDescription(e.target.value)}
-                placeholder="Description"
-                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
-              />
-              <select
-                value={createVisibility}
-                onChange={(e) => setCreateVisibility(e.target.value === "public" ? "public" : "private")}
-                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
-              >
-                <option value="private">Private (join code)</option>
-                <option value="public">Public (open join)</option>
-              </select>
-              <button type="submit" className="rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-900">
-                Create
-              </button>
-            </div>
-          </form>
-
-          <form onSubmit={handleJoinGroup} className="rounded-xl border border-white/10 bg-white/5 p-5">
-            <h2 className="text-xl font-semibold text-amber-200">Join Group</h2>
-            <div className="mt-4 space-y-3">
-              <input
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="Join code (for private groups)"
-                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
-              />
-              <input
-                value={joinGroupId}
-                onChange={(e) => setJoinGroupId(e.target.value)}
-                placeholder="Group id (for public groups)"
-                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
-              />
-              <button type="submit" className="rounded-md bg-amber-300 px-4 py-2 font-semibold text-slate-900">
-                Join
-              </button>
-            </div>
-          </form>
-        </div>
-
         <div className="mt-10 rounded-xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-xl font-semibold">Your Groups</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold">Your Groups</h2>
+              <p className="text-sm text-slate-300">Quick access to classes you teach or attend.</p>
+            </div>
+          </div>
           {loading ? (
             <p className="mt-4 text-slate-300">Loading groups...</p>
           ) : groups.length === 0 ? (
@@ -219,6 +246,139 @@ export default function StudyGroupsPage() {
                 page={page}
                 totalPages={totalPages}
                 onPageChange={setPage}
+                className="mt-6"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <form onSubmit={handleCreateGroup} className="rounded-xl border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-semibold text-cyan-200">Create Group</h2>
+            <p className="mt-1 text-sm text-slate-300">Start a private or public learning space.</p>
+            <div className="mt-4 space-y-3">
+              <input
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder="Group name"
+                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
+              />
+              <textarea
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
+                placeholder="Description"
+                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
+              />
+              <select
+                value={createVisibility}
+                onChange={(e) => setCreateVisibility(e.target.value === "public" ? "public" : "private")}
+                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
+              >
+                <option value="private">Private (join code)</option>
+                <option value="public">Public (open join)</option>
+              </select>
+              <button type="submit" className="rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-900">
+                Create
+              </button>
+            </div>
+          </form>
+
+          <form onSubmit={handleJoinGroup} className="rounded-xl border border-white/10 bg-white/5 p-5">
+            <h2 className="text-xl font-semibold text-amber-200">Join Group</h2>
+            <p className="mt-1 text-sm text-slate-300">Enter a code or join an open group by id.</p>
+            <div className="mt-4 space-y-3">
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                placeholder="Join code (for private groups)"
+                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
+              />
+              <input
+                value={joinGroupId}
+                onChange={(e) => setJoinGroupId(e.target.value)}
+                placeholder="Group id (for public groups)"
+                className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
+              />
+              <button type="submit" className="rounded-md bg-amber-300 px-4 py-2 font-semibold text-slate-900">
+                Join
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="mt-10 rounded-xl border border-white/10 bg-white/5 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-semibold">Discover Public Groups</h2>
+              <p className="text-sm text-slate-300">Search open groups by name or description.</p>
+            </div>
+          </div>
+
+          <form onSubmit={handlePublicSearch} className="mt-4 flex flex-wrap gap-3">
+            <input
+              value={publicQuery}
+              onChange={(e) => setPublicQuery(e.target.value)}
+              placeholder="Search public groups"
+              className="flex-1 rounded-md border border-white/20 bg-slate-900/70 px-3 py-2"
+            />
+            <button type="submit" className="rounded-md bg-cyan-300 px-4 py-2 font-semibold text-slate-900">
+              Search
+            </button>
+          </form>
+
+          {publicError ? (
+            <div className="mt-4 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200">
+              {publicError}
+            </div>
+          ) : null}
+
+          {publicLoading ? (
+            <p className="mt-4 text-slate-300">Searching public groups...</p>
+          ) : publicQuery.trim().length === 0 ? (
+            <p className="mt-4 text-slate-300">Start typing to discover public groups.</p>
+          ) : publicGroups.length === 0 ? (
+            <p className="mt-4 text-slate-300">No public groups match that search.</p>
+          ) : (
+            <div className="mt-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                {publicGroups.map((group) => (
+                  <div key={group.id} className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-semibold text-cyan-100">{group.name}</p>
+                        <p className="mt-1 text-sm text-slate-300">{group.description || "No description"}</p>
+                        <p className="mt-2 text-xs text-slate-400">Teacher: {group.teacherName || "Unknown"}</p>
+                      </div>
+                      {group.isMember ? (
+                        <Link
+                          href={`/study-groups/${group.id}`}
+                          className="rounded-md border border-white/20 px-3 py-1.5 text-xs font-semibold"
+                        >
+                          Open
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void handleJoinPublicGroup(group.id)}
+                          className="rounded-md bg-amber-300 px-3 py-1.5 text-xs font-semibold text-slate-900"
+                        >
+                          Join
+                        </button>
+                      )}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full bg-slate-700 px-2 py-1 uppercase">public</span>
+                      {group.role ? (
+                        <span className="rounded-full bg-slate-700 px-2 py-1 uppercase">{group.role}</span>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Pagination
+                page={publicPage}
+                totalPages={publicTotalPages}
+                onPageChange={setPublicPage}
                 className="mt-6"
               />
             </div>

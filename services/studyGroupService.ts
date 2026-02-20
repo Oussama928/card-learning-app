@@ -10,13 +10,41 @@ import type {
   GetStudyGroupAssignmentsResponseDTO,
   GetStudyGroupPostsResponseDTO,
   GetStudyGroupsResponseDTO,
+  GetPublicStudyGroupsResponseDTO,
   JoinStudyGroupRequestDTO,
   JoinStudyGroupResponseDTO,
+  DeleteStudyGroupAssignmentResponseDTO,
+  DeleteStudyGroupCommentResponseDTO,
+  DeleteStudyGroupPostResponseDTO,
 } from "@/types";
 import { requestJson } from "./httpClient";
 
 export async function getStudyGroups(accessToken: string): Promise<GetStudyGroupsResponseDTO> {
   return requestJson<GetStudyGroupsResponseDTO>("/api/study-groups", {
+    method: "GET",
+    token: accessToken,
+  });
+}
+
+export async function getPublicStudyGroups(
+  params: { query?: string; page?: number; limit?: number },
+  accessToken: string
+): Promise<GetPublicStudyGroupsResponseDTO> {
+  const search = new URLSearchParams();
+  if (params.query) {
+    search.set("q", params.query);
+  }
+  if (params.page) {
+    search.set("page", String(params.page));
+  }
+  if (params.limit) {
+    search.set("limit", String(params.limit));
+  }
+
+  const queryString = search.toString();
+  const url = queryString ? `/api/study-groups/public?${queryString}` : "/api/study-groups/public";
+
+  return requestJson<GetPublicStudyGroupsResponseDTO>(url, {
     method: "GET",
     token: accessToken,
   });
@@ -100,6 +128,46 @@ export async function createStudyGroupComment(
       method: "POST",
       token: accessToken,
       body: JSON.stringify(payload),
+    }
+  );
+}
+
+export async function deleteStudyGroupPost(
+  groupId: number,
+  postId: number,
+  accessToken: string
+): Promise<DeleteStudyGroupPostResponseDTO> {
+  return requestJson<DeleteStudyGroupPostResponseDTO>(`/api/study-groups/${groupId}/posts/${postId}`, {
+    method: "DELETE",
+    token: accessToken,
+  });
+}
+
+export async function deleteStudyGroupComment(
+  groupId: number,
+  postId: number,
+  commentId: number,
+  accessToken: string
+): Promise<DeleteStudyGroupCommentResponseDTO> {
+  return requestJson<DeleteStudyGroupCommentResponseDTO>(
+    `/api/study-groups/${groupId}/posts/${postId}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      token: accessToken,
+    }
+  );
+}
+
+export async function deleteStudyGroupAssignment(
+  groupId: number,
+  assignmentId: number,
+  accessToken: string
+): Promise<DeleteStudyGroupAssignmentResponseDTO> {
+  return requestJson<DeleteStudyGroupAssignmentResponseDTO>(
+    `/api/study-groups/${groupId}/assignments/${assignmentId}`,
+    {
+      method: "DELETE",
+      token: accessToken,
     }
   );
 }

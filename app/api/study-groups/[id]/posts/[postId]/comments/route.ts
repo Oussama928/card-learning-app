@@ -38,23 +38,6 @@ export async function POST(
       return NextResponse.json({ error: "Comment content is required" }, { status: 400 });
     }
 
-    // student  post top-level comment, techer reply to comments
-    const isTopLevelComment = !parentCommentId;
-
-    if (isTopLevelComment && access.role !== "student") {
-      return NextResponse.json(
-        { error: "Only students can post top-level comments." },
-        { status: 403 }
-      );
-    }
-
-    if (!isTopLevelComment && access.role !== "teacher") {
-      return NextResponse.json(
-        { error: "Only teachers can post replies." },
-        { status: 403 }
-      );
-    }
-
     if (parentCommentId) {
       const parentResult = await db.queryAsync(
         `SELECT id, post_id FROM study_group_post_comments WHERE id = $1`,

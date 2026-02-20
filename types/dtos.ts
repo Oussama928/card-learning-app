@@ -447,6 +447,18 @@ export interface StudyGroupDTO {
   createdAt: string;
 }
 
+export interface PublicStudyGroupDTO {
+  id: number;
+  name: string;
+  description?: string | null;
+  teacherId: number;
+  teacherName?: string;
+  visibility: "public";
+  role: StudyGroupRole | null;
+  isMember: boolean;
+  createdAt: string;
+}
+
 export interface CreateStudyGroupRequestDTO {
   name: string;
   description?: string;
@@ -522,6 +534,12 @@ export interface GetStudyGroupsResponseDTO {
   groups: StudyGroupDTO[];
 }
 
+export interface GetPublicStudyGroupsResponseDTO {
+  message: string;
+  groups: PublicStudyGroupDTO[];
+  pagination: PaginationDTO;
+}
+
 export interface CreateStudyGroupResponseDTO {
   message: string;
   group: StudyGroupDTO;
@@ -536,6 +554,18 @@ export interface JoinStudyGroupResponseDTO {
 export interface GetStudyGroupAssignmentsResponseDTO {
   message: string;
   assignments: StudyGroupAssignmentDTO[];
+}
+
+export interface DeleteStudyGroupPostResponseDTO {
+  message: string;
+}
+
+export interface DeleteStudyGroupCommentResponseDTO {
+  message: string;
+}
+
+export interface DeleteStudyGroupAssignmentResponseDTO {
+  message: string;
 }
 
 export interface CreateStudyGroupAssignmentResponseDTO {

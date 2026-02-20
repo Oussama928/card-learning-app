@@ -19,6 +19,9 @@ import {
   createStudyGroupAssignment,
   createStudyGroupComment,
   createStudyGroupPost,
+  deleteStudyGroupAssignment,
+  deleteStudyGroupComment,
+  deleteStudyGroupPost,
   getStudyGroupAssignments,
   getStudyGroupPosts,
   getStudyGroups,
@@ -51,10 +54,11 @@ export default function StudyGroupDetailsPage() {
   const [postLinkUrl, setPostLinkUrl] = React.useState("");
   const [postImageUrl, setPostImageUrl] = React.useState("");
 
-  const [studentComments, setStudentComments] = React.useState<Record<number, string>>({});
+  const [postComments, setPostComments] = React.useState<Record<number, string>>({});
 
   const accessToken = session?.user?.accessToken;
   const isTeacher = group?.role === "teacher";
+  const canReply = Boolean(group);
 
   const loadAll = React.useCallback(async () => {
     if (!accessToken || !groupId) {
@@ -163,10 +167,10 @@ export default function StudyGroupDetailsPage() {
     }
   };
 
-  const submitStudentComment = async (postId: number) => {
+  const submitPostComment = async (postId: number) => {
     if (!accessToken || !groupId) return;
 
-    const value = (studentComments[postId] || "").trim();
+    const value = (postComments[postId] || "").trim();
     if (!value) return;
 
     const payload: CreateStudyGroupCommentRequestDTO = {
@@ -176,14 +180,14 @@ export default function StudyGroupDetailsPage() {
     try {
       setError(null);
       await createStudyGroupComment(groupId, postId, payload, accessToken);
-      setStudentComments((prev) => ({ ...prev, [postId]: "" }));
+      setPostComments((prev) => ({ ...prev, [postId]: "" }));
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add comment");
     }
   };
 
-  const handleTeacherReply = async (postId: number, parentCommentId: number, content: string) => {
+  const handleReply = async (postId: number, parentCommentId: number, content: string) => {
     if (!accessToken || !groupId) return;
 
     const payload: CreateStudyGroupCommentRequestDTO = {
@@ -193,6 +197,42 @@ export default function StudyGroupDetailsPage() {
 
     await createStudyGroupComment(groupId, postId, payload, accessToken);
     await loadAll();
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (!accessToken || !groupId || !isTeacher) return;
+    if (!window.confirm("Delete this post? ")) return;
+
+    try {
+      await deleteStudyGroupPost(groupId, postId, accessToken);
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete post");
+    }
+  };
+
+  const handleDeleteComment = async (postId: number, commentId: number) => {
+    if (!accessToken || !groupId || !isTeacher) return;
+    if (!window.confirm("Delete this comment?")) return;
+
+    try {
+      await deleteStudyGroupComment(groupId, postId, commentId, accessToken);
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete comment");
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: number) => {
+    if (!accessToken || !groupId || !isTeacher) return;
+    if (!window.confirm("Delete this assignment?")) return;
+
+    try {
+      await deleteStudyGroupAssignment(groupId, assignmentId, accessToken);
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete assignment");
+    }
   };
 
   if (status === "loading") {
@@ -316,19 +356,51 @@ export default function StudyGroupDetailsPage() {
                   <div className="grid gap-3 md:grid-cols-2">
                     {pagedAssignments.map((item) => (
                       <div key={item.id} className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
-                        <p className="font-semibold text-cyan-100">
-                          {item.title || `${item.assignmentType.toUpperCase()} assignment`}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-300">
-                          {item.assignmentType === "card"
-                            ? `Card ID: ${item.cardId ?? "-"}`
-                            : `Class ID: ${item.classId ?? "-"}`}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            {item.assignmentType === "card" && item.cardId ? (
+                              <Link
+                                href={`/learning/${item.cardId}`}
+                                className="font-semibold text-cyan-100 hover:text-cyan-200"
+                              >
+                                {item.title || "Card assignment"}
+                              </Link>
+                            ) : (
+                              <p className="font-semibold text-cyan-100">
+                                {item.title || `${item.assignmentType.toUpperCase()} assignment`}
+                              </p>
+                            )}
+                            <p className="mt-1 text-sm text-slate-300">
+                              {item.assignmentType === "card"
+                                ? `Card ID: ${item.cardId ?? "-"}`
+                                : `Class ID: ${item.classId ?? "-"}`}
+                            </p>
+                          </div>
+                          {isTeacher ? (
+                            <button
+                              type="button"
+                              onClick={() => void handleDeleteAssignment(item.id)}
+                              className="text-xs font-semibold text-rose-300 hover:text-rose-200"
+                            >
+                              Delete
+                            </button>
+                          ) : null}
+                        </div>
+                        <p className="mt-2 text-xs text-slate-400">
                           Assigned by {item.assignedByName || `user #${item.assignedBy}`} • {new Date(item.createdAt).toLocaleString()}
                         </p>
                         {item.dueAt ? (
-                          <p className="mt-1 text-xs text-amber-300">Due: {new Date(item.dueAt).toLocaleString()}</p>
+                          <p className="mt-1 text-xs text-amber-300">Deadline: {new Date(item.dueAt).toLocaleString()}</p>
+                        ) : (
+                          <p className="mt-1 text-xs text-slate-500">No deadline</p>
+                        )}
+                        {item.assignmentType === "card" && item.cardId ? (
+                          <Link
+                            href={`/learning/${item.cardId}`}
+                            className="mt-3 inline-block text-sm font-semibold text-cyan-300 hover:text-cyan-200"
+                          >
+                            Start learning →
+                          </Link>
                         ) : null}
                       </div>
                     ))}
@@ -400,7 +472,18 @@ export default function StudyGroupDetailsPage() {
                   <article key={post.id} className="rounded-xl border border-white/10 bg-white/5 p-5">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-semibold text-cyan-100">{post.authorName || "Teacher"}</p>
-                      <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString()}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-400">{new Date(post.createdAt).toLocaleString()}</span>
+                        {isTeacher ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleDeletePost(post.id)}
+                            className="text-xs font-semibold text-rose-300 hover:text-rose-200"
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
 
                     <p className="mt-3 text-slate-100">{post.content}</p>
@@ -420,38 +503,38 @@ export default function StudyGroupDetailsPage() {
                       <img src={post.imageUrl} alt="Post attachment" className="mt-3 max-h-72 rounded-lg border border-white/10" />
                     ) : null}
 
-                    {!isTeacher ? (
-                      <div className="mt-4 flex gap-2">
-                        <input
-                          value={studentComments[post.id] || ""}
-                          onChange={(e) =>
-                            setStudentComments((prev) => ({
-                              ...prev,
-                              [post.id]: e.target.value,
-                            }))
-                          }
-                          placeholder="Add a comment"
-                          className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2 text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => void submitStudentComment(post.id)}
-                          className="rounded-md bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-900"
-                        >
-                          Comment
-                        </button>
-                      </div>
-                    ) : null}
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        value={postComments[post.id] || ""}
+                        onChange={(e) =>
+                          setPostComments((prev) => ({
+                            ...prev,
+                            [post.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="Add a reply"
+                        className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2 text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void submitPostComment(post.id)}
+                        className="rounded-md bg-amber-300 px-3 py-2 text-sm font-semibold text-slate-900"
+                      >
+                        Reply
+                      </button>
+                    </div>
 
                     <div className="mt-4 space-y-2">
                       {post.comments.map((comment) => (
                         <CommentNode
                           key={comment.id}
                           comment={comment}
-                          canReply={isTeacher}
+                          canReply={canReply}
                           onReply={(parentCommentId, content) =>
-                            handleTeacherReply(post.id, parentCommentId, content)
+                            handleReply(post.id, parentCommentId, content)
                           }
+                          canDelete={isTeacher}
+                          onDelete={(commentId) => handleDeleteComment(post.id, commentId)}
                         />
                       ))}
                     </div>

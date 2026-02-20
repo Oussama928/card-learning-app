@@ -3,7 +3,7 @@
 import React from "react";
 import type { StudyGroupCommentNodeProps } from "@/types";
 
-export default function CommentNode({ comment, canReply, onReply }: StudyGroupCommentNodeProps) {
+export default function CommentNode({ comment, canReply, onReply, canDelete, onDelete }: StudyGroupCommentNodeProps) {
   const [reply, setReply] = React.useState("");
   const [sending, setSending] = React.useState(false);
 
@@ -29,7 +29,18 @@ export default function CommentNode({ comment, canReply, onReply }: StudyGroupCo
             {comment.authorRole}
           </span>
         </p>
-        <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
+          {canDelete && onDelete ? (
+            <button
+              type="button"
+              onClick={() => void onDelete(comment.id)}
+              className="text-xs font-semibold text-rose-300 hover:text-rose-200"
+            >
+              Delete
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <p className="mt-2 text-sm text-slate-200">{comment.content}</p>
@@ -39,7 +50,7 @@ export default function CommentNode({ comment, canReply, onReply }: StudyGroupCo
           <input
             value={reply}
             onChange={(e) => setReply(e.target.value)}
-            placeholder="Reply as teacher..."
+            placeholder="Write a reply..."
             className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder:text-slate-400"
           />
           <button
@@ -56,7 +67,14 @@ export default function CommentNode({ comment, canReply, onReply }: StudyGroupCo
       {comment.replies.length > 0 ? (
         <div className="mt-3 space-y-2 pl-4 border-l border-white/10">
           {comment.replies.map((item) => (
-            <CommentNode key={item.id} comment={item} canReply={canReply} onReply={onReply} />
+            <CommentNode
+              key={item.id}
+              comment={item}
+              canReply={canReply}
+              onReply={onReply}
+              canDelete={canDelete}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       ) : null}
