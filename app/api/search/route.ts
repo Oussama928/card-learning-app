@@ -36,7 +36,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         { status: 400 }
       );
     }
-    const limit = 10;
+    const limit = 12;
     const offset = (pageNumber - 1) * limit;
 
     const searchVersion = await cache.getNamespaceVersion("search");

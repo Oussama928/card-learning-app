@@ -6,6 +6,7 @@ import { FaTrash } from "react-icons/fa";
 import { io, Socket } from "socket.io-client";
 import type { NotificationItemDTO } from "@/types";
 import { deleteNotification, getBigNotifications } from "@/services/notificationService";
+import { Pagination } from "../components/Pagination";
 
 const base64ToUint8Array = (base64String: string) => {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -24,6 +25,8 @@ const NotificationsPage = () => {
   const { data: session, status } = useSession();
   const [notifs, setNotifs] = useState<NotificationItemDTO[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     const subscribeToPush = async () => {
@@ -123,6 +126,15 @@ const NotificationsPage = () => {
       console.error("Error:", error);
     }
   };
+  const totalPages = Math.max(1, Math.ceil(notifs.length / pageSize));
+  const pagedNotifs = notifs.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -139,9 +151,9 @@ const NotificationsPage = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {notifs.map((item, index) => (
+              {pagedNotifs.map((item) => (
                 <div
-                  key={index}
+                  key={item.id}
                   className={classNames(
                     "flex justify-between w-full text-left px-6 py-4 transition-colors duration-200",
                     "hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
@@ -189,6 +201,12 @@ const NotificationsPage = () => {
               ))}
             </div>
           )}
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            className="py-6"
+          />
         </div>
       </div>
     </div>

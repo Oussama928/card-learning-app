@@ -423,17 +423,33 @@ export default function Profile({ id }: ProfileProps) {
                       : "1px solid rgba(255,255,255,0.08)",
                   }}
                 >
-                  <div className="text-sm font-semibold" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.85)" }}>
-                    {badge.name}
-                  </div>
-                  <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    {badge.description}
-                  </div>
-                  <div className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.8)" }}>
-                    Progress: {Math.min(badge.progress, badge.target)}/{badge.target}
-                  </div>
-                  <div className="text-xs mt-1" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.6)" }}>
-                    {badge.unlocked ? "Unlocked" : "Locked"}
+                  <div className="flex items-center gap-3">
+                    {badge.imageUrl ? (
+                      <img
+                        src={badge.imageUrl}
+                        alt={badge.name}
+                        className="w-12 h-12 rounded-md object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-md bg-white/5 flex items-center justify-center text-xs" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.6)" }}>
+                        {badge.name.charAt(0)}
+                      </div>
+                    )}
+
+                    <div className="flex-1">
+                      <div className="text-sm font-semibold" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.85)" }}>
+                        {badge.name}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+                        {badge.description}
+                      </div>
+                      <div className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.8)" }}>
+                        Progress: {Math.min(badge.progress, badge.target)}/{badge.target}
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.6)" }}>
+                        {badge.unlocked ? "Unlocked" : "Locked"}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

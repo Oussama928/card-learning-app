@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import CommentNode from "@/app/components/studyGroups/CommentNode";
+import { Pagination } from "@/app/components/Pagination";
 import type {
   CreateStudyGroupAssignmentRequestDTO,
   CreateStudyGroupCommentRequestDTO,
@@ -34,6 +35,10 @@ export default function StudyGroupDetailsPage() {
   const [posts, setPosts] = React.useState<StudyGroupPostDTO[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [assignmentsPage, setAssignmentsPage] = React.useState(1);
+  const [postsPage, setPostsPage] = React.useState(1);
+  const assignmentsPageSize = 6;
+  const postsPageSize = 4;
 
   const [assignmentType, setAssignmentType] = React.useState<StudyAssignmentType>("card");
   const [assignmentCardId, setAssignmentCardId] = React.useState("");
@@ -81,6 +86,34 @@ export default function StudyGroupDetailsPage() {
   React.useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  const assignmentTotalPages = Math.max(1, Math.ceil(assignments.length / assignmentsPageSize));
+  const postTotalPages = Math.max(1, Math.ceil(posts.length / postsPageSize));
+  const pagedAssignments = assignments.slice(
+    (assignmentsPage - 1) * assignmentsPageSize,
+    assignmentsPage * assignmentsPageSize
+  );
+  const pagedPosts = posts.slice((postsPage - 1) * postsPageSize, postsPage * postsPageSize);
+
+  React.useEffect(() => {
+    if (assignmentsPage > assignmentTotalPages) {
+      setAssignmentsPage(assignmentTotalPages);
+    }
+  }, [assignmentsPage, assignmentTotalPages]);
+
+  React.useEffect(() => {
+    if (postsPage > postTotalPages) {
+      setPostsPage(postTotalPages);
+    }
+  }, [postsPage, postTotalPages]);
+
+  React.useEffect(() => {
+    if (tab === "assignments") {
+      setAssignmentsPage(1);
+    } else {
+      setPostsPage(1);
+    }
+  }, [tab]);
 
   const submitAssignment = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -279,23 +312,33 @@ export default function StudyGroupDetailsPage() {
               {assignments.length === 0 ? (
                 <p className="mt-3 text-slate-300">No assignments yet.</p>
               ) : (
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {assignments.map((item) => (
-                    <div key={item.id} className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
-                      <p className="font-semibold text-cyan-100">{item.title || `${item.assignmentType.toUpperCase()} assignment`}</p>
-                      <p className="mt-1 text-sm text-slate-300">
-                        {item.assignmentType === "card"
-                          ? `Card ID: ${item.cardId ?? "-"}`
-                          : `Class ID: ${item.classId ?? "-"}`}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Assigned by {item.assignedByName || `user #${item.assignedBy}`} • {new Date(item.createdAt).toLocaleString()}
-                      </p>
-                      {item.dueAt ? (
-                        <p className="mt-1 text-xs text-amber-300">Due: {new Date(item.dueAt).toLocaleString()}</p>
-                      ) : null}
-                    </div>
-                  ))}
+                <div className="mt-4">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {pagedAssignments.map((item) => (
+                      <div key={item.id} className="rounded-lg border border-white/10 bg-slate-900/50 p-4">
+                        <p className="font-semibold text-cyan-100">
+                          {item.title || `${item.assignmentType.toUpperCase()} assignment`}
+                        </p>
+                        <p className="mt-1 text-sm text-slate-300">
+                          {item.assignmentType === "card"
+                            ? `Card ID: ${item.cardId ?? "-"}`
+                            : `Class ID: ${item.classId ?? "-"}`}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Assigned by {item.assignedByName || `user #${item.assignedBy}`} • {new Date(item.createdAt).toLocaleString()}
+                        </p>
+                        {item.dueAt ? (
+                          <p className="mt-1 text-xs text-amber-300">Due: {new Date(item.dueAt).toLocaleString()}</p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                  <Pagination
+                    page={assignmentsPage}
+                    totalPages={assignmentTotalPages}
+                    onPageChange={setAssignmentsPage}
+                    className="mt-6"
+                  />
                 </div>
               )}
             </div>
@@ -352,7 +395,8 @@ export default function StudyGroupDetailsPage() {
               {posts.length === 0 ? (
                 <div className="rounded-xl border border-white/10 bg-white/5 p-5 text-slate-300">No posts yet.</div>
               ) : (
-                posts.map((post) => (
+                <div>
+                  {pagedPosts.map((post) => (
                   <article key={post.id} className="rounded-xl border border-white/10 bg-white/5 p-5">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-semibold text-cyan-100">{post.authorName || "Teacher"}</p>
@@ -412,7 +456,14 @@ export default function StudyGroupDetailsPage() {
                       ))}
                     </div>
                   </article>
-                ))
+                  ))}
+                  <Pagination
+                    page={postsPage}
+                    totalPages={postTotalPages}
+                    onPageChange={setPostsPage}
+                    className="mt-6"
+                  />
+                </div>
               )}
             </div>
           </div>

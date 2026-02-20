@@ -20,7 +20,7 @@ export async function GET(
 
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") || "25", 10);
+    const limit = parseInt(url.searchParams.get("limit") || "12", 10);
     const offset = (page - 1) * limit;
 
     const countResult = await db.queryAsync(

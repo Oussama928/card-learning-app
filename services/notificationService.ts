@@ -21,7 +21,7 @@ export async function getSmallNotifications(
 export async function getBigNotifications(
   accessToken: string,
   page = 1,
-  limit = 25
+  limit = 12
 ): Promise<GetNotificationsResponseDTO> {
   return requestJson<GetNotificationsResponseDTO>(
     `/api/notifications/getBig?page=${page}&limit=${limit}`,

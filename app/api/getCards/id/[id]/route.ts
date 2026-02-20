@@ -1,44 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../../../lib/db";
-import type { CardWithOwnerDTO, OwnerSummaryDTO } from "@/types";
+import { authenticateRequest } from "../../authenticateRequest";
+import type { CardWithOwnerDTO, OwnerSummaryDTO, GetCardsResponse } from "@/types";
+import { handleApiError } from "@/lib/apiHandler";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-): Promise<NextResponse> {
-  const { id } = await params;
-
+): Promise<NextResponse<GetCardsResponse | { error: string }>> {
   try {
-    const getCardsQuery = `SELECT * FROM cards WHERE user_id = $1`;
-    const cardsResult = await db.queryAsync(getCardsQuery, [id]);
-    const cards = (cardsResult.rows || []) as CardWithOwnerDTO[];
+    const userIdFromToken = await authenticateRequest(request);
+    const { id } = await params;
 
-    const userQuery = `SELECT id, username, email, image FROM users WHERE id = $1`;
-    const userResult = await db.queryAsync(userQuery, [id]);
-    const user = userResult.rows[0] as OwnerSummaryDTO | undefined;
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // Only allow the authenticated user to view their own created cards
+    if (Number(id) !== Number(userIdFromToken)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (cards.length === 0) {
-      return NextResponse.json(
-        { error: "No cards found for this user" },
-        { status: 404 }
-      );
-    }
+    const url = new URL(request.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1", 10));
+    const requestedLimit = parseInt(url.searchParams.get("limit") || "12", 10);
+    const limit = Math.min(Math.max(requestedLimit, 1), 100);
+    const offset = (page - 1) * limit;
 
-    const cardsWithOwner: CardWithOwnerDTO[] = cards.map((card) => ({
-      ...card,
-      owner: user,
-    }));
+    const countQuery = `SELECT COUNT(*) as total FROM cards WHERE user_id = $1`;
+    const countResult = await db.queryAsync(countQuery, [id]);
+    const total = parseInt(countResult.rows[0]?.total || "0", 10);
 
-    return NextResponse.json(cardsWithOwner);
+    const getCardsQuery = `
+      SELECT cards.*,
+             json_build_object(
+               'id', users.id,
+               'username', users.username,
+               'email', users.email,
+               'image', users.image
+             ) as owner
+      FROM cards
+      LEFT JOIN users ON cards.user_id = users.id
+      WHERE users.id = $1
+      ORDER BY cards.id DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const cardsResult = await db.queryAsync(getCardsQuery, [id, limit, offset]);
+    const cards: CardWithOwnerDTO[] = cardsResult.rows;
+
+    const response: GetCardsResponse = {
+      cards,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+
+    return NextResponse.json(response);
   } catch (error: unknown) {
-    console.error("Error fetching user cards:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch user cards" },
-      { status: 500 }
-    );
+    return handleApiError(error, request as NextRequest);
   }
 }

@@ -9,6 +9,7 @@ export async function GET(
   const { id } = await params;
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("user_id");
+  const dueOnly = searchParams.get("dueOnly") === "1" || searchParams.get("dueOnly") === "true";
 
   try {
     if (!userId) {
@@ -64,8 +65,13 @@ export async function GET(
         ON w.id = up.word_id 
         AND up.user_id = $1
       WHERE w.card_id = $2
+        AND (
+          $3::boolean = false
+          OR up.next_review_at IS NULL
+          OR up.next_review_at <= NOW()
+        )
     `,
-      [userId, id]
+      [userId, id, dueOnly]
     );
     const words: Array<{
       id: number;

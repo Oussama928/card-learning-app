@@ -5,12 +5,15 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import type { CreateStudyGroupRequestDTO, JoinStudyGroupRequestDTO, StudyGroupDTO } from "@/types";
 import { createStudyGroup, getStudyGroups, joinStudyGroup } from "@/services/studyGroupService";
+import { Pagination } from "../components/Pagination";
 
 export default function StudyGroupsPage() {
   const { data: session, status } = useSession();
   const [groups, setGroups] = React.useState<StudyGroupDTO[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [page, setPage] = React.useState(1);
+  const pageSize = 8;
 
   const [createName, setCreateName] = React.useState("");
   const [createDescription, setCreateDescription] = React.useState("");
@@ -43,6 +46,15 @@ export default function StudyGroupsPage() {
   React.useEffect(() => {
     void loadGroups();
   }, [loadGroups]);
+
+  const totalPages = Math.max(1, Math.ceil(groups.length / pageSize));
+  const pagedGroups = groups.slice((page - 1) * pageSize, page * pageSize);
+
+  React.useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const handleCreateGroup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -183,24 +195,32 @@ export default function StudyGroupsPage() {
           ) : groups.length === 0 ? (
             <p className="mt-4 text-slate-300">No groups yet.</p>
           ) : (
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              {groups.map((group) => (
-                <Link
-                  key={group.id}
-                  href={`/study-groups/${group.id}`}
-                  className="rounded-lg border border-white/10 bg-slate-900/50 p-4 hover:bg-slate-900"
-                >
-                  <p className="text-lg font-semibold text-cyan-100">{group.name}</p>
-                  <p className="mt-1 text-sm text-slate-300">{group.description || "No description"}</p>
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    <span className="rounded-full bg-slate-700 px-2 py-1 uppercase">{group.role}</span>
-                    <span className="rounded-full bg-slate-700 px-2 py-1 uppercase">{group.visibility}</span>
-                    {group.role === "teacher" && group.joinCode ? (
-                      <span className="rounded-full bg-cyan-900/60 px-2 py-1">Code: {group.joinCode}</span>
-                    ) : null}
-                  </div>
-                </Link>
-              ))}
+            <div className="mt-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                {pagedGroups.map((group) => (
+                  <Link
+                    key={group.id}
+                    href={`/study-groups/${group.id}`}
+                    className="rounded-lg border border-white/10 bg-slate-900/50 p-4 hover:bg-slate-900"
+                  >
+                    <p className="text-lg font-semibold text-cyan-100">{group.name}</p>
+                    <p className="mt-1 text-sm text-slate-300">{group.description || "No description"}</p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full bg-slate-700 px-2 py-1 uppercase">{group.role}</span>
+                      <span className="rounded-full bg-slate-700 px-2 py-1 uppercase">{group.visibility}</span>
+                      {group.role === "teacher" && group.joinCode ? (
+                        <span className="rounded-full bg-cyan-900/60 px-2 py-1">Code: {group.joinCode}</span>
+                      ) : null}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                className="mt-6"
+              />
             </div>
           )}
         </div>

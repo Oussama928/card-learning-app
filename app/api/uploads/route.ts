@@ -11,6 +11,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const formData = await request.formData();
     const file = formData.get("file");
+    // optional target folder
+    const target = typeof formData.get("target") === "string" ? (formData.get("target") as string) : (formData.get("target") instanceof FormDataEntryValue ? String(formData.get("target")) : null);
 
     if (!(file instanceof Blob)) {
       return NextResponse.json(
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const result = await saveUpload(file);
+    const result = await saveUpload(file, target || undefined);
     return NextResponse.json({
       success: true,
       data: result,

@@ -11,7 +11,7 @@ interface UseCardsOptions {
   initialLimit?: number;
 }
 
-export function useCards({ type, token, initialPage = 1, initialLimit = 20 }: UseCardsOptions) {
+export function useCards({ type, token, initialPage = 1, initialLimit = 12 }: UseCardsOptions) {
   const [cards, setCards] = useState<CardWithOwnerDTO[] | null>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);

@@ -9,6 +9,7 @@ export async function GET(
   const { id: cardId } = await params;
   const { searchParams } = new URL(request.url);
   const email = searchParams.get("email");
+  const dueOnly = searchParams.get("dueOnly") === "1" || searchParams.get("dueOnly") === "true";
 
   try {
     const userResult = await db.queryAsync(
@@ -39,8 +40,13 @@ export async function GET(
       LEFT JOIN user_progress up 
         ON w.id = up.word_id AND up.user_id = $1
       WHERE w.card_id = $2
+        AND (
+          $3::boolean = false
+          OR up.next_review_at IS NULL
+          OR up.next_review_at <= NOW()
+        )
     `,
-      [user.id, cardId]
+      [user.id, cardId, dueOnly]
     );
     const words = wordsResult.rows;
 

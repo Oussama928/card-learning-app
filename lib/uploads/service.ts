@@ -77,7 +77,14 @@ const getExtensionFromMime = (mimeType: string) => {
   return "bin";
 };
 
-export const saveUpload = async (file: Blob): Promise<UploadResult> => {
+
+const sanitizeTargetFolder = (targetFolder?: string): string => {
+  const candidate = String(targetFolder || "uploads").trim().toLowerCase();
+  const match = candidate.match(/^[a-z0-9_-]+$/);
+  return match ? match[0] : "uploads";
+};
+
+export const saveUpload = async (file: Blob, targetFolder: string = "uploads"): Promise<UploadResult> => {
   validateFile(file);
 
   const storageDriver = process.env.UPLOAD_STORAGE_DRIVER || "local";
@@ -86,13 +93,44 @@ export const saveUpload = async (file: Blob): Promise<UploadResult> => {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const uploadsDir = path.join(process.cwd(), "public/uploads");
+
+  // sanitize target folder to a single safe segment to prevents path traversal)
+  const safeFolderName = sanitizeTargetFolder(targetFolder);
+
+  // resolve uploadsDir under the project's public directory and ensure it is contained there
+  const publicBase = path.resolve(process.cwd(), "public");
+  const uploadsDir = path.resolve(publicBase, safeFolderName);
+
+  if (!uploadsDir.startsWith(publicBase + path.sep) && uploadsDir !== publicBase) {
+    throw new UploadValidationError("Invalid upload target", 400);
+  }
+
   await ensureDirectory(uploadsDir);
 
+  const buildUrl = (filename: string) => path.posix.join("/", safeFolderName, filename);
+
   if (file.type.startsWith("image/")) {
-    return uploadImageLocal(buffer, uploadsDir);
+    const filename = `${uuidv4()}.webp`;
+    const filePath = path.join(uploadsDir, filename);
+    const output = await sharp(buffer).resize(1024, 1024, { fit: "inside" }).webp().toBuffer();
+
+    await fs.writeFile(filePath, output);
+
+    return {
+      url: buildUrl(filename),
+      mimeType: "image/webp",
+      size: output.length,
+    };
   }
 
   const extension = getExtensionFromMime(file.type);
-  return uploadRawLocal(buffer, uploadsDir, extension, file.type || "application/octet-stream");
+  const filename = `${uuidv4()}.${extension}`;
+  const filePath = path.join(uploadsDir, filename);
+  await fs.writeFile(filePath, buffer);
+
+  return {
+    url: buildUrl(filename),
+    mimeType: file.type || "application/octet-stream",
+    size: buffer.length,
+  };
 };

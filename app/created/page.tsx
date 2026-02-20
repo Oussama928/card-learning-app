@@ -5,71 +5,96 @@ import Card from "../components/card";
 import Loading from "../components/loading";
 import { useSession } from "next-auth/react";
 import Edit from "../cardAdd/page";
-import type { CardWithOwnerDTO } from "@/types";
+import type { CardWithOwnerDTO, GetCardsResponseDTO } from "@/types";
+import { Pagination } from "../components/Pagination";
+import { getCardsByUser } from "@/services/cardService";
 
 const Home = () => {
   const [loading, setLoading] = React.useState(true);
   const [cards, setCards] = React.useState<CardWithOwnerDTO[] | null>(null);
   const [Favorites, setFavorites] = React.useState<string[]>([]);
   const [isEditing, setIsEditing] = React.useState<[boolean, string]>([false, ""]);
+  const [page, setPage] = React.useState(1);
+  const pageSize = 12;
+  const [pagination, setPagination] = React.useState({ page: 1, limit: pageSize, total: 0, totalPages: 1 });
 
   const { data: session } = useSession();
 
   useEffect(() => {
-    const retrieveCards = async () => {
-      const res = await fetch(`/api/getCards/id/${session?.user?.id}`);
-      const data = await res.json();
-      console.log(data);
-      setCards(data as CardWithOwnerDTO[]);
-    };
-    const retrieveFavorites = async () => {
-      const res = await fetch(`/api/getFavorites`, {
-        method: "GET",
-        headers: {
-          authorization: `Bearer ${(session?.user as any)?.accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
-      console.log(data);
-      setFavorites(() => {
-        console.log("Updated favorites:", data.favorites);
-        return data.favorites;
-      });
-      console.log(Favorites);
-    };
-
-    (async () => {
+    const retrieve = async () => {
       try {
-        await retrieveCards();
-        await retrieveFavorites();
-        setLoading(false);
+        setLoading(true);
+        const token = (session?.user as any)?.accessToken;
+        const userId = session?.user?.id;
+        const data: GetCardsResponseDTO = await getCardsByUser(userId || "", page, pageSize, token);
+        setCards(data.cards || []);
+        setPagination(data.pagination || { page, limit: pageSize, total: 0, totalPages: 1 });
+
+        // favorites
+        const favRes = await fetch(`/api/getFavorites`, {
+          method: "GET",
+          headers: {
+            authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const favData = await favRes.json();
+        setFavorites(Array.isArray(favData.favorites) ? favData.favorites : []);
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
-    })();
+    };
+
+    if (session) retrieve();
   }, [session]);
   if (isEditing[0]) {
     return <Edit Current={isEditing[1]} />;
   }
-  
+
+  React.useEffect(() => {
+    // fetch when page changes
+    if (!session) return;
+    const token = (session?.user as any)?.accessToken;
+    (async () => {
+      try {
+        setLoading(true);
+        const data: GetCardsResponseDTO = await getCardsByUser(session?.user?.id || "", page, pageSize, token);
+        setCards(data.cards || []);
+        setPagination(data.pagination || { page, limit: pageSize, total: 0, totalPages: 1 });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [page, session]);
 
   return (
     <div>
       {loading || !cards || !Favorites ? (
         <Loading />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3  xl:grid-cols-4 gap-4 p-4 px-12 pt-12">
-          {Array.from({ length: cards.length }).map((_, index) => (
-            <Card
-            delete_item={true}
-            setCards={setCards}
-            setIsEditing = {setIsEditing}
-              key={index}
-              data={cards[index]}
-              isfavorited={Favorites.includes(cards[index].id)}
-            />
-          ))}
+        <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3  xl:grid-cols-4 gap-4 p-4 px-12 pt-12">
+            {cards?.map((card) => (
+              <Card
+                delete_item={true}
+                setCards={setCards}
+                setIsEditing={setIsEditing}
+                key={card.id}
+                data={card}
+                isfavorited={Favorites.includes(card.id)}
+              />
+            ))}
+          </div>
+          <Pagination
+            page={pagination.page}
+            totalPages={pagination.totalPages}
+            onPageChange={setPage}
+            className="pb-10"
+          />
         </div>
       )}
     </div>

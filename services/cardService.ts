@@ -17,12 +17,25 @@ export async function getCards(
   accessToken: string
 ): Promise<GetCardsResponseDTO> {
   const page = query.page ?? 1;
-  const limit = query.limit ?? 20;
+  const limit = query.limit ?? 12;
 
   return requestJson<GetCardsResponseDTO>(
     `/api/getCards/type/${query.type}?page=${page}&limit=${limit}`,
     { method: "GET", token: accessToken }
   );
+}
+
+export async function getCardsByUser(
+  userId: string | number,
+  page = 1,
+  limit = 12,
+  accessToken?: string
+): Promise<GetCardsResponseDTO> {
+  const encodedId = encodeURIComponent(String(userId));
+  return requestJson<GetCardsResponseDTO>(`/api/getCards/id/${encodedId}?page=${page}&limit=${limit}`, {
+    method: "GET",
+    token: accessToken,
+  });
 }
 
 export async function getFavorites(accessToken: string): Promise<string[]> {

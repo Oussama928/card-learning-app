@@ -64,6 +64,7 @@ export default function AddAchievementPage() {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
+      formData.append("target", "achievements");
       const response = await fetch("/api/uploads", {
         method: "POST",
         headers: {
