@@ -3,7 +3,12 @@ import { getMailer } from "@/lib/email/mailer";
 import { renderEmailTemplate } from "@/lib/email/templates";
 
 export interface EmailPayload {
-  template: "verify-email" | "password-reset" | "daily-reminder" | "notification-digest";
+  template:
+    | "verify-email"
+    | "password-reset"
+    | "daily-reminder"
+    | "notification-digest"
+    | "skill-tree-certificate";
   to: string;
   data: Record<string, any>;
 }

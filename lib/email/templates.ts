@@ -46,6 +46,23 @@ const renderNotificationDigest = (data: EmailPayload["data"]): RenderedEmail => 
   };
 };
 
+const renderSkillTreeCertificate = (data: EmailPayload["data"]): RenderedEmail => {
+  const username = String(data.username || "Learner");
+  const treeName = String(data.treeName || "Skill Tree");
+  const certificateUrl = String(data.certificateUrl || getAppUrl());
+
+  return {
+    subject: `Certificate unlocked: ${treeName}`,
+    html: `
+      <p>Congratulations ${username}!</p>
+      <p>You completed the ${treeName} skill tree.</p>
+      <p>Download your certificate here:</p>
+      <p><a href="${certificateUrl}">${certificateUrl}</a></p>
+    `,
+    text: `Congratulations ${username}! You completed the ${treeName} skill tree. Download your certificate: ${certificateUrl}`,
+  };
+};
+
 export const renderEmailTemplate = (
   template: EmailPayload["template"],
   data: EmailPayload["data"]
@@ -59,6 +76,8 @@ export const renderEmailTemplate = (
       return renderDailyReminder(data);
     case "notification-digest":
       return renderNotificationDigest(data);
+    case "skill-tree-certificate":
+      return renderSkillTreeCertificate(data);
     default:
       return {
         subject: "Card Learning",

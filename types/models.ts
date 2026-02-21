@@ -192,6 +192,60 @@ export interface StudyGroupPostComment {
   updated_at?: string;
 }
 
+export interface SkillTree {
+  id: number;
+  language: string;
+  name: string;
+  description?: string | null;
+  completion_xp_reward?: number;
+  badge_name?: string | null;
+  badge_image_url?: string | null;
+  created_at?: string;
+}
+
+export interface SkillTreeNode {
+  id: number;
+  tree_id: number;
+  card_id?: number | null;
+  title: string;
+  description?: string | null;
+  difficulty?: string | null;
+  xp_reward?: number;
+  criteria_type?: string | null;
+  required_mastery_pct?: number | null;
+  required_xp?: number | null;
+  position_x?: number | null;
+  position_y?: number | null;
+  created_at?: string;
+}
+
+export interface SkillTreeEdge {
+  id: number;
+  tree_id: number;
+  parent_node_id: number;
+  child_node_id: number;
+}
+
+export interface SkillTreeUserNode {
+  id: number;
+  user_id: number;
+  node_id: number;
+  status: string;
+  xp_awarded?: number;
+  unlocked_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface SkillTreeUserTree {
+  id: number;
+  user_id: number;
+  tree_id: number;
+  xp_earned?: number;
+  badge_awarded?: boolean;
+  certificate_url?: string | null;
+  completed_at?: string | null;
+}
+
 // Internal Database Row Types
 export interface UserStatsProgressRow {
   xp: number;

@@ -201,9 +201,13 @@ export default function Example({ Current }: CardAddPageProps) {
     console.log(Current);
     const fetchCardData = async (Current: string) => {
       try {
-        console.log(session);
         const res = await fetch(
           `/api/getCard/${Current}?user_id=${session?.user?.id}`,
+          {
+            headers: {
+              authorization: session?.user?.accessToken ? `Bearer ${session.user.accessToken}` : "",
+            },
+          }
         );
         if (!res.ok) throw new Error("Failed to fetch");
 

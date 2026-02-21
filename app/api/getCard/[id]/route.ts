@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "../../../../lib/db";
+import { AuthRequestError, authenticateRequest } from "@/app/api/authenticateRequest";
+import { syncSkillTreeProgressForCard } from "@/lib/skillTreeService";
 import type { ApiErrorResponseDTO, GetCardResponse } from "@/types";
 
 export async function GET(
@@ -45,6 +47,43 @@ export async function GET(
       );
     }
 
+    const skillNodeResult = await db.queryAsync(
+      `SELECT id FROM skill_tree_nodes WHERE card_id = $1 LIMIT 1`,
+      [id]
+    );
+
+    if (skillNodeResult.rowCount > 0) {
+      const tokenUserId = await authenticateRequest(request);
+      if (Number(tokenUserId) !== Number(userId)) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      await syncSkillTreeProgressForCard(tokenUserId, Number(id));
+
+      const accessResult = await db.queryAsync(
+        `
+        SELECT 1
+        FROM skill_tree_user_nodes un
+        INNER JOIN skill_tree_nodes n ON n.id = un.node_id
+        WHERE un.user_id = $1
+          AND n.card_id = $2
+          AND un.status IN ('unlocked', 'completed')
+        LIMIT 1
+        `,
+        [tokenUserId, id]
+      );
+
+      if (accessResult.rowCount === 0) {
+        return NextResponse.json(
+          { success: false, error: "This node is locked" },
+          { status: 403 }
+        );
+      }
+    }
+
     const wordsResult = await db.queryAsync(
       `
       SELECT 
@@ -79,6 +118,13 @@ export async function GET(
       translated_word: string;
       image_url: string | null;
       is_learned: boolean;
+      correct_count: number;
+      incorrect_count: number;
+      repetitions: number;
+      interval_days: number;
+      ease_factor: number;
+      last_reviewed: string | null;
+      next_review_at: string | null;
     }> = wordsResult.rows;
 
     const wordPairs = words.map((word) => [
@@ -111,6 +157,12 @@ export async function GET(
       targetLanguage: card.target_language,
     } as GetCardResponse);
   } catch (error: unknown) {
+    if (error instanceof AuthRequestError) {
+      return NextResponse.json(
+        { success: false, error: error.json?.message || "Unauthorized" },
+        { status: error.status }
+      );
+    }
     console.error("Database error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch card data" },

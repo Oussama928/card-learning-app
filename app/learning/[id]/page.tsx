@@ -90,7 +90,12 @@ const Learning = () => {
       try {
         const dueOnlyParam = studyMode === "spaced_repetition" ? "&dueOnly=1" : "";
         const res = await fetch(
-          `/api/getCard/${id}?user_id=${session?.user?.id}${dueOnlyParam}`
+          `/api/getCard/${id}?user_id=${session?.user?.id}${dueOnlyParam}`,
+          {
+            headers: {
+              authorization: session?.user?.accessToken ? `Bearer ${session.user.accessToken}` : "",
+            },
+          }
         );
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();

@@ -8,6 +8,7 @@
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
     "migrate": "node scripts/migrate.js",
+    "seed:french-skill-tree": "node scripts/seedFrenchSkillTree.js",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -32,6 +33,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.10.1",
     "pg": "^8.18.0",
+    "pdfkit": "^0.15.0",
     "rate-limiter-flexible": "^3.0.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -52,6 +54,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
+    "@types/pdfkit": "^0.13.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/supertest": "^6.0.3",

@@ -74,6 +74,9 @@ export interface NotificationMetadataDTO {
   popupType?: 'tier_unlock' | 'achievement_unlock';
   tierName?: TierNameDTO;
   achievementKey?: string;
+  skillTreeId?: number;
+  skillTreeName?: string;
+  certificateUrl?: string;
 }
 
 export interface RegisterRequestDTO {
@@ -554,6 +557,83 @@ export interface JoinStudyGroupResponseDTO {
 export interface GetStudyGroupAssignmentsResponseDTO {
   message: string;
   assignments: StudyGroupAssignmentDTO[];
+}
+
+export type SkillTreeNodeStatus = "locked" | "unlocked" | "completed";
+export type SkillTreeDifficulty = "beginner" | "intermediate" | "advanced" | "expert";
+export type SkillTreeCriteriaType = "card_mastery" | "xp";
+
+export interface SkillTreeNodeDTO {
+  id: number;
+  treeId: number;
+  cardId?: number | null;
+  title: string;
+  description?: string | null;
+  difficulty: SkillTreeDifficulty;
+  xpReward: number;
+  criteriaType: SkillTreeCriteriaType;
+  requiredMasteryPct?: number | null;
+  requiredXp?: number | null;
+  positionX: number;
+  positionY: number;
+  status: SkillTreeNodeStatus;
+  prerequisites: number[];
+  children: number[];
+  completedAt?: string | null;
+  unlockedAt?: string | null;
+}
+
+export interface SkillTreeSummaryDTO {
+  id: number;
+  language: string;
+  name: string;
+  description?: string | null;
+  badgeName?: string | null;
+  badgeImageUrl?: string | null;
+  completionXpReward: number;
+  totalNodes: number;
+  completedNodes: number;
+  progressPercent: number;
+  xpEarned: number;
+  isCompleted: boolean;
+}
+
+export interface SkillTreeDetailDTO extends SkillTreeSummaryDTO {
+  nodes: SkillTreeNodeDTO[];
+}
+
+export interface SkillTreeLanguageProgressDTO {
+  language: string;
+  totalNodes: number;
+  completedNodes: number;
+  progressPercent: number;
+  xpEarned: number;
+}
+
+export interface GetSkillTreesResponseDTO {
+  message: string;
+  language: string | null;
+  languages: string[];
+  trees: SkillTreeSummaryDTO[];
+  overallProgress: SkillTreeLanguageProgressDTO | null;
+}
+
+export interface GetSkillTreeResponseDTO {
+  message: string;
+  tree: SkillTreeDetailDTO;
+}
+
+export interface SkillTreeLeaderboardEntryDTO {
+  userId: number;
+  username: string;
+  xpEarned: number;
+  completedAt?: string | null;
+}
+
+export interface GetSkillTreeLeaderboardResponseDTO {
+  message: string;
+  treeId: number;
+  entries: SkillTreeLeaderboardEntryDTO[];
 }
 
 export interface DeleteStudyGroupPostResponseDTO {

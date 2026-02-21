@@ -141,6 +141,39 @@ export async function applyXpAction(userId: number, action: XpAction): Promise<P
   };
 }
 
+export async function applyXpReward(
+  userId: number,
+  xpAwarded: number,
+  reason: string
+): Promise<ProgressionActionResult> {
+  const current = await getUserStatsProgress(userId);
+
+  const newXp = current.xp + xpAwarded;
+  const nextTier = resolveTierByXp(newXp);
+
+  await db.queryAsync(
+    `
+    UPDATE user_stats
+    SET xp = $2,
+        current_tier = $3
+    WHERE user_id = $1
+    `,
+    [userId, newXp, nextTier.name]
+  );
+
+  if (reason) {
+    //maybe used for future notification content
+  }
+
+  return {
+    xpAwarded,
+    newXp,
+    previousTier: current.current_tier,
+    currentTier: nextTier.name,
+    unlockedTier: current.current_tier !== nextTier.name ? nextTier : null,
+  };
+}
+
 export async function getTierProgressSummary(userId: number): Promise<UserTierProgressDTO> {
   const stats = await getUserStatsProgress(userId);
 

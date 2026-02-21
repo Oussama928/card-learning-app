@@ -12,6 +12,7 @@ import {
   evaluateAchievements,
 } from "@/lib/progressionService";
 import { notifyUser } from "@/lib/notificationEvents";
+import { syncSkillTreeProgressForCard } from "@/lib/skillTreeService";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -78,6 +79,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       `,
       [userId, word_id, is_learned]
     );
+
+    const cardResult = await db.queryAsync(
+      `SELECT card_id FROM words WHERE id = $1`,
+      [word_id]
+    );
+    const cardId = Number(cardResult.rows[0]?.card_id || 0);
+    if (cardId) {
+      await syncSkillTreeProgressForCard(userId, cardId);
+    }
 
     const progressionResult = await applyXpAction(userId, "study_review");
     const achievementResult = await evaluateAchievements(userId);
