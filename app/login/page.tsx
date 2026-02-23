@@ -5,12 +5,14 @@ import { signIn, useSession } from "next-auth/react";
 import { redirect } from "next/navigation";
 import { useFormik } from "formik";
 import { loginSchema } from "@/types/validationSchemas";
+import { route } from "sanity/router";
+import {useRouter} from "next/navigation";
 
 export default function Example() {
   const [isHovered, setIsHovered] = React.useState([false,false]);
   const [errorMessage, setErrorMessage] = React.useState("");
   const { data: session } = useSession();
-
+  const router = useRouter();
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -32,6 +34,7 @@ export default function Example() {
         }
       } else {
         console.log(result);
+        router.push("/"); 
         alert("Login successful ?");
       }
     },

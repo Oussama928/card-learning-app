@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { FaArrowLeft, FaHome } from "react-icons/fa";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Loading from "../../components/loading";
 import { useSession } from "next-auth/react";
 import type {
@@ -13,7 +12,6 @@ import type {
 import {
   buildInitialQueue,
   computeNextReview,
-  formatDuration,
   isDue,
   normalizeProgressState,
   requeueCard,
@@ -22,6 +20,7 @@ import { SessionSetup } from "../../components/learning/SessionSetup";
 import { FlashcardMode } from "../../components/learning/FlashcardMode";
 import { FillMode } from "../../components/learning/FillMode";
 import { MCMode } from "../../components/learning/MCMode";
+import { OralMode } from "../../components/learning/OralMode";
 import { SessionComplete } from "../../components/learning/SessionComplete";
 import { SessionStats } from "../../components/learning/SessionStats";
 
@@ -37,7 +36,7 @@ const Learning = () => {
   const [progressMap, setProgressMap] = React.useState<Record<number, SpacedRepetitionStateDTO>>({});
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [mode, setMode] = React.useState<"flashcard" | "fill" | "mc">(
+  const [mode, setMode] = React.useState<"flashcard" | "fill" | "mc" | "oral">(
     "flashcard"
   );
   const [fillAnswer, setFillAnswer] = React.useState("");
@@ -55,6 +54,7 @@ const Learning = () => {
   const [cardEpoch, setCardEpoch] = React.useState(0);
   const [studyMode, setStudyMode] = React.useState<"default" | "spaced_repetition">("default");
   const [progressError, setProgressError] = React.useState<string | null>(null);
+  const [hintsEnabled, setHintsEnabled] = React.useState(false);
 
   const timerIntervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const deadlineIntervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
@@ -63,7 +63,6 @@ const Learning = () => {
 
   const { data: session } = useSession();
   const { id } = useParams();
-  const router = useRouter();
 
   React.useEffect(() => {
     const fetchStudyMode = async () => {
@@ -281,6 +280,7 @@ const Learning = () => {
           user_id: session?.user?.id,
           word_id: wordId,
           is_learned: isLearned,
+          hintsEnabled,
         }),
       });
       if (!res.ok) throw new Error("Failed to update progress");
@@ -436,6 +436,7 @@ const Learning = () => {
           currentDue={currentDue}
           nextReviewLabel={nextReviewLabel}
           progressError={progressError}
+          hintsEnabled={hintsEnabled}
         />
       )}
 
@@ -462,6 +463,8 @@ const Learning = () => {
           timeLimitInput={timeLimitInput}
           setTimeLimitInput={setTimeLimitInput}
           onStart={handleStartSession}
+          hintsEnabled={hintsEnabled}
+          setHintsEnabled={setHintsEnabled}
         />
       ) : isSessionComplete ? (
         <SessionComplete
@@ -481,6 +484,7 @@ const Learning = () => {
           onBack={handleBack}
           canGoBack={currentIndex > 0}
           timeLimitSeconds={timeLimitSeconds}
+          hintsEnabled={hintsEnabled}
         />
       ) : mode === "fill" ? (
         <FillMode
@@ -493,6 +497,7 @@ const Learning = () => {
           onBack={handleBack}
           canGoBack={currentIndex > 0}
           timeLimitSeconds={timeLimitSeconds}
+          hintsEnabled={hintsEnabled}
         />
       ) : mode === "mc" ? (
         <MCMode
@@ -506,6 +511,18 @@ const Learning = () => {
           onBack={handleBack}
           canGoBack={currentIndex > 0}
           timeLimitSeconds={timeLimitSeconds}
+          hintsEnabled={hintsEnabled}
+        />
+      ) : mode === "oral" ? (
+        <OralMode
+          activeCard={activeCard}
+          studyMode={studyMode}
+          currentDue={currentDue}
+          onNext={handleNext}
+          onBack={handleBack}
+          canGoBack={currentIndex > 0}
+          timeLimitSeconds={timeLimitSeconds}
+          hintsEnabled={hintsEnabled}
         />
       ) : null}
     </div>

@@ -3,6 +3,7 @@
 import React from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import type { StudyCardTermDTO } from "@/types";
+import { SpeakButton } from "./SpeakButton";
 
 interface FlashcardModeProps {
   activeCard: StudyCardTermDTO;
@@ -14,6 +15,7 @@ interface FlashcardModeProps {
   onBack: () => void;
   canGoBack: boolean;
   timeLimitSeconds: number | null;
+  hintsEnabled: boolean;
 }
 
 export const FlashcardMode: React.FC<FlashcardModeProps> = ({
@@ -26,7 +28,20 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
   onBack,
   canGoBack,
   timeLimitSeconds,
+  hintsEnabled,
 }) => {
+  const buildHint = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (trimmed.length <= 2) return trimmed[0] ? `${trimmed[0]}…` : trimmed;
+    const first = trimmed[0];
+    const last = trimmed[trimmed.length - 1];
+    return `${first}${"•".repeat(Math.max(trimmed.length - 2, 1))}${last}`;
+  };
+
+  const hintTarget = side === 0 ? String(activeCard?.[1] ?? "") : String(activeCard?.[0] ?? "");
+  const hintText = buildHint(hintTarget);
+
   return (
     <>
       <div
@@ -45,13 +60,16 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
             className="absolute inset-0 h-full w-full object-cover opacity-20"
           />
         ) : null}
-        <div className="relative z-10">
-          <h2
-            className="mb-4 text-2xl font-semibold text-gray-400"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
-            {side === 0 ? "Expression" : "Translation"}
-          </h2>
+        <div className="relative z-10 w-full">
+          <div className="flex items-center justify-between">
+            <h2
+              className="mb-4 text-2xl font-semibold text-gray-400"
+              style={{ fontFamily: "'Montserrat', sans-serif" }}
+            >
+              {side === 0 ? "Expression" : "Translation"}
+            </h2>
+            <SpeakButton text={String(activeCard?.[side] ?? "")} label="Play pronunciation" />
+          </div>
           <div
             className={`text-5xl font-black text-white ${
               side === 0 ? "text-teal-300" : "text-amber-300"
@@ -63,6 +81,11 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
           >
             {activeCard[side]}
           </div>
+          {hintsEnabled && hintText ? (
+            <p className="mt-4 text-xs uppercase tracking-[0.3em] text-amber-300">
+              Hint: {hintText}
+            </p>
+          ) : null}
           <p className="mt-8 text-sm uppercase tracking-widest text-gray-500">
             Click to Flip
           </p>

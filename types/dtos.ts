@@ -225,6 +225,7 @@ export interface ActivityHeatmapDayDTO {
 export interface CreateWordProgressRequestDTO {
   word_id: number;
   is_learned: boolean;
+  hintsEnabled?: boolean;
 }
 
 export interface ProgressItemDTO {

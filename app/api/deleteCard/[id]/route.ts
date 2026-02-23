@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
-import { authenticateRequest } from "../../authenticateRequest";
+import { authenticateRequest } from "../../../authenticateRequest";
 import { cache } from "@/lib/cache";
 import { handleApiError } from "@/lib/apiHandler";
 import type { CardOwnership } from "@/types";

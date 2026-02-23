@@ -115,8 +115,14 @@ async function getUserStatsProgress(userId: number): Promise<UserStatsProgressRo
   };
 }
 
-export async function applyXpAction(userId: number, action: XpAction): Promise<ProgressionActionResult> {
-  const xpAwarded = XP_ACTIONS[action];
+export async function applyXpAction(
+  userId: number,
+  action: XpAction,
+  options?: { multiplier?: number }
+): Promise<ProgressionActionResult> {
+  const multiplier = options?.multiplier ?? 1;
+  const rawAward = XP_ACTIONS[action] * multiplier;
+  const xpAwarded = Math.max(0, Math.round(rawAward));
   const current = await getUserStatsProgress(userId);
 
   const newXp = current.xp + xpAwarded;

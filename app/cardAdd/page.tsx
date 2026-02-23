@@ -530,7 +530,7 @@ export default function Example({ Current }: CardAddPageProps) {
                     </p>
                     <p>• Example format:</p>
                     <pre className="bg-blue-100 px-2 py-1 rounded text-xs mt-1">
-                      hello:bonjour goodbye:au revoir a hard egg:un œuf dur
+                      hello:bonjour <br></br>goodbye:au revoir <br></br>a hard egg:un œuf dur
                     </pre>
                     <p className="mt-1">
                       • Maximum 1000 expression pairs, file size under 1MB

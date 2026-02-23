@@ -16,7 +16,7 @@ import { syncSkillTreeProgressForCard } from "@/lib/skillTreeService";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    const { word_id, is_learned }: UpdateProgressRequest =
+    const { word_id, is_learned, hintsEnabled }: UpdateProgressRequest =
       await request.json();
     const userId = await authenticateRequest(request);
 
@@ -89,7 +89,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       await syncSkillTreeProgressForCard(userId, cardId);
     }
 
-    const progressionResult = await applyXpAction(userId, "study_review");
+    const progressionResult = await applyXpAction(userId, "study_review", {
+      multiplier: hintsEnabled ? 0.5 : 1,
+    });
     const achievementResult = await evaluateAchievements(userId);
 
     if (progressionResult.unlockedTier) {

@@ -3,13 +3,15 @@
 import React from "react";
 
 interface SessionSetupProps {
-  mode: "flashcard" | "fill" | "mc";
-  setMode: (mode: "flashcard" | "fill" | "mc") => void;
+  mode: "flashcard" | "fill" | "mc" | "oral";
+  setMode: (mode: "flashcard" | "fill" | "mc" | "oral") => void;
   wantTimer: boolean;
   setWantTimer: (val: boolean) => void;
   timeLimitInput: string;
   setTimeLimitInput: (val: string) => void;
   onStart: () => void;
+  hintsEnabled: boolean;
+  setHintsEnabled: (val: boolean) => void;
 }
 
 export const SessionSetup: React.FC<SessionSetupProps> = ({
@@ -20,6 +22,8 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
   timeLimitInput,
   setTimeLimitInput,
   onStart,
+  hintsEnabled,
+  setHintsEnabled,
 }) => {
   return (
     <section className="w-full max-w-3xl">
@@ -33,7 +37,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
         <div className="mt-5 grid gap-5 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
             <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Learning Type</p>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <button
                 onClick={() => setMode("flashcard")}
                 className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
@@ -63,6 +67,16 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                 }`}
               >
                 Multiple Choice
+              </button>
+              <button
+                onClick={() => setMode("oral")}
+                className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
+                  mode === "oral"
+                    ? "border-teal-400 bg-teal-500 text-white"
+                    : "border-white/20 bg-transparent text-gray-300 hover:border-white/60"
+                }`}
+              >
+                Oral Mode
               </button>
             </div>
           </div>
@@ -97,6 +111,29 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
                 <span className="text-xs text-gray-400 whitespace-nowrap">sec / card</span>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Hints</p>
+                <p className="text-sm text-gray-300">Show contextual hints during the session.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setHintsEnabled(!hintsEnabled)}
+                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+                  hintsEnabled ? "bg-amber-500 text-white" : "bg-white/10 text-gray-300"
+                }`}
+              >
+                {hintsEnabled ? "Enabled" : "Disabled"}
+              </button>
+            </div>
+            {hintsEnabled ? (
+              <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+                Hints are on — XP rewards will be reduced by 50% for this session.
+              </div>
+            ) : null}
           </div>
         </div>
 

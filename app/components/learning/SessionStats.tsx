@@ -18,6 +18,7 @@ interface SessionStatsProps {
   currentDue: boolean | null;
   nextReviewLabel: string;
   progressError: string | null;
+  hintsEnabled: boolean;
 }
 
 export const SessionStats: React.FC<SessionStatsProps> = ({
@@ -34,6 +35,7 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
   currentDue,
   nextReviewLabel,
   progressError,
+  hintsEnabled,
 }) => {
   return (
     <div className="w-full max-w-3xl flex flex-col gap-4">
@@ -64,6 +66,11 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
           )}
         </div>
         <div className="flex items-center gap-6">
+          {hintsEnabled ? (
+            <div className="rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+              Hints on -  XP taxed at 50%
+            </div>
+          ) : null}
           {timeLimitSeconds && remainingSeconds !== null && !isSessionComplete ? (
             <div className="text-right">
               <div className="text-sm text-gray-300">Time left (card)</div>
