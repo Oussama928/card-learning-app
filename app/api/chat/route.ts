@@ -16,7 +16,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const { message, history } = await parseRequestBody(request, ChatRequestSchema);
 
-    const apiKey = process.env.HF_API_KEY || process.env.HUGGINGFACE_HUB_TOKEN;
+    const apiKey = process.env.HF_API_KEY ;
     if (!apiKey) {
       return NextResponse.json(
         { error: "Missing HF_API_KEY environment variable" },
