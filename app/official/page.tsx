@@ -2,6 +2,17 @@
 
 import React from "react";
 import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
+import { 
+  Loader2, 
+  AlertCircle, 
+  Map as MapIcon, 
+  Trophy, 
+  BarChart, 
+  ChevronRight,
+  Globe
+} from "lucide-react";
+
 import SkillTreeView from "@/app/components/skillTree/SkillTreeView";
 import type {
   GetSkillTreeResponseDTO,
@@ -10,6 +21,16 @@ import type {
   GetSkillTreeLeaderboardResponseDTO,
 } from "@/types";
 import { getSkillTree, getSkillTreeLeaderboard, getSkillTrees } from "@/services/skillTreeService";
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const OfficialPage = () => {
   const { data: session, status } = useSession();
@@ -87,131 +108,235 @@ const OfficialPage = () => {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-blue-500" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!session?.user || !accessToken) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-red-500">
-        Please sign in to view the Official Skill Trees
+      <div className="flex min-h-screen items-center justify-center bg-background text-destructive p-4">
+        <Card className="max-w-md w-full border-destructive/20 bg-destructive/5">
+          <CardHeader className="text-center">
+            <AlertCircle className="h-10 w-10 mx-auto text-destructive mb-2" />
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>
+              Please sign in to view the Official Skill Trees
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-800 text-white">
-      <section className="mx-auto max-w-7xl px-6 py-14">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-background text-foreground py-14 px-4 sm:px-6"
+    >
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-bold">Official Skill Trees</h1>
-            <p className="mt-2 text-slate-300">
+            <h1 className="text-3xl font-bold tracking-tight">Official Skill Trees</h1>
+            <p className="mt-2 text-muted-foreground max-w-2xl">
               Progress through curated learning paths. Unlock nodes as you master official cards.
             </p>
           </div>
 
-          {languages.length > 0 ? (
-            <select
-              value={selectedLanguage ?? ""}
-              onChange={(event) => setSelectedLanguage(event.target.value || null)}
-              className="rounded-md border border-white/20 bg-slate-900/70 px-3 py-2 text-sm"
-            >
-              {languages.map((lang) => (
-                <option key={lang} value={lang}>
-                  {lang}
-                </option>
-              ))}
-            </select>
-          ) : null}
+          {languages.length > 0 && (
+            <div className="flex items-center gap-3">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <select
+                value={selectedLanguage ?? ""}
+                onChange={(event) => setSelectedLanguage(event.target.value || null)}
+                className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {languages.map((lang) => (
+                  <option key={lang} value={lang}>
+                    {lang}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
-        {error ? (
-          <div className="mt-6 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200">
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-sm text-destructive flex items-center gap-2"
+          >
+            <AlertCircle className="h-4 w-4" />
             {error}
-          </div>
-        ) : null}
+          </motion.div>
+        )}
 
         {loading ? (
-          <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-5 text-slate-300">
-            Loading skill trees...
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : trees.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-white/10 bg-white/5 p-5 text-slate-300">
-            No skill trees configured for this language yet.
-          </div>
+          <Card className="text-center py-12">
+            <CardContent>
+              <MapIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <p className="text-muted-foreground">No skill trees configured for this language yet.</p>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="mt-8 grid gap-6 lg:grid-cols-[300px_1fr]">
-            <aside className="space-y-4">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <h2 className="text-sm font-semibold text-slate-200">Language Progress</h2>
-                <p className="mt-2 text-2xl font-semibold text-cyan-200">
-                  {overallProgress?.progressPercent ?? 0}%
-                </p>
-                <p className="mt-1 text-xs text-slate-400">
-                  {overallProgress?.completedNodes ?? 0}/{overallProgress?.totalNodes ?? 0} nodes completed
-                </p>
-                <p className="mt-1 text-xs text-slate-400">XP earned: {overallProgress?.xpEarned ?? 0}</p>
-              </div>
+          <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
+            {/* Sidebar */}
+            <aside className="space-y-6">
+              {/* Progress Card */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <BarChart className="h-4 w-4" />
+                    Language Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-primary">
+                    {overallProgress?.progressPercent ?? 0}%
+                  </p>
+                  <div className="mt-2 space-y-1">
+                    <p className="text-xs text-muted-foreground flex justify-between">
+                      <span>Nodes</span>
+                      <span>{overallProgress?.completedNodes ?? 0}/{overallProgress?.totalNodes ?? 0}</span>
+                    </p>
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-500" 
+                        style={{ width: `${overallProgress?.progressPercent ?? 0}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-1">
+                      XP earned: {overallProgress?.xpEarned ?? 0}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                <h2 className="text-sm font-semibold text-slate-200">Trees</h2>
-                <div className="mt-3 space-y-3">
-                  {trees.map((tree) => (
-                    <button
-                      key={tree.id}
-                      type="button"
-                      onClick={() => setSelectedTreeId(tree.id)}
-                      className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition ${
-                        selectedTreeId === tree.id
-                          ? "border-cyan-400/60 bg-cyan-500/10"
-                          : "border-white/10 bg-slate-900/40 hover:bg-slate-900/70"
-                      }`}
-                    >
-                      <p className="font-semibold text-cyan-100">{tree.name}</p>
-                      <p className="mt-1 text-xs text-slate-400">{tree.progressPercent}% complete</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {tree.completedNodes}/{tree.totalNodes} nodes
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Trees List */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <MapIcon className="h-4 w-4" />
+                    Available Trees
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <div className="space-y-1">
+                    {trees.map((tree) => (
+                      <button
+                        key={tree.id}
+                        type="button"
+                        onClick={() => setSelectedTreeId(tree.id)}
+                        className={cn(
+                          "w-full rounded-lg px-3 py-3 text-left transition-all text-sm group flex items-center justify-between",
+                          selectedTreeId === tree.id
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <div className="flex-1">
+                          <p className={cn(
+                             "transition-colors",
+                             selectedTreeId === tree.id ? "text-primary" : "text-foreground"
+                          )}>
+                            {tree.name}
+                          </p>
+                          <p className="text-xs opacity-70 mt-0.5">
+                            {tree.completedNodes}/{tree.totalNodes} nodes
+                          </p>
+                        </div>
+                        {selectedTreeId === tree.id && (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </aside>
 
-            <div className="space-y-6">
-              {treeDetail?.tree ? <SkillTreeView tree={treeDetail.tree} /> : null}
+            {/* Main Content */}
+            <div className="space-y-8">
+              {treeDetail?.tree && (
+                <motion.div
+                  key={selectedTreeId}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="overflow-hidden border-2 border-border/50 shadow-sm">
+                    <div className="p-6">
+                       <SkillTreeView tree={treeDetail.tree} />
+                    </div>
+                  </Card>
+                </motion.div>
+              )}
 
-              {leaderboard ? (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                  <h2 className="text-lg font-semibold">Leaderboard</h2>
-                  <p className="text-xs text-slate-400">Top learners in this tree</p>
-                  <div className="mt-4 space-y-2">
-                    {leaderboard.entries.length ? (
-                      leaderboard.entries.map((entry, index) => (
-                        <div
-                          key={entry.userId}
-                          className="flex items-center justify-between rounded-lg bg-slate-900/50 px-3 py-2 text-sm"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-slate-400">#{index + 1}</span>
-                            <span className="font-semibold text-slate-100">{entry.username}</span>
+              {leaderboard && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card>
+                    <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                      <div>
+                        <CardTitle className="text-lg font-bold flex items-center gap-2">
+                          <Trophy className="h-5 w-5 text-yellow-500" />
+                          Leaderboard
+                        </CardTitle>
+                        <CardDescription>Top learners in this tree</CardDescription>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {leaderboard.entries.length > 0 ? (
+                          leaderboard.entries.map((entry, index) => (
+                            <div
+                              key={entry.userId}
+                              className={cn(
+                                "flex items-center justify-between rounded-lg p-3 text-sm transition-colors",
+                                index === 0 ? "bg-yellow-500/10 border border-yellow-500/20" : "bg-muted/40"
+                              )}
+                            >
+                              <div className="flex items-center gap-4">
+                                <span className={cn(
+                                  "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold",
+                                  index === 0 ? "bg-yellow-500 text-yellow-950" :
+                                  index === 1 ? "bg-zinc-400 text-zinc-900" :
+                                  index === 2 ? "bg-amber-700 text-amber-100" :
+                                  "bg-muted text-muted-foreground"
+                                )}>
+                                  {index + 1}
+                                </span>
+                                <span className="font-medium text-foreground">{entry.username}</span>
+                              </div>
+                              <span className="font-semibold text-primary">{entry.xpEarned} XP</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-6 text-muted-foreground text-sm">
+                            No leaderboard data yet. Be the first!
                           </div>
-                          <span className="text-cyan-200">{entry.xpEarned} XP</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-slate-400">No leaderboard data yet.</p>
-                    )}
-                  </div>
-                </div>
-              ) : null}
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
             </div>
           </div>
         )}
-      </section>
-    </main>
+      </div>
+    </motion.main>
   );
 };
 

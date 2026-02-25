@@ -126,30 +126,18 @@ export default function Profile({ id }: ProfileProps) {
   }
 
   return (
-    <div
-      className=" p-8 w-full min-h-screen pt-20 relative"
-      style={{
-        background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-      }}
-    >
+    <div className="p-8 w-full min-h-screen pt-20 relative bg-background text-foreground">
       <div className="px-4 sm:px-0 mb-8">
-        <h3 className="text-2xl font-bold" style={{ color: "#7fcac9" }}>
+        <h3 className="text-2xl font-bold text-primary">
           User Profile
         </h3>
-        <p
-          className="mt-2 text-sm opacity-80"
-          style={{ color: "rgba(255,255,255,0.7)" }}
-        >
+        <p className="mt-2 text-sm text-muted-foreground">
           Personal details and account information
         </p>
       </div>
 
-      <div
-        className="mt-6 border-t"
-        style={{ borderColor: "rgba(127,202,201,0.1)" }}
-      >
-        <dl className="" style={{ borderColor: "rgba(127,202,201,0.1)" }}>
+      <div className="mt-6 border-t border-border">
+        <dl className="divide-y divide-border">
           {[
             { label: "Username", value: stats?.username },
 
@@ -160,23 +148,17 @@ export default function Profile({ id }: ProfileProps) {
           ].map((item, idx) => (
             <div
               key={idx}
-              className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 hover:bg-white/5 transition-colors rounded-lg justify-center items-center"
+              className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 hover:bg-muted/50 transition-colors rounded-lg justify-center items-center"
             >
-              <dt
-                className="text-sm font-medium "
-                style={{ color: "rgba(255,255,255,0.8)" }}
-              >
+              <dt className="text-sm font-medium text-muted-foreground">
                 {item.label}
               </dt>
-              <dd
-                className="mt-1 text-sm sm:col-span-2 sm:mt-0 flex"
-                style={{ color: "#7fcac9" }}
-              >
+              <dd className="mt-1 text-sm sm:col-span-2 sm:mt-0 flex text-foreground">
                 {editIndex[idx] && !id ? (
                   idx === 2 ? (
                     <div className="flex items-center gap-2">
                       <select
-                        className="text-black p-2 rounded-lg"
+                        className="bg-background border border-input text-foreground p-2 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
                         onChange={(e) => setEdited(e.target.value)}
                         value={edited}
                       >
@@ -188,7 +170,7 @@ export default function Profile({ id }: ProfileProps) {
                       </select>
                       <button
                         onClick={() => handleSubmit("country")}
-                        className="bg-black px-2 rounded-full"
+                        className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
                       >
                         submit
                       </button>
@@ -199,12 +181,12 @@ export default function Profile({ id }: ProfileProps) {
                         onChange={(e) => setEdited(e.target.value)}
                         value={edited}
                         type="text"
-                        className="w-full text-black p-2 rounded-lg"
+                        className="w-full bg-background border border-input text-foreground p-2 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
                         placeholder={`Enter ${item.label.toLowerCase()}`}
                       />
                       <button
                         onClick={() => handleSubmit("username")}
-                        className="bg-black px-2 rounded-full"
+                        className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
                       >
                         submit
                       </button>
@@ -222,7 +204,7 @@ export default function Profile({ id }: ProfileProps) {
                             prev.map((_, i) => (i === idx ? true : false))
                           )
                         }
-                        className="cursor-pointer ml-5"
+                        className="cursor-pointer ml-5 text-muted-foreground hover:text-primary transition-colors"
                       />
                     )}
                     {idx === 3 && (
@@ -230,7 +212,7 @@ export default function Profile({ id }: ProfileProps) {
                         <img src="/flame.png" className="h-7 w-7 ml-5" />
                         <FaInfoCircle
                           onClick={() => setStreakInfo(true)}
-                          className="ml-12 opacity-45 cursor-pointer"
+                          className="ml-12 text-muted-foreground hover:text-primary cursor-pointer transition-colors"
                         />
                       </div>
                     )}
@@ -240,37 +222,31 @@ export default function Profile({ id }: ProfileProps) {
             </div>
           ))}
 
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt
-              className="text-sm font-medium"
-              style={{ color: "rgba(255,255,255,0.8)" }}
-            >
+          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0 hover:bg-muted/50 transition-colors rounded-lg">
+            <dt className="text-sm font-medium text-muted-foreground">
               Bio
             </dt>
-            <dd
-              className="mt-1 text-sm sm:col-span-2 sm:mt-0"
-              style={{ color: "rgba(255,255,255,0.7)" }}
-            >
+            <dd className="mt-1 text-sm sm:col-span-2 sm:mt-0 text-foreground">
               <div className="space-y-4">
                 <p>
                   {editIndex[4] && !id ? (
-                    <>
+                    <div className="flex flex-col gap-2 items-start">
                       <textarea
-                        className="w-full h-20 text-black p-2 rounded-lg"
+                        className="w-full h-20 bg-background border border-input text-foreground p-2 rounded-md focus:ring-2 focus:ring-primary focus:outline-none resize-none"
                         placeholder="Write a short bio about yourself"
                         onChange={(e) => setEdited(e.target.value)}
                         value={edited}
                       ></textarea>
                       <button
                         onClick={() => handleSubmit("bio")}
-                        className="bg-black px-2 rounded-full"
+                        className="bg-primary text-primary-foreground px-3 py-1.5 rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
                       >
                         submit
                       </button>
-                    </>
+                    </div>
                   ) : stats?.bio == null && editIndex[4] === false && !id ? (
                     <button
-                      className="bg-black px-2 rounded-full"
+                      className="bg-secondary text-secondary-foreground px-3 py-1.5 rounded-md text-sm font-medium hover:bg-secondary/80 transition-colors"
                       onClick={() =>
                         setEditIndex((prev) =>
                           prev.map((val, i) => (i === 4 ? true : val))
@@ -283,7 +259,7 @@ export default function Profile({ id }: ProfileProps) {
                     stats?.bio &&
                     !id &&
                     editIndex[4] === false && (
-                      <>
+                      <div className="flex items-center">
                         {stats?.bio}
                         <FaEdit
                           onClick={() =>
@@ -291,18 +267,15 @@ export default function Profile({ id }: ProfileProps) {
                               prev.map((val, i) => (i === 4 ? true : val))
                             )
                           }
-                          className="cursor-pointer ml-5"
+                          className="cursor-pointer ml-5 text-muted-foreground hover:text-primary transition-colors"
                         />
-                      </>
+                      </div>
                     )
                   )}
                 </p>
                 <div className="flex items-center gap-2 text-sm">
-                  <PaperClipIcon
-                    className="h-5 w-5 flex-none"
-                    style={{ color: "#7fcac9" }}
-                  />
-                  <span style={{ color: "#7fcac9" }}>
+                  <PaperClipIcon className="h-5 w-5 flex-none text-primary" />
+                  <span className="text-primary hover:underline cursor-pointer">
                     lang_learner_achievements.pdf
                   </span>
                 </div>
@@ -312,7 +285,7 @@ export default function Profile({ id }: ProfileProps) {
         </dl>
       </div>
 
-      <div className="mt-24 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
           { label: "daily Streak", value: stats?.dailyStreak, unit: "days" },
           {
@@ -325,19 +298,12 @@ export default function Profile({ id }: ProfileProps) {
         ].map((stat, idx) => (
           <div
             key={idx}
-            className="p-4 rounded-lg text-center"
-            style={{
-              background: "rgba(127,202,201,0.1)",
-              border: "1px solid rgba(127,202,201,0.2)",
-            }}
+            className="p-4 rounded-xl text-center bg-card border border-border shadow-sm"
           >
-            <div style={{ color: "#7fcac9" }} className="text-2xl font-bold">
-              {stat.value} {stat.unit}
+            <div className="text-2xl font-bold text-primary">
+              {stat.value} <span className="text-lg font-medium text-muted-foreground">{stat.unit}</span>
             </div>
-            <div
-              style={{ color: "rgba(255,255,255,0.7)" }}
-              className="text-sm mt-1"
-            >
+            <div className="text-sm mt-1 text-muted-foreground capitalize">
               {stat.label}
             </div>
           </div>
@@ -347,107 +313,101 @@ export default function Profile({ id }: ProfileProps) {
       <PerformanceHeatmap activityHeatmap={stats?.activityHeatmap} />
 
       <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div
-          className="rounded-xl p-5"
-          style={{
-            background: "rgba(127,202,201,0.08)",
-            border: "1px solid rgba(127,202,201,0.2)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h4
-              className="text-lg font-semibold"
-              style={{ color: "#7fcac9" }}
-            >
+        <div className="rounded-xl p-6 bg-card border border-border shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-lg font-semibold text-primary flex items-center">
               Tier Progression
               <img
                 src={`/tiers/${stats.progression?.currentXp >= 12000 ? "godlike" : stats.progression?.currentXp >= 8000 ? "legendary" : stats.progression?.currentXp >= 5000 ? "titanium" : stats.progression?.currentXp >= 3000 ? "platinum" : stats.progression?.currentXp >= 1500 ? "gold" : stats.progression?.currentXp >= 500 ? "silver" : "bronze"}.png`}
                 alt={stats.progression?.currentTier?.name ?? "tier icon"}
-                className="ml-2 inline-block w-8 h-8"
+                className="ml-3 inline-block w-8 h-8"
               />
             </h4>
             <FaInfoCircle
               onClick={() => setTierInfo(true)}
-              className="opacity-45 cursor-pointer text-white"
+              className="text-muted-foreground hover:text-primary cursor-pointer transition-colors"
             />
           </div>
-          <div
-            className="space-y-2 text-sm"
-            style={{ color: "rgba(255,255,255,0.85)" }}
-          >
-            <p>
-              Current tier: <span className="font-semibold">{stats.progression?.currentTier?.name ?? "Bronze"}</span>
-            </p>
-            <p>
-              Current XP: <span className="font-semibold">{stats.progression?.currentXp ?? 0}</span>
-            </p>
-            <p>
-              Percentile ranking: <span className="font-semibold">{stats.progression?.percentileRanking ?? 0}%</span>
-            </p>
-            <p>
-              Next unlock:{" "}
-              <span className="font-semibold">
+          <div className="space-y-3 text-sm text-foreground">
+            <div className="flex justify-between items-center py-1 border-b border-border/50">
+              <span className="text-muted-foreground">Current tier</span>
+              <span className="font-semibold">{stats.progression?.currentTier?.name ?? "Bronze"}</span>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-border/50">
+              <span className="text-muted-foreground">Current XP</span>
+              <span className="font-semibold">{stats.progression?.currentXp ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-border/50">
+              <span className="text-muted-foreground">Percentile ranking</span>
+              <span className="font-semibold">{stats.progression?.percentileRanking ?? 0}%</span>
+            </div>
+            <div className="flex justify-between items-center py-1">
+              <span className="text-muted-foreground">Next unlock</span>
+              <span className="font-semibold text-right">
                 {stats.progression?.nextUnlock
-                  ? `${stats.progression.nextUnlock.tier.name} (${stats.progression.nextUnlock.xpRemaining} XP remaining)`
+                  ? `${stats.progression.nextUnlock.tier.name} (${stats.progression.nextUnlock.xpRemaining} XP left)`
                   : "Max tier reached"}
               </span>
-            </p>
+            </div>
           </div>
         </div>
 
-        <div
-          className="rounded-xl p-5"
-          style={{
-            background: "rgba(127,202,201,0.08)",
-            border: "1px solid rgba(127,202,201,0.2)",
-          }}
-        >
-          <h4 className="text-lg font-semibold mb-3" style={{ color: "#7fcac9" }}>
+        <div className="rounded-xl p-6 bg-card border border-border shadow-sm">
+          <h4 className="text-lg font-semibold mb-4 text-primary">
             Achievement Badges
           </h4>
 
           {(stats.achievements || []).length === 0 ? (
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.75)" }}>
+            <p className="text-sm text-muted-foreground italic">
               No badges available yet.
             </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {(stats.achievements || []).map((badge: AchievementBadgeDTO) => (
                 <div
                   key={badge.key}
-                  className="rounded-lg p-3"
-                  style={{
-                    background: badge.unlocked ? "rgba(127,202,201,0.18)" : "rgba(255,255,255,0.04)",
-                    border: badge.unlocked
-                      ? "1px solid rgba(127,202,201,0.35)"
-                      : "1px solid rgba(255,255,255,0.08)",
-                  }}
+                  className={`rounded-lg p-3 border transition-colors ${
+                    badge.unlocked 
+                      ? "bg-primary/5 border-primary/30" 
+                      : "bg-muted/30 border-border"
+                  }`}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-3">
                     {badge.imageUrl ? (
                       <img
                         src={badge.imageUrl}
                         alt={badge.name}
-                        className="w-12 h-12 rounded-md object-cover flex-shrink-0"
+                        className={`w-10 h-10 rounded-md object-cover flex-shrink-0 ${!badge.unlocked && "grayscale opacity-50"}`}
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-md bg-white/5 flex items-center justify-center text-xs" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.6)" }}>
+                      <div className={`w-10 h-10 rounded-md flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                        badge.unlocked ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                      }`}>
                         {badge.name.charAt(0)}
                       </div>
                     )}
 
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.85)" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm font-semibold truncate ${badge.unlocked ? "text-foreground" : "text-muted-foreground"}`}>
                         {badge.name}
                       </div>
-                      <div className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      <div className="text-xs mt-1 text-muted-foreground line-clamp-2" title={badge.description}>
                         {badge.description}
                       </div>
-                      <div className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.8)" }}>
-                        Progress: {Math.min(badge.progress, badge.target)}/{badge.target}
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="text-[10px] font-medium text-muted-foreground">
+                          {Math.min(badge.progress, badge.target)} / {badge.target}
+                        </div>
+                        <div className={`text-[10px] font-bold uppercase tracking-wider ${badge.unlocked ? "text-primary" : "text-muted-foreground"}`}>
+                          {badge.unlocked ? "Unlocked" : "Locked"}
+                        </div>
                       </div>
-                      <div className="text-xs mt-1" style={{ color: badge.unlocked ? "#7fcac9" : "rgba(255,255,255,0.6)" }}>
-                        {badge.unlocked ? "Unlocked" : "Locked"}
+                      {/* Progress bar */}
+                      <div className="w-full h-1.5 bg-muted rounded-full mt-1.5 overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full ${badge.unlocked ? "bg-primary" : "bg-primary/40"}`}
+                          style={{ width: `${Math.min(100, (badge.progress / badge.target) * 100)}%` }}
+                        />
                       </div>
                     </div>
                   </div>
@@ -459,25 +419,12 @@ export default function Profile({ id }: ProfileProps) {
       </div>
 
       {streakInfo && (
-        <div
-          className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm px-4"
-          style={{ zIndex: 1000 }}
-        >
-          <div
-            className="p-8 rounded-lg max-w-lg w-full"
-            style={{
-              background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
-              border: "1px solid rgba(127,202,201,0.2)",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-            }}
-          >
-            <h3
-              className="text-2xl font-bold mb-6 text-center"
-              style={{ color: "#7fcac9" }}
-            >
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm px-4 z-50">
+          <div className="p-8 rounded-xl max-w-lg w-full bg-card border border-border shadow-2xl">
+            <h3 className="text-2xl font-bold mb-6 text-center text-primary">
               Streak Milestones
             </h3>
-            <div className="flex  items-center justify-center gap-8 mt-5">
+            <div className="flex items-center justify-center gap-8 mt-5">
               {[
                 { src: "/flame.png", days: "1 Day" },
                 { src: "/flame1.png", days: "7 Days" },
@@ -488,33 +435,22 @@ export default function Profile({ id }: ProfileProps) {
                   <img
                     src={flame.src}
                     alt={`${flame.days} streak`}
-                    className="w-12 h-12"
+                    className="w-12 h-12 drop-shadow-md"
                   />
-                  <span
-                    className="mt-2 text-sm"
-                    style={{ color: "rgba(255,255,255,0.8)" }}
-                  >
+                  <span className="mt-3 text-sm font-medium text-foreground">
                     {flame.days}
                   </span>
                 </div>
               ))}
             </div>
-            <p
-              className="mt-6 text-center text-sm max-w-md"
-              style={{ color: "rgba(255,255,255,0.7)" }}
-            >
+            <p className="mt-8 text-center text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
               Each flame represents a streak milestone: the first for 1 day, the
               second for 7 days, the third for 30 days, and the fourth for 100
-              days.
+              days. Keep learning every day to upgrade your flame!
             </p>
             <button
               onClick={() => setStreakInfo(false)}
-              className="mt-6 w-full py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{
-                background: "rgba(127,202,201,0.1)",
-                color: "#7fcac9",
-                border: "1px solid rgba(127,202,201,0.2)",
-              }}
+              className="mt-8 w-full py-2.5 rounded-lg text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
             >
               Close
             </button>
@@ -523,25 +459,12 @@ export default function Profile({ id }: ProfileProps) {
       )}
 
       {tierInfo && (
-        <div
-          className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm px-4"
-          style={{ zIndex: 1000 }}
-        >
-          <div
-            className="p-8 rounded-lg max-w-lg w-full"
-            style={{
-              background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
-              border: "1px solid rgba(127,202,201,0.2)",
-              boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-            }}
-          >
-            <h3
-              className="text-2xl font-bold mb-6 text-center"
-              style={{ color: "#7fcac9" }}
-            >
+        <div className="fixed inset-0 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm px-4 z-50">
+          <div className="p-8 rounded-xl max-w-lg w-full bg-card border border-border shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-2xl font-bold mb-6 text-center text-primary">
               Tier Requirements
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {[
                 { name: "Bronze", xp: 0, img: "/tiers/bronze.png" },
                 { name: "Silver", xp: 500, img: "/tiers/silver.png" },
@@ -550,49 +473,34 @@ export default function Profile({ id }: ProfileProps) {
                 { name: "Titanium", xp: 5000, img: "/tiers/titanium.png" },
                 { name: "Legendary", xp: 8000, img: "/tiers/legendary.png" },
                 { name: "Godlike", xp: 12000, img: "/tiers/godlike.png" },
-              ].sort((a, b) => a.xp < b.xp).map((tier, idx) => (
+              ].sort((a, b) => a.xp - b.xp).map((tier, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-2 rounded-lg"
-                  style={{ background: "rgba(127,202,201,0.05)" }}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50 hover:bg-muted transition-colors"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <img
                       src={tier.img}
                       alt={tier.name}
-                      className="w-8 h-8 rounded-full"
+                      className="w-10 h-10 rounded-full drop-shadow-sm"
                     />
-                    <span
-                      className="font-medium"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
-                    >
+                    <span className="font-semibold text-foreground">
                       {tier.name}
                     </span>
                   </div>
-                  <span
-                    className="text-sm"
-                    style={{ color: "rgba(127,202,201,0.8)" }}
-                  >
-                    {tier.xp} XP
+                  <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
+                    {tier.xp.toLocaleString()} XP
                   </span>
                 </div>
               ))}
             </div>
-            <p
-              className="mt-6 text-center text-sm"
-              style={{ color: "rgba(255,255,255,0.7)" }}
-            >
+            <p className="mt-8 text-center text-sm text-muted-foreground leading-relaxed">
               Earn XP by completing reviews and learning new words to rank up
               through the tiers and unlock exclusive achievements.
             </p>
             <button
               onClick={() => setTierInfo(false)}
-              className="mt-6 w-full py-2 rounded-lg text-sm font-medium transition-colors"
-              style={{
-                background: "rgba(127,202,201,0.1)",
-                color: "#7fcac9",
-                border: "1px solid rgba(127,202,201,0.2)",
-              }}
+              className="mt-8 w-full py-2.5 rounded-lg text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
             >
               Close
             </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Button } from "./ui/button";
 
 interface PaginationProps {
   page: number;
@@ -20,25 +21,25 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <div className={className ?? ""}>
       <div className="flex items-center justify-center gap-4">
-        <button
+        <Button
           type="button"
+          variant="outline"
           disabled={page <= 1}
           onClick={() => onPageChange(Math.max(page - 1, 1))}
-          className="rounded-md bg-slate-200 px-4 py-2 text-slate-900 disabled:opacity-40"
         >
           Previous
-        </button>
-        <span className="text-sm text-slate-700">
-          Page {page} of {totalPages}
+        </Button>
+        <span className="text-sm text-muted-foreground">
+          Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span>
         </span>
-        <button
+        <Button
           type="button"
+          variant="outline"
           disabled={page >= totalPages}
           onClick={() => onPageChange(Math.min(page + 1, totalPages))}
-          className="rounded-md bg-slate-200 px-4 py-2 text-slate-900 disabled:opacity-40"
         >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   );

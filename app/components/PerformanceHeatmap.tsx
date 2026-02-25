@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface ActivityHeatmapEntry {
   date: string;
@@ -54,62 +55,54 @@ export default function PerformanceHeatmap({ activityHeatmap = [] }: Performance
   }, [activityHeatmap]);
 
   return (
-    <div
-      className="mt-12 rounded-xl p-6"
-      style={{
-        background: "rgba(127,202,201,0.06)",
-        border: "1px solid rgba(127,202,201,0.2)",
-      }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-semibold" style={{ color: "#7fcac9" }}>
+    <Card className="mt-12">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-lg font-semibold">
           Performance Heatmap (Last 20 Weeks)
-        </h4>
-        <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.75)" }}>
+        </CardTitle>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>Less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <span
               key={level}
-              className="inline-block h-3 w-3 rounded-sm"
-              style={{
-                background:
-                  level === 0
-                    ? "rgba(255,255,255,0.08)"
-                    : level === 1
-                      ? "#1f6b66"
-                      : level === 2
-                        ? "#2a8f88"
-                        : level === 3
-                          ? "#39b7ad"
-                          : "#7fcac9",
-              }}
+              className={`inline-block h-3 w-3 rounded-sm ${
+                level === 0
+                  ? "bg-muted"
+                  : level === 1
+                    ? "bg-primary/30"
+                    : level === 2
+                      ? "bg-primary/50"
+                      : level === 3
+                        ? "bg-primary/70"
+                        : "bg-primary"
+              }`}
             />
           ))}
           <span>More</span>
         </div>
-      </div>
+      </CardHeader>
 
-      <div className="grid grid-rows-7 grid-flow-col gap-1 overflow-x-auto pb-2">
-        {heatmapDays.map((day) => (
-          <div
-            key={day.date}
-            title={`${day.date} • ${day.reviews} review${day.reviews === 1 ? "" : "s"}`}
-            className="h-3 w-3 rounded-sm"
-            style={{
-              background:
+      <CardContent>
+        <div className="grid grid-rows-7 grid-flow-col gap-1 overflow-x-auto pb-2">
+          {heatmapDays.map((day) => (
+            <div
+              key={day.date}
+              title={`${day.date} • ${day.reviews} review${day.reviews === 1 ? "" : "s"}`}
+              className={`h-3 w-3 rounded-sm ${
                 day.level === 0
-                  ? "rgba(255,255,255,0.08)"
+                  ? "bg-muted"
                   : day.level === 1
-                    ? "#1f6b66"
+                    ? "bg-primary/30"
                     : day.level === 2
-                      ? "#2a8f88"
+                      ? "bg-primary/50"
                       : day.level === 3
-                        ? "#39b7ad"
-                        : "#7fcac9",
-            }}
-          />
-        ))}
-      </div>
-    </div>
+                        ? "bg-primary/70"
+                        : "bg-primary"
+              }`}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

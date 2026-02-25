@@ -6,8 +6,11 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { CardProps } from "@/types";
 import { deleteCard, toggleFavorite } from "@/services/cardService";
+import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
 
-const Card: React.FC<CardProps> = ({
+const CardItem: React.FC<CardProps> = ({
   data,
   isfavorited,
   setCards,
@@ -58,208 +61,119 @@ const Card: React.FC<CardProps> = ({
 
 
   return (
-    <div
-      className="p-6  flex flex-col gap-4 rounded-xl transition-all duration-300 hover:transform hover:translate-y-[-6px]"
-      style={{
-        background: "linear-gradient(145deg, #2a3f54 0%, #1e2b3a 100%)",
-        boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
-      }}
-    >
-      <div
-        style={{
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-          paddingBottom: "12px",
-        }}
-      >
-        <h3
-          style={{
-            color: "#fff",
-            fontSize: "1.5rem",
-            fontWeight: 600,
-            margin: 0,
-            letterSpacing: "0.5px",
-            marginBottom: "8px",
-          }}
-        >
+    <Card className="flex flex-col gap-4 rounded-xl transition-all duration-300 hover:transform hover:translate-y-[-6px] hover:shadow-lg border-primary/20 bg-gradient-to-br from-card to-muted/50">
+      <CardHeader className="pb-3 border-b border-border/50">
+        <CardTitle className="text-2xl font-semibold tracking-tight mb-2 text-foreground">
           {data.title}
-        </h3>
+        </CardTitle>
 
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          <span
-            style={{
-              background: "rgba(255,255,255,0.1)",
-              color: "#7fcac9",
-              padding: "6px 12px",
-              borderRadius: "20px",
-              fontSize: "0.85rem",
-              fontWeight: 500,
-              border: "1px solid rgba(127,202,201,0.3)",
-            }}
-          >
+        <div className="flex gap-3 items-center">
+          <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10">
             {data.target_language}
-          </span>
+          </Badge>
 
-          <span
-            style={{
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "0.9rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
+
+          <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <svg
-              style={{ width: "16px", height: "16px", fill: "currentColor" }}
+              className="w-4 h-4 fill-current"
               viewBox="0 0 24 24"
             >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
             </svg>
             {data.total_words} words
           </span>
-          <button
-            type="button"
-            onClick={handleClick}
-            className="rounded-full p-2 hover:bg-white/10 transition-colors"
-            aria-label={isFavorited ? "Remove favorite" : "Add favorite"}
-          >
-            <FaHeart
-              style={{
-                color: isFavorited ? "red" : "gray",
-                transition: "color 0.3s",
-              }}
-            />
-          </button>
-          {delete_item && (
-            <>
-              <button
-                type="button"
-                onClick={handleDelete}
-                style={{
-                  padding: "4px",
-                  borderRadius: "50%",
-                  transition: "background-color 0.3s",
-                }}
-                className="hover:bg-[#92969c66]"
-              >
-                <FaTrash
-                  style={{
-                    color: "gray",
-                    transition: "color 0.3s",
-                  }}
-                />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditing?.([true, data.id])}
-                style={{
-                  padding: "4px",
-                  borderRadius: "50%",
-                  transition: "background-color 0.3s",
-                }}
-                className="hover:bg-[#92969c66]"
-              >
-                <FaEdit style={{ color: "gray" }} />
-              </button>
-            </>
-          )}
+
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant="ghost" 
+              size="icon"
+              onClick={handleClick}
+              className={`rounded-full hover:bg-muted ${isFavorited ? 'text-destructive' : 'text-muted-foreground'}`}
+              aria-label={isFavorited ? "Remove favorite" : "Add favorite"}
+            >
+              <FaHeart className="w-4 h-4" />
+            </Button>
+            
+            {delete_item && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDelete}
+                  className="rounded-full hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
+                >
+                  <FaTrash className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing?.([true, data.id])}
+                  className="rounded-full hover:bg-muted text-muted-foreground"
+                >
+                  <FaEdit className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-      <div
+      </CardHeader>
       
-        style={{
-          
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <CardContent className="pt-0 flex items-center justify-between">
         {data?.owner ? (
           <div
-            className="cursor-pointer"
+            className="flex items-center gap-3 cursor-pointer group"
             onClick={() => router.push(`/profile/${data.owner?.id}`)}
-            style={{ display: "flex", alignItems: "center", gap: "12px" }}
           >
             <Image
               width={40}
               height={40}
               src={data.owner?.image ? data.owner.image : "/avatar.jpeg"}
               alt="Avatar"
-              style={{
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid rgba(127,202,201,0.5)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              }}
+              className="rounded-full object-cover border-2 border-primary/50 shadow-sm group-hover:border-primary transition-colors"
             />
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span
-                style={{
-                  color: "rgba(255,255,255,0.8)",
-                  fontSize: "0.85rem",
-                }}
-              >
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">
                 Created by
               </span>
-              <span
-                style={{
-                  color: "#7fcac9",
-                  fontSize: "0.95rem",
-                  fontWeight: 500,
-                }}
-              >
+              <span className="text-sm font-medium text-primary group-hover:underline">
                 {data.owner?.username}
               </span>
             </div>
           </div>
         ) : (
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div className="flex items-center gap-3">
             <Image
               width={40}
               height={40}
               src="/avatar.jpeg"
               alt="Avatar"
-              style={{
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "2px solid rgba(127,202,201,0.5)",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-              }}
+              className="rounded-full object-cover border-2 border-primary/50 shadow-sm"
             />
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ color: "rgba(255,255,255,0.8)", fontSize: "0.85rem" }}>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">
                 Created by
               </span>
-              <span style={{ color: "#7fcac9", fontSize: "0.95rem", fontWeight: 500 }}>
+              <span className="text-sm font-medium text-primary">
                 Unknown
               </span>
             </div>
           </div>
         )}
-        <Link href={`/learning/${data.id}`} style={{ textDecoration: "none" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: "#7fcac9",
-              fontSize: "0.9rem",
-              padding: "8px 12px",
-              borderRadius: "8px",
-              transition: "all 0.2s ease",
-            }}
-          >
+        
+        <Link href={`/learning/${data.id}`}>
+          <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 gap-2">
             Start Now
             <svg
-              style={{ width: "16px", height: "16px", fill: "currentColor" }}
+              className="w-4 h-4 fill-current"
               viewBox="0 0 24 24"
             >
               <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
             </svg>
-          </div>
+          </Button>
         </Link>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
-export default Card;
+export default CardItem;

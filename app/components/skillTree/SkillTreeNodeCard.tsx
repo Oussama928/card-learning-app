@@ -2,6 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
+import { Badge } from "@/app/components/ui/Badge";
+import { cn } from "@/lib/utils";
+import { Lock, CheckCircle2, Unlock, ArrowRight } from "lucide-react";
 import type { SkillTreeNodeDTO } from "@/types";
 
 interface SkillTreeNodeCardProps {
@@ -9,18 +12,24 @@ interface SkillTreeNodeCardProps {
   onPreview: (node: SkillTreeNodeDTO) => void;
 }
 
-const statusStyles: Record<SkillTreeNodeDTO["status"], string> = {
-  locked: "border-slate-700 bg-slate-900/40 text-slate-400",
-  unlocked: "border-cyan-400/60 bg-cyan-500/10 text-cyan-100 animate-pulse",
-  completed: "border-emerald-400/60 bg-emerald-500/10 text-emerald-100",
+const statusStyles : Record<string, string> = {
+  locked: "border-muted bg-card opacity-70",
+  unlocked: "border-primary/50 bg-primary/5 shadow-md hover:border-primary",
+  completed: "border-green-500/30 bg-green-500/5",
 };
 
 export default function SkillTreeNodeCard({ node, onPreview }: SkillTreeNodeCardProps) {
   const isLocked = node.status === "locked";
+  const isCompleted = node.status === "completed";
+  const isUnlocked = node.status === "unlocked";
 
   return (
     <div
-      className={`rounded-lg border p-3 shadow-md transition ${statusStyles[node.status]}`}
+      className={cn(
+        "relative flex flex-col justify-between rounded-xl border p-4 shadow-sm transition-all cursor-pointer h-[180px]",
+        statusStyles[node.status] || statusStyles.locked,
+        !isLocked && "hover:shadow-lg hover:-translate-y-1"
+      )}
       onClick={() => onPreview(node)}
       role="button"
       tabIndex={0}
@@ -30,41 +39,37 @@ export default function SkillTreeNodeCard({ node, onPreview }: SkillTreeNodeCard
         }
       }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-semibold">{node.title}</p>
-          <p className="mt-1 text-xs uppercase tracking-wide text-slate-300">{node.difficulty}</p>
+      <div className="space-y-2">
+        <div className="flex items-start justify-between gap-2">
+          <Badge variant={isCompleted ? "default" : isLocked ? "secondary" : "outline"} className={cn("text-[10px] h-5 px-1.5", isCompleted && "bg-green-600 hover:bg-green-700")}>
+            {node.difficulty}
+          </Badge>
+          {isLocked && <Lock className="h-4 w-4 text-muted-foreground/50" />}
+          {isCompleted && <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />}
+          {isUnlocked && <Unlock className="h-4 w-4 text-primary animate-pulse" />}
         </div>
-        <span className="rounded-full bg-slate-800 px-2 py-0.5 text-xs">
-          {node.xpReward} XP
-        </span>
+
+        <div>
+          <h4 className="font-semibold text-sm line-clamp-1 text-foreground" title={node.title}>
+            {node.title}
+          </h4>
+          <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+            {node.description}
+          </p>
+        </div>
       </div>
 
-      <p className="mt-2 line-clamp-2 text-xs text-slate-300">
-        {node.description || "Complete the requirements to unlock."}
-      </p>
-
-      <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
-        <span className="rounded-full bg-slate-800 px-2 py-0.5">{node.status}</span>
-        {node.prerequisites.length > 0 ? (
-          <span className="rounded-full bg-slate-800 px-2 py-0.5">
-            {node.prerequisites.length} prereq
-          </span>
-        ) : (
-          <span className="rounded-full bg-slate-800 px-2 py-0.5">Start node</span>
-        )}
+      <div className="mt-auto pt-3 border-t border-border/50 flex items-center justify-between">
+         <span className="text-xs font-mono text-muted-foreground">
+           {node.xpReward} XP
+         </span>
+         
+         {!isLocked && (
+            <div className="bg-primary/10 p-1.5 rounded-full text-primary">
+              <ArrowRight className="h-3 w-3" />
+            </div>
+         )}
       </div>
-
-      {node.cardId && !isLocked ? (
-        <Link
-          href={`/learning/${node.cardId}`}
-          className="mt-3 inline-block text-xs font-semibold text-cyan-200 hover:text-cyan-100"
-        >
-          Open card →
-        </Link>
-      ) : (
-        <p className="mt-3 text-xs text-slate-500">Locked until prerequisites complete</p>
-      )}
     </div>
   );
 }

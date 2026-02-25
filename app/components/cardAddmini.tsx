@@ -1,6 +1,9 @@
 import React from "react";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaImage } from "react-icons/fa";
 import { CardAddminiProps } from "@/types";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Button } from "./ui/button";
 
 const CardAddmini: React.FC<CardAddminiProps> = ({
   index,
@@ -13,6 +16,15 @@ const CardAddmini: React.FC<CardAddminiProps> = ({
 }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const updatedWords = [...words];
+    if (!words[index]) {
+        // initialize if undefined
+        // Assuming structure [expression, translated, id, image] based on usage
+        updatedWords[index] = ["", "", 0, ""]; 
+    }
+    
+    // Ensure the array has enough elements
+    while(updatedWords[index].length < 4) updatedWords[index].push("");
+
     if (type === "word") {
       updatedWords[index][0] = e.target.value;
     } else if (type === "translatedWord") {
@@ -24,98 +36,103 @@ const CardAddmini: React.FC<CardAddminiProps> = ({
   const currentImage = words[index]?.[3] || "";
 
   return (
-    <div className="flex gap-x-4  items-center justify-center">
-      <div className="flex flex-col h-20 justify-center items-center min-w-0 flex-1">
-        <label
-          htmlFor={`expression-${index}`}
-          className="block text-sm font-semibold text-gray-900"
-        >
+    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end justify-center p-4 rounded-lg bg-muted/30 border border-border/50">
+      <div className="flex flex-col gap-2 w-full sm:flex-1">
+        <Label htmlFor={`expression-${index}`} className="text-foreground">
           Expression
-        </label>
-        <div className="mt-2.5 w-full">
-          <input
-            id={`expression-${index}`}
-            name={`expression-${index}`}
-            type="text"
-            autoComplete="off"
-            value={words[index]?.[0] || ""}
-            onChange={(e) => handleInputChange(e, "word")}
-            className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-            placeholder="Enter expression"
-          />
-        </div>
-      </div>
-      <div className="flex flex-col h-20 justify-center items-center min-w-0 flex-1">
-        <label
-          htmlFor={`translation-${index}`}
-          className="block text-sm font-semibold text-gray-900"
-        >
-          Translated Expression
-        </label>
-        <div className="mt-2.5 w-full">
-          <input
-            id={`translation-${index}`}
-            name={`translation-${index}`}
-            type="text"
-            autoComplete="off"
-            value={words[index]?.[1] || ""}
-            onChange={(e) => handleInputChange(e, "translatedWord")}
-            className="block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600"
-            placeholder="Enter translation"
-          />
-        </div>
-      </div>
-      <div className="flex flex-col items-center justify-center pt-7 gap-2">
-        <label className="text-xs text-gray-600" htmlFor={`image-upload-${index}`}>
-          Expression Image
-        </label>
-        <input
-          id={`image-upload-${index}`}
-          type="file"
-          accept="image/*"
-          disabled={isUploading}
-          className="text-xs w-36"
-          onChange={async (e) => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            await onUploadWordImage(index, file);
-            e.currentTarget.value = "";
-          }}
+        </Label>
+        <Input
+          id={`expression-${index}`}
+          name={`expression-${index}`}
+          type="text"
+          autoComplete="off"
+          value={words[index]?.[0] || ""}
+          onChange={(e) => handleInputChange(e, "word")}
+          placeholder="Enter expression"
+          className="bg-background"
         />
-        {currentImage ? (
-          <img
-            src={currentImage}
-            alt="expression"
-            className="h-12 w-12 rounded object-cover border border-gray-200"
-          />
-        ) : null}
-        <button
-          type="button"
-          className="text-xs text-gray-500 hover:text-gray-700"
-          onClick={() => {
-            const updatedWords = [...words];
-            updatedWords[index][3] = "";
-            setWords(updatedWords);
-          }}
-        >
-          Remove image
-        </button>
-        <FaTrash
-          className="h-6 w-6 cursor-pointer text-gray-400 hover:text-red-500 transition-colors"
-          onClick={() => {
-            const updatedWords = [...words];
-            updatedWords.splice(index, 1);
-            setWords(updatedWords);
-            setGarbageCollector((prev: number[]) => {
-              if (typeof words[index][2] === "number") {
-                return [...prev, words[index][2]];
-              }
-              return prev;
-            });
+      </div>
+      
+      <div className="flex flex-col gap-2 w-full sm:flex-1">
+        <Label htmlFor={`translation-${index}`} className="text-foreground">
+          Translation
+        </Label>
+        <Input
+          id={`translation-${index}`}
+          name={`translation-${index}`}
+          type="text"
+          autoComplete="off"
+          value={words[index]?.[1] || ""}
+          onChange={(e) => handleInputChange(e, "translatedWord")}
+          placeholder="Enter translation"
+          className="bg-background"
+        />
+      </div>
 
-            seti((i: number) => i - 1);
+      <div className="flex flex-row sm:flex-row items-center gap-3 w-full sm:w-auto pt-2 sm:pt-0">
+        <div className="relative group">
+           <input
+            id={`image-upload-${index}`}
+            type="file"
+            accept="image/*"
+            disabled={isUploading}
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              await onUploadWordImage(index, file);
+              e.currentTarget.value = "";
+            }}
+          />
+          <Label 
+            htmlFor={`image-upload-${index}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-md border cursor-pointer hover:bg-muted transition-colors ${currentImage ? 'border-primary' : 'border-input'}`}
+            title="Upload image"
+          >
+            {currentImage ? (
+               <img
+                src={currentImage}
+                alt="expression"
+                className="h-full w-full rounded-md object-cover"
+              />
+            ) : (
+              <FaImage className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Label>
+          {currentImage && (
+             <button
+               type="button"
+               className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+               onClick={() => {
+                 const updatedWords = [...words];
+                 if(updatedWords[index]) updatedWords[index][3] = "";
+                 setWords(updatedWords);
+               }}
+             >
+               <div className="h-3 w-3 flex items-center justify-center text-[10px]">✕</div>
+             </button>
+          )}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+          onClick={() => {
+            const updatedWords = [...words];
+            const removedItem = updatedWords.splice(index, 1)[0]; 
+            setWords(updatedWords);
+            
+            if (removedItem && typeof removedItem[2] === "number") {
+                setGarbageCollector((prev: number[]) => [...prev, removedItem[2]]);
+            }
+
+            seti((i: number) => Math.max(0, i - 1));
           }}
-        />
+          title="Remove word pair"
+        >
+          <FaTrash className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

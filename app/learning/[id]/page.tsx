@@ -391,32 +391,12 @@ const Learning = () => {
     : "Not scheduled yet";
 
   return (
-    <div
-      className="flex flex-col pb-30 gap-5 min-h-screen pt-28 items-center px-4"
-      style={{
-        background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
-        color: "#ffffff",
-        fontFamily: "'Poppins', sans-serif",
-      }}
-    >
-      <div className="text-center mb-8">
-        <h1
-          className="text-4xl font-bold mb-2"
-          style={{
-            letterSpacing: "0.5px",
-            textShadow: "0 2px 4px rgba(0,0,0,0.2)",
-            fontFamily: "'Montserrat', sans-serif",
-          }}
-        >
+    <div className="flex flex-col min-h-screen pt-28 pb-10 px-4 items-center gap-6 bg-background text-foreground">
+      <div className="text-center mb-4">
+        <h1 className="text-4xl font-bold mb-2 tracking-tight">
           {title}
         </h1>
-        <h3
-          className="text-xl opacity-80"
-          style={{
-            color: "rgba(255,255,255,0.7)",
-            fontFamily: "'Poppins', sans-serif",
-          }}
-        >
+        <h3 className="text-xl text-muted-foreground">
           {description}
         </h3>
       </div>
@@ -441,14 +421,14 @@ const Learning = () => {
       )}
 
       {started && !isSessionComplete && (
-         <div className="w-full max-w-2xl px-4 py-2 bg-white/5 rounded-full border border-white/10 flex items-center justify-between gap-4">
-            <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
+         <div className="w-full max-w-2xl px-4 py-2 bg-muted/30 rounded-full border flex items-center justify-between gap-4">
+            <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-teal-500 transition-all duration-500" 
+                  className="h-full bg-primary transition-all duration-500" 
                   style={{ width: `${(progressDisplayIndex / progressDenominator) * 100}%` }}
                 />
             </div>
-            <span className="text-xs font-bold text-teal-300 whitespace-nowrap">
+            <span className="text-xs font-bold text-primary whitespace-nowrap">
                 {progressDisplayIndex} / {progressDenominator} Card Types
             </span>
          </div>

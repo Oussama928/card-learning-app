@@ -2,10 +2,29 @@
 
 import React from "react";
 import type { StudyGroupCommentNodeProps } from "@/types";
+import { Card, CardContent } from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui/badge";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Trash2, MessageSquare, CornerDownRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export default function CommentNode({ comment, canReply, onReply, canDelete, onDelete }: StudyGroupCommentNodeProps) {
+// Extended props to handle nesting level
+interface CommentNodeExtendedProps extends StudyGroupCommentNodeProps {
+  level?: number;
+}
+
+export default function CommentNode({ 
+  comment, 
+  canReply, 
+  onReply, 
+  canDelete, 
+  onDelete,
+  level = 0 
+}: CommentNodeExtendedProps) {
   const [reply, setReply] = React.useState("");
   const [sending, setSending] = React.useState(false);
+  const [isReplying, setIsReplying] = React.useState(false);
 
   const submitReply = async () => {
     const value = reply.trim();
@@ -15,57 +34,105 @@ export default function CommentNode({ comment, canReply, onReply, canDelete, onD
       setSending(true);
       await onReply(comment.id, value);
       setReply("");
+      setIsReplying(false);
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-cyan-100">
-          {comment.authorName || "User"}
-          <span className="ml-2 rounded-full bg-slate-700 px-2 py-0.5 text-xs uppercase text-slate-200">
-            {comment.authorRole}
-          </span>
-        </p>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">{new Date(comment.createdAt).toLocaleString()}</span>
-          {canDelete && onDelete ? (
-            <button
-              type="button"
-              onClick={() => void onDelete(comment.id)}
-              className="text-xs font-semibold text-rose-300 hover:text-rose-200"
-            >
-              Delete
-            </button>
-          ) : null}
-        </div>
-      </div>
+    <div className={cn("flex flex-col gap-2", level > 0 && "ml-4 pl-4 border-l-2 border-border")}>
+      <Card className="bg-card">
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-foreground">
+                {comment.authorName || "User"}
+              </span>
+              <Badge variant="secondary" className="text-xs py-0 h-5">
+                {comment.authorRole}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {new Date(comment.createdAt).toLocaleString()}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {canReply && !isReplying && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setIsReplying(true)}
+                >
+                  <MessageSquare className="h-3 w-3 mr-1" />
+                  Reply
+                </Button>
+              )}
+              
+              {canDelete && onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => void onDelete(comment.id)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          </div>
 
-      <p className="mt-2 text-sm text-slate-200">{comment.content}</p>
+          <p className="text-sm text-foreground/90 whitespace-pre-wrap">
+            {comment.content}
+          </p>
 
-      {canReply ? (
-        <div className="mt-3 flex gap-2">
-          <input
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            placeholder="Write a reply..."
-            className="w-full rounded-md border border-white/20 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder:text-slate-400"
-          />
-          <button
-            type="button"
-            onClick={submitReply}
-            disabled={sending}
-            className="rounded-md bg-cyan-300 px-3 py-2 text-sm font-semibold text-slate-900 disabled:opacity-50"
-          >
-            Reply
-          </button>
-        </div>
-      ) : null}
+          {isReplying && (
+            <div className="mt-3 flex items-start gap-2 animate-in fade-in slide-in-from-top-1">
+              <CornerDownRight className="h-4 w-4 text-muted-foreground mt-2" />
+              <div className="flex-1 flex flex-col gap-2">
+                <Input
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  placeholder="Write a reply..."
+                  className="h-9 text-sm"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      submitReply();
+                    }
+                    if (e.key === "Escape") {
+                      setIsReplying(false);
+                    }
+                  }}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={submitReply}
+                    disabled={sending || !reply.trim()}
+                    className="h-8 text-xs"
+                  >
+                    {sending ? "..." : "Reply"}
+                  </Button>
+                  <Button
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setIsReplying(false)}
+                    className="h-8 text-xs"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {comment.replies.length > 0 ? (
-        <div className="mt-3 space-y-2 pl-4 border-l border-white/10">
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="space-y-2 mt-1">
           {comment.replies.map((item) => (
             <CommentNode
               key={item.id}
@@ -74,10 +141,11 @@ export default function CommentNode({ comment, canReply, onReply, canDelete, onD
               onReply={onReply}
               canDelete={canDelete}
               onDelete={onDelete}
+              level={level + 1}
             />
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

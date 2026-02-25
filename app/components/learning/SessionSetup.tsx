@@ -1,6 +1,11 @@
 "use client";
 
 import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
+import { Play } from "lucide-react";
 
 interface SessionSetupProps {
   mode: "flashcard" | "fill" | "mc" | "oral";
@@ -26,124 +31,111 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
   setHintsEnabled,
 }) => {
   return (
-    <section className="w-full max-w-3xl">
-      <div className="rounded-[30px] border border-white/10 bg-gradient-to-br from-[#102332]/80 to-[#1f2f3e]/80 p-6 shadow-[0_25px_60px_rgba(0,0,0,0.65)]">
-        <div className="space-y-1 border-b border-white/10 pb-4">
-          <p className="text-xs uppercase tracking-[0.4em] text-teal-300">Session Setup</p>
-          <p className="text-2xl font-semibold text-white">Plan your study moment</p>
-          <p className="text-sm text-gray-300">Pick a learning type, toggle the timer, and optionally add a card deadline.</p>
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader className="border-b space-y-4 pb-6">
+        <div>
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="text-primary border-primary/20">SESSION SETUP</Badge>
+          </div>
+          <CardTitle className="mt-4 text-2xl">Plan your study moment</CardTitle>
+          <CardDescription className="text-base mt-2">
+            Pick a learning type, toggle the timer, and optionally add a card deadline.
+          </CardDescription>
         </div>
+      </CardHeader>
+      
+      <CardContent className="grid gap-6 p-6 md:grid-cols-2">
+        {/* Learning Type Section */}
+        <Card className="border bg-muted/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Learning Type</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-3">
+            {(["flashcard", "fill", "mc", "oral"] as const).map((m) => (
+              <Button
+                key={m}
+                onClick={() => setMode(m)}
+                variant={mode === m ? "default" : "outline"}
+                className={`w-full capitalize ${mode !== m && "bg-transparent hover:bg-muted"}`}
+              >
+                {m === "mc" ? "Multiple Choice" : m}
+              </Button>
+            ))}
+          </CardContent>
+        </Card>
 
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-            <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Learning Type</p>
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <button
-                onClick={() => setMode("flashcard")}
-                className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
-                  mode === "flashcard"
-                    ? "border-teal-400 bg-teal-500 text-white"
-                    : "border-white/20 bg-transparent text-gray-300 hover:border-white/60"
-                }`}
-              >
-                Flashcards
-              </button>
-              <button
-                onClick={() => setMode("fill")}
-                className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
-                  mode === "fill"
-                    ? "border-teal-400 bg-teal-500 text-white"
-                    : "border-white/20 bg-transparent text-gray-300 hover:border-white/60"
-                }`}
-              >
-                Fill
-              </button>
-              <button
-                onClick={() => setMode("mc")}
-                className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
-                  mode === "mc"
-                    ? "border-teal-400 bg-teal-500 text-white"
-                    : "border-white/20 bg-transparent text-gray-300 hover:border-white/60"
-                }`}
-              >
-                Multiple Choice
-              </button>
-              <button
-                onClick={() => setMode("oral")}
-                className={`rounded-2xl border px-3 py-2 text-sm font-semibold transition ${
-                  mode === "oral"
-                    ? "border-teal-400 bg-teal-500 text-white"
-                    : "border-white/20 bg-transparent text-gray-300 hover:border-white/60"
-                }`}
-              >
-                Oral Mode
-              </button>
-            </div>
-          </div>
+        {/* Timer Section */}
+        <Card className="border bg-muted/20">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Session Timer</CardTitle>
+            <Button
+              type="button"
+              variant={wantTimer ? "default" : "secondary"}
+              size="sm"
+              onClick={() => setWantTimer(!wantTimer)}
+              className="h-7 text-xs"
+            >
+              {wantTimer ? "Enabled" : "Disabled"}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground mb-4">Track how long you study.</p>
+          </CardContent>
+        </Card>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Session Timer</p>
-                <p className="text-sm text-gray-300">Track how long you study.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setWantTimer(!wantTimer)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  wantTimer ? "bg-teal-500 text-white" : "bg-white/10 text-gray-300"
-                }`}
-              >
-                {wantTimer ? "Enabled" : "Disabled"}
-              </button>
-            </div>
+        {/* Card Deadline Section */}
+        <Card className="border bg-muted/20">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Card Deadline</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-foreground">Time limit per card (seconds)</p>
+            <Input
+              type="number"
+              placeholder="e.g. 10 (Leave empty for no limit)"
+              value={timeLimitInput}
+              onChange={(e) => setTimeLimitInput(e.target.value)}
+              className="bg-background"
+            />
+          </CardContent>
+        </Card>
 
-            <div className="space-y-2">
-              <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Card Deadline (optional)</p>
-              <div className="flex items-center gap-3">
-                <input
-                  type="number"
-                  placeholder="Seconds (e.g. 10)"
-                  value={timeLimitInput}
-                  onChange={(e) => setTimeLimitInput(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white placeholder:text-gray-500 focus:border-teal-500 focus:outline-none"
-                />
-                <span className="text-xs text-gray-400 whitespace-nowrap">sec / card</span>
-              </div>
-            </div>
-          </div>
+        {/* Hints Section */}
+        <Card className="border bg-muted/20">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Hints</CardTitle>
+             <Button
+              type="button"
+              variant={hintsEnabled ? "default" : "secondary"}
+              size="sm"
+              onClick={() => setHintsEnabled(!hintsEnabled)}
+              className="h-7 text-xs"
+            >
+              {hintsEnabled ? "Enabled" : "Disabled"}
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-foreground mb-2">
+              Show first letter of answer if stuck.
+            </p>
+             {hintsEnabled && (
+                <div className="rounded-md bg-amber-500/10 px-3 py-2 text-xs text-amber-600 border border-amber-500/20">
+                  Hints are on — XP rewards will be reduced by 50% for this session.
+                </div>
+            )}
+          </CardContent>
+        </Card>
+      </CardContent>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-teal-300">Hints</p>
-                <p className="text-sm text-gray-300">Show contextual hints during the session.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setHintsEnabled(!hintsEnabled)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                  hintsEnabled ? "bg-amber-500 text-white" : "bg-white/10 text-gray-300"
-                }`}
-              >
-                {hintsEnabled ? "Enabled" : "Disabled"}
-              </button>
-            </div>
-            {hintsEnabled ? (
-              <div className="rounded-xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
-                Hints are on — XP rewards will be reduced by 50% for this session.
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <button
-          onClick={onStart}
-          className="mt-6 w-full rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-teal-500/20 active:scale-[0.98]"
+      <div className="p-6 pt-0">
+        <Button 
+          onClick={onStart} 
+          className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
         >
-          Begin Study Session
-        </button>
+          <Play className="mr-2 h-5 w-5 fill-current" />
+          Start Session
+        </Button>
       </div>
-    </section>
+    </Card>
   );
 };

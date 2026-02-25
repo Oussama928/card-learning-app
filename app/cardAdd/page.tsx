@@ -14,6 +14,10 @@ import {
   CloudArrowUpIcon,
 } from "@heroicons/react/24/outline";
 import { CardAddPageProps, CreateCardRequestDTO } from "@/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
 
 const validationSchema = cardAddSchema;
 
@@ -236,7 +240,7 @@ export default function Example({ Current }: CardAddPageProps) {
   }, [Current, session]);
 
   return (
-    <div className="bg-white px-6 py-24 sm:py-32 lg:px-8 h-full">
+    <div className="min-h-screen bg-background px-6 py-24 sm:py-32 lg:px-8">
       <div
         aria-hidden="true"
         className="absolute inset-x-0 top-[-10rem] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[-20rem]"
@@ -246,15 +250,15 @@ export default function Example({ Current }: CardAddPageProps) {
             clipPath:
               "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
           }}
-          className="relative left-1/2 -z-10 aspect-[1155/678] w-[36.125rem] max-w-none -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-40rem)] sm:w-[72.1875rem]"
+          className="relative left-1/2 -z-10 aspect-[1155/678] w-[36.125rem] max-w-none -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/40 to-secondary/40 opacity-30 sm:left-[calc(50%-40rem)] sm:w-[72.1875rem]"
         />
       </div>
       <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+        <h2 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
           Add a Card !
         </h2>
-        <p className="mt-2 text-lg/8 text-gray-600">
-          make sure the expressions are neither too hard nor too easy
+        <p className="mt-2 text-lg leading-8 text-muted-foreground">
+          Make sure the expressions are neither too hard nor too easy.
         </p>
       </div>
       <form
@@ -263,28 +267,24 @@ export default function Example({ Current }: CardAddPageProps) {
       >
         <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label
+            <Label
               htmlFor="title"
-              className="block text-sm/6 font-semibold text-gray-900"
+              className="text-sm font-semibold leading-6 text-foreground"
             >
               Card Title
-            </label>
+            </Label>
             <div className="mt-2.5">
-              <input
+              <Input
                 id="title"
                 name="title"
                 type="text"
                 value={formik.values.title}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 -outline-offset-1 ${
-                  formik.touched.title && formik.errors.title
-                    ? "outline-red-500"
-                    : "outline-gray-300"
-                } placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600`}
+                variant={formik.touched.title && formik.errors.title ? "destructive" : "default"}
               />
               {formik.touched.title && formik.errors.title && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-destructive">
                   {formik.errors.title}
                 </p>
               )}
@@ -292,28 +292,24 @@ export default function Example({ Current }: CardAddPageProps) {
           </div>
 
           <div className="sm:col-span-2">
-            <label
+            <Label
               htmlFor="targetLanguage"
-              className="block text-sm/6 font-semibold text-gray-900"
+              className="text-sm font-semibold leading-6 text-foreground"
             >
               Target Language
-            </label>
+            </Label>
             <div className="mt-2.5">
-              <input
+              <Input
                 id="targetLanguage"
                 name="targetLanguage"
                 value={formik.values.targetLanguage}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 -outline-offset-1 ${
-                  formik.touched.targetLanguage && formik.errors.targetLanguage
-                    ? "outline-red-500"
-                    : "outline-gray-300"
-                } placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600`}
+                variant={formik.touched.targetLanguage && formik.errors.targetLanguage ? "destructive" : "default"}
               />
               {formik.touched.targetLanguage &&
                 formik.errors.targetLanguage && (
-                  <p className="mt-1 text-sm text-red-600">
+                  <p className="mt-1 text-sm text-destructive">
                     {formik.errors.targetLanguage}
                   </p>
                 )}
@@ -321,28 +317,24 @@ export default function Example({ Current }: CardAddPageProps) {
           </div>
 
           <div className="sm:col-span-2">
-            <label
+            <Label
               htmlFor="description"
-              className="block text-sm/6 font-semibold text-gray-900"
+              className="text-sm font-semibold leading-6 text-foreground"
             >
               Card Description
-            </label>
+            </Label>
             <div className="mt-2.5">
-              <textarea
+              <Textarea
                 id="description"
                 name="description"
                 rows={4}
                 value={formik.values.description}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                className={`block w-full rounded-md bg-white px-3.5 py-2 text-base text-gray-900 outline outline-1 -outline-offset-1 ${
-                  formik.touched.description && formik.errors.description
-                    ? "outline-red-500"
-                    : "outline-gray-300"
-                } placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600`}
+                className={formik.touched.description && formik.errors.description ? "border-destructive focus-visible:ring-destructive" : ""}
               />
               {formik.touched.description && formik.errors.description && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-sm text-destructive">
                   {formik.errors.description}
                 </p>
               )}
@@ -351,15 +343,15 @@ export default function Example({ Current }: CardAddPageProps) {
 
           {/* Input Method Selection */}
           <div className="sm:col-span-2">
-            <label className="block text-sm/6 font-semibold text-gray-900 mb-4">
+            <Label className="block text-sm font-semibold leading-6 text-foreground mb-4">
               How would you like to add expressions?
-            </label>
+            </Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div
-                className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+                className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-colors ${
                   inputMethod === "manual"
-                    ? "border-indigo-600 bg-indigo-50"
-                    : "border-gray-300 bg-white hover:bg-gray-50"
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:bg-muted/50"
                 }`}
                 onClick={() => {
                   setInputMethod("manual");
@@ -373,8 +365,8 @@ export default function Example({ Current }: CardAddPageProps) {
                       <p
                         className={`font-medium ${
                           inputMethod === "manual"
-                            ? "text-indigo-900"
-                            : "text-gray-900"
+                            ? "text-primary"
+                            : "text-foreground"
                         }`}
                       >
                         Manual Input
@@ -382,8 +374,8 @@ export default function Example({ Current }: CardAddPageProps) {
                       <p
                         className={`text-sm ${
                           inputMethod === "manual"
-                            ? "text-indigo-700"
-                            : "text-gray-500"
+                            ? "text-primary/80"
+                            : "text-muted-foreground"
                         }`}
                       >
                         Type expressions one by one
@@ -393,13 +385,13 @@ export default function Example({ Current }: CardAddPageProps) {
                   <div
                     className={`shrink-0 rounded-full border-2 p-1 ${
                       inputMethod === "manual"
-                        ? "border-indigo-600 bg-indigo-600"
-                        : "border-gray-300"
+                        ? "border-primary bg-primary"
+                        : "border-border"
                     }`}
                   >
                     <div
                       className={`h-2 w-2 rounded-full ${
-                        inputMethod === "manual" ? "bg-white" : ""
+                        inputMethod === "manual" ? "bg-background" : ""
                       }`}
                     />
                   </div>
@@ -407,10 +399,10 @@ export default function Example({ Current }: CardAddPageProps) {
               </div>
 
               <div
-                className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none ${
+                className={`relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-colors ${
                   inputMethod === "file"
-                    ? "border-indigo-600 bg-indigo-50"
-                    : "border-gray-300 bg-white hover:bg-gray-50"
+                    ? "border-primary bg-primary/10"
+                    : "border-border bg-card hover:bg-muted/50"
                 }`}
                 onClick={() => {
                   setInputMethod("file");
@@ -425,8 +417,8 @@ export default function Example({ Current }: CardAddPageProps) {
                       <p
                         className={`font-medium ${
                           inputMethod === "file"
-                            ? "text-indigo-900"
-                            : "text-gray-900"
+                            ? "text-primary"
+                            : "text-foreground"
                         }`}
                       >
                         File Upload
@@ -434,8 +426,8 @@ export default function Example({ Current }: CardAddPageProps) {
                       <p
                         className={`text-sm ${
                           inputMethod === "file"
-                            ? "text-indigo-700"
-                            : "text-gray-500"
+                            ? "text-primary/80"
+                            : "text-muted-foreground"
                         }`}
                       >
                         Import from .txt or .csv file
@@ -445,13 +437,13 @@ export default function Example({ Current }: CardAddPageProps) {
                   <div
                     className={`shrink-0 rounded-full border-2 p-1 ${
                       inputMethod === "file"
-                        ? "border-indigo-600 bg-indigo-600"
-                        : "border-gray-300"
+                        ? "border-primary bg-primary"
+                        : "border-border"
                     }`}
                   >
                     <div
                       className={`h-2 w-2 rounded-full ${
-                        inputMethod === "file" ? "bg-white" : ""
+                        inputMethod === "file" ? "bg-background" : ""
                       }`}
                     />
                   </div>
@@ -465,20 +457,20 @@ export default function Example({ Current }: CardAddPageProps) {
             <>
               <div className="sm:col-span-2 mt-8">
                 <div className="flex items-center justify-between">
-                  <label className="block text-sm/6 font-semibold text-gray-900">
+                  <Label className="block text-sm font-semibold leading-6 text-foreground">
                     Expression Pairs{" "}
                     {words.length > 1
                       ? `(${words.filter(([w, t]) => w.trim() && t.trim()).length} pairs)`
                       : ""}
-                  </label>
-                  <span className="text-sm text-gray-500">
+                  </Label>
+                  <span className="text-sm text-muted-foreground">
                     add manually below
                   </span>
                 </div>
               </div>
               <div className="sm:col-span-2 space-y-6">
                 {Array.from({ length: i }, (_, j) => (
-                  <div key={j} className="bg-gray-50 rounded-lg p-4">
+                  <div key={j} className="bg-card border border-border rounded-lg p-4 shadow-sm">
                     <CardAddmini
                       index={j}
                       words={words}
@@ -492,17 +484,18 @@ export default function Example({ Current }: CardAddPageProps) {
                 ))}
 
                 <div className="mt-5 mb-12 flex items-center justify-center">
-                  <button
+                  <Button
                     onClick={() => {
                       seti(i + 1);
                       setWords([...words, ["", "", false, ""]]);
                     }}
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-colors"
+                    variant="default"
+                    className="gap-2"
                   >
                     <PlusIcon className="w-5 h-5" />
                     Add Expression Pair
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>
@@ -511,25 +504,25 @@ export default function Example({ Current }: CardAddPageProps) {
           {/* File Upload Section */}
           {inputMethod === "file" && (
             <div className="sm:col-span-2">
-              <label className="block text-sm/6 font-semibold text-gray-900 mb-2">
+              <Label className="block text-sm font-semibold leading-6 text-foreground mb-2">
                 Upload File
-              </label>
-              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              </Label>
+              <div className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/20">
                 <div className="flex items-start">
-                  <DocumentTextIcon className="h-5 w-5 text-blue-600 mt-0.5 mr-2" />
-                  <div className="text-sm text-blue-800">
+                  <DocumentTextIcon className="h-5 w-5 text-primary mt-0.5 mr-2" />
+                  <div className="text-sm text-primary/80">
                     <p className="font-medium mb-1">
                       File Format Instructions:
                     </p>
                     <p>• Upload a .txt or .csv file</p>
                     <p>
                       • Each line should contain one pair:{" "}
-                      <code className="bg-blue-100 px-1 rounded">
+                      <code className="bg-background/50 px-1 rounded text-foreground">
                         expression:translation
                       </code>
                     </p>
                     <p>• Example format:</p>
-                    <pre className="bg-blue-100 px-2 py-1 rounded text-xs mt-1">
+                    <pre className="bg-background/50 px-2 py-1 rounded text-xs mt-1 text-foreground">
                       hello:bonjour <br></br>goodbye:au revoir <br></br>a hard egg:un œuf dur
                     </pre>
                     <p className="mt-1">
@@ -542,19 +535,19 @@ export default function Example({ Current }: CardAddPageProps) {
               <div
                 className={`mt-2 flex justify-center rounded-lg border border-dashed px-6 py-10 transition-colors ${
                   isDragOver
-                    ? "border-indigo-400 bg-indigo-50"
-                    : "border-gray-300 bg-gray-50 hover:bg-gray-100"
+                    ? "border-primary bg-primary/10"
+                    : "border-input bg-muted/20 hover:bg-muted/40"
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
               >
                 <div className="text-center">
-                  <CloudArrowUpIcon className="mx-auto h-12 w-12 text-gray-300" />
-                  <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                  <CloudArrowUpIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <div className="mt-4 flex text-sm leading-6 text-muted-foreground">
                     <label
                       htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500"
+                      className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
                     >
                       <span>Upload a file</span>
                       <input
@@ -569,14 +562,14 @@ export default function Example({ Current }: CardAddPageProps) {
                     </label>
                     <p className="pl-1">or drag and drop</p>
                   </div>
-                  <p className="text-xs leading-5 text-gray-600">
+                  <p className="text-xs leading-5 text-muted-foreground">
                     TXT, CSV up to 1MB
                   </p>
                 </div>
               </div>
 
               {fileError && (
-                <p className="mt-2 text-sm text-red-600">{fileError}</p>
+                <p className="mt-2 text-sm text-destructive">{fileError}</p>
               )}
 
               {uploadedFile && (
@@ -606,7 +599,7 @@ export default function Example({ Current }: CardAddPageProps) {
                         fileInputRef.current.value = "";
                       }
                     }}
-                    className="text-sm text-gray-600 hover:text-gray-800 underline"
+                    className="text-sm text-muted-foreground hover:text-foreground underline"
                   >
                     Remove file
                   </button>
@@ -620,38 +613,39 @@ export default function Example({ Current }: CardAddPageProps) {
               <Switch
                 checked={formik.values.agreed}
                 onChange={(value) => formik.setFieldValue("agreed", value)}
-                className="group flex w-8 flex-none cursor-pointer rounded-full bg-gray-200 p-px ring-1 ring-inset ring-gray-900/5 transition-colors duration-200 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 data-[checked]:bg-indigo-600"
+                className="group flex w-8 flex-none cursor-pointer rounded-full bg-input p-px ring-1 ring-inset ring-border transition-colors duration-200 ease-in-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary data-[checked]:bg-primary"
               >
                 <span className="sr-only">Agree to policies</span>
                 <span
                   aria-hidden="true"
-                  className="size-4 transform rounded-full bg-white shadow-sm ring-1 ring-gray-900/5 transition duration-200 ease-in-out group-data-[checked]:translate-x-3.5"
+                  className="size-4 transform rounded-full bg-background shadow-sm ring-1 ring-border transition duration-200 ease-in-out group-data-[checked]:translate-x-3.5"
                 />
               </Switch>
             </div>
-            <Label className="text-sm/6 text-gray-600">
+            <Label className="text-sm leading-6 text-muted-foreground">
               By selecting this, you agree to our{" "}
-              <a href="#" className="font-semibold text-indigo-600">
+              <a href="#" className="font-semibold text-primary">
                 policies
               </a>
               .
             </Label>
           </Field>
           {formik.touched.agreed && formik.errors.agreed && (
-            <p className="mt-1 text-sm text-red-600 sm:col-span-2">
+            <p className="mt-1 text-sm text-destructive sm:col-span-2">
               {formik.errors.agreed}
             </p>
           )}
         </div>
 
         <div className="mt-20">
-          <button
+          <Button
             type="submit"
             disabled={formik.isSubmitting}
-            className="block w-full rounded-md bg-indigo-600 px-3.5 py-2.5 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full"
+            variant="default"
           >
-            {formik.isSubmitting ? "Submitting..." : "let's GO"}
-          </button>
+            {formik.isSubmitting ? "Submitting..." : "Let's GO"}
+          </Button>
         </div>
       </form>
     </div>

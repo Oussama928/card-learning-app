@@ -1,9 +1,12 @@
 "use client";
 
 import React from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import { ArrowLeft } from "lucide-react";
 import type { StudyCardTermDTO } from "@/types";
 import { SpeakButton } from "./SpeakButton";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
 interface MCModeProps {
   activeCard: StudyCardTermDTO;
@@ -24,7 +27,7 @@ export const MCMode: React.FC<MCModeProps> = ({
   mcOptions,
   selectedOption,
   setSelectedOption,
-  studyMode,
+  studyMode: _studyMode,
   currentDue,
   onNext,
   onBack,
@@ -45,74 +48,79 @@ export const MCMode: React.FC<MCModeProps> = ({
 
   return (
     <>
-      <div className="mt-6 text-center flex flex-col items-center justify-center w-full max-w-2xl rounded-xl p-8 transition-transform hover:scale-105 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg border border-gray-600 relative">
-        {studyMode === "spaced_repetition" && currentDue && (
-          <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-teal-500 text-white text-xs font-bold uppercase tracking-wider animate-pulse transition-all">
-            Due
-          </div>
+      <Card className="mt-6 w-full max-w-2xl text-center relative overflow-hidden">
+        {_studyMode === "spaced_repetition" && currentDue && (
+          <Badge variant="secondary" className="absolute top-4 right-4 animate-pulse">
+            DUE
+          </Badge>
         )}
-        {activeCard?.[4] ? (
-          <img
-            src={String(activeCard[4])}
-            alt="Expression visual"
-            className="w-full max-w-md h-44 object-cover rounded-xl border border-white/20 shadow-md mb-5"
-          />
-        ) : null}
-        <div className="w-full flex items-center justify-between">
-          <h2
-            className="mb-4 text-2xl font-semibold text-gray-200"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
-            What is the translation of:
-          </h2>
-          <SpeakButton text={String(activeCard?.[0] ?? "")} label="Play pronunciation" />
-        </div>
-        <div
-          className="mb-6 text-3xl font-bold text-teal-300"
-          style={{ fontFamily: "'Montserrat', sans-serif" }}
-        >
-          {activeCard[0]}
-        </div>
-        {hintsEnabled && hintText ? (
-          <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
-            Hint: {hintText}
-          </div>
-        ) : null}
-        <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-          {mcOptions.map((option, idx) => (
-            <button
-              key={idx}
-              onClick={() => setSelectedOption(option)}
-              className={`p-3 rounded-lg border transition duration-200 ${
-                selectedOption === option
-                  ? "bg-teal-500 text-white border-teal-500"
-                  : "bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200"
-              }`}
-              style={{ fontFamily: "'Poppins', sans-serif" }}
+
+        <CardHeader className="space-y-4 pb-2">
+            {activeCard?.[4] && (
+                <div className="w-full h-44 rounded-md overflow-hidden bg-muted/20 mb-4 border border-border">
+                    <img
+                        src={String(activeCard[4])}
+                        alt="Expression visual"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+            )}
+            <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-semibold text-muted-foreground">
+                    What is the translation of:
+                </CardTitle>
+                 <SpeakButton text={String(activeCard?.[0] ?? "")} label="Play pronunciation" />
+            </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6">
+            <div className="text-3xl font-bold text-primary">
+                {activeCard[0]}
+            </div>
+
+            {hintsEnabled && hintText && (
+                 <div className="flex justify-center">
+                    <Badge variant="outline" className="text-amber-500 border-amber-500/20 px-3 py-1">
+                        Hint: {hintText}
+                    </Badge>
+                 </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4 w-full">
+                {mcOptions.map((option, idx) => (
+                    <Button
+                        key={idx}
+                        onClick={() => setSelectedOption(option)}
+                        variant={selectedOption === option ? "default" : "outline"}
+                        className="h-14 text-lg whitespace-normal"
+                    >
+                        {option}
+                    </Button>
+                ))}
+            </div>
+
+            <Button
+                onClick={() => void onNext(selectedOption === activeCard?.[1])}
+                disabled={!selectedOption}
+                className="w-full h-12 font-medium max-w-xs mx-auto block"
+                size="lg"
             >
-              {option}
-            </button>
-          ))}
-        </div>
-        <button
-          onClick={() => void onNext(selectedOption === activeCard?.[1])}
-          disabled={!selectedOption}
-          className="mt-6 px-6 py-3 rounded-lg bg-teal-500 hover:bg-teal-600 transition duration-200 text-white font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        >
-          Submit
-        </button>
-      </div>
-      <div className="mt-4">
-        <button
+                Submit
+            </Button>
+        </CardContent>
+      </Card>
+
+      <div className="mt-6">
+        <Button
+          variant="outline"
+          size="icon"
           onClick={onBack}
           disabled={!canGoBack || timeLimitSeconds !== null}
-          className="p-3 rounded-full transition-all bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
+          className="h-14 w-14 rounded-full border-border hover:border-primary disabled:opacity-50"
         >
-          <FaArrowLeft className="h-8 w-8 text-teal-300" />
-        </button>
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
       </div>
-    </>
+     </>
   );
 };

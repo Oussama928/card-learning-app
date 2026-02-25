@@ -1,9 +1,12 @@
 "use client";
 
 import React from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import { ArrowLeft } from "lucide-react";
 import type { StudyCardTermDTO } from "@/types";
 import { SpeakButton } from "./SpeakButton";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
 
 interface FlashcardModeProps {
   activeCard: StudyCardTermDTO;
@@ -22,7 +25,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
   activeCard,
   side,
   setSide,
-  studyMode,
+  studyMode: _studyMode,
   currentDue,
   onNext,
   onBack,
@@ -44,82 +47,84 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
 
   return (
     <>
-      <div
+      <Card
         onClick={() => setSide((prev) => (prev + 1) % 2)}
-        className="mt-6 flex h-80 w-full max-w-2xl cursor-pointer items-center justify-center rounded-[40px] border border-white/20 bg-gradient-to-br from-gray-800 to-gray-700 p-12 text-center shadow-2xl transition-transform hover:scale-105 active:scale-95 relative overflow-hidden"
+        className="mt-6 flex h-80 w-full max-w-2xl cursor-pointer flex-col justify-center border-border bg-card shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
       >
-        {studyMode === "spaced_repetition" && currentDue && (
-          <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-teal-500 text-white text-xs font-bold uppercase tracking-wider animate-pulse transition-all">
-            Due
-          </div>
+        {_studyMode === "spaced_repetition" && currentDue && (
+          <Badge variant="secondary" className="absolute top-4 right-4 animate-pulse">
+            DUE
+          </Badge>
         )}
-        {activeCard[4] && side === 0 ? (
+        
+        {activeCard[4] && side === 0 && (
           <img
             src={String(activeCard[4])}
             alt="Expression visual"
-            className="absolute inset-0 h-full w-full object-cover opacity-20"
+            className="absolute inset-0 h-full w-full object-cover opacity-10"
           />
-        ) : null}
-        <div className="relative z-10 w-full">
-          <div className="flex items-center justify-between">
-            <h2
-              className="mb-4 text-2xl font-semibold text-gray-400"
-              style={{ fontFamily: "'Montserrat', sans-serif" }}
-            >
+        )}
+        
+        <CardContent className="relative z-10 w-full p-12">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-semibold text-muted-foreground">
               {side === 0 ? "Expression" : "Translation"}
             </h2>
             <SpeakButton text={String(activeCard?.[side] ?? "")} label="Play pronunciation" />
           </div>
-          <div
-            className={`text-5xl font-black text-white ${
-              side === 0 ? "text-teal-300" : "text-amber-300"
-            }`}
-            style={{
-              fontFamily: "'Montserrat', sans-serif",
-              letterSpacing: "1px",
-            }}
-          >
+          
+          <div className={`text-center text-4xl font-bold tracking-wide ${side === 0 ? "text-primary" : "text-foreground"}`}>
             {activeCard[side]}
           </div>
-          {hintsEnabled && hintText ? (
-            <p className="mt-4 text-xs uppercase tracking-[0.3em] text-amber-300">
-              Hint: {hintText}
-            </p>
-          ) : null}
-          <p className="mt-8 text-sm uppercase tracking-widest text-gray-500">
+
+          {hintsEnabled && hintText && side === 0 && (
+            <div className="mt-8 text-center">
+              <Badge variant="outline" className="text-amber-500 border-amber-500/20">
+                Hint: {hintText}
+              </Badge>
+            </div>
+          )}
+          
+          <p className="absolute bottom-6 left-0 right-0 text-center text-sm uppercase tracking-widest text-muted-foreground/50">
             Click to Flip
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="mt-12 flex items-center gap-12">
-        <button
+      <div className="mt-12 flex items-center justify-center gap-6 w-full max-w-2xl">
+        <Button
+          variant="outline"
+          size="icon"
           onClick={onBack}
           disabled={!canGoBack || timeLimitSeconds !== null}
-          className="group flex h-16 w-16 items-center justify-center rounded-full border border-white/10 bg-gray-600 transition-all hover:border-teal-500 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          className="h-14 w-14 rounded-full border-border hover:border-primary disabled:opacity-50"
         >
-          <FaArrowLeft className="h-6 w-6 text-teal-300 transition-transform group-hover:-translate-x-1" />
-        </button>
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
 
-        <div className="flex gap-4">
-          <button
+        <div className="flex gap-4 flex-1 justify-center">
+          <Button
+            variant="destructive"
+            size="lg"
             onClick={(e) => {
               e.stopPropagation();
               void onNext(false);
             }}
-            className="rounded-2xl border border-red-500/50 bg-red-500/10 px-8 py-4 font-bold text-red-100 transition-all hover:bg-red-500 hover:text-white"
+            className="flex-1 max-w-[200px] h-14 text-lg font-bold rounded-2xl"
           >
             I failed
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="default"
+            size="lg"
             onClick={(e) => {
               e.stopPropagation();
               void onNext(true);
             }}
-            className="rounded-2xl border border-teal-500/50 bg-teal-500 px-8 py-4 font-bold text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-teal-500/20 active:scale-95"
+            className="flex-1 max-w-[200px] h-14 text-lg font-bold rounded-2xl shadow-lg hover:shadow-primary/20"
           >
             I mastered it
-          </button>
+          </Button>
         </div>
       </div>
     </>

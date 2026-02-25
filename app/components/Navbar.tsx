@@ -253,10 +253,10 @@ const Navbar = () => {
   return (
     <Disclosure
       as="nav"
-      className="bg-gray-800 shadow-md sticky top-0 w-full z-50"
+      className="bg-background border-b sticky top-0 w-full z-50"
     >
       {searchAppear && (
-        <div className="absolute text-black  left-0 top-14 w-full h-full bg-opacity-90 z-50">
+        <div className="absolute text-foreground left-0 top-14 w-full h-full bg-background/90 backdrop-blur-sm z-50">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -272,13 +272,13 @@ const Navbar = () => {
               onChange={(e) => setSearch(e.target.value)}
               type="text"
               placeholder="Search"
-              className="w-1/2 h-10 border-2 border-gray-400 rounded-md px-2"
+              className="w-1/2 h-10 border border-input bg-background rounded-md px-3 focus:outline-none focus:ring-2 focus:ring-primary"
             />
 
             <button
               type="button"
               onClick={() => setSearchAppear(false)}
-              className="text-gray-400 hover:text-black"
+              className="ml-2 text-muted-foreground hover:text-foreground"
             >
               <XMarkIcon className="h-6 w-6" />
             </button>
@@ -288,7 +288,7 @@ const Navbar = () => {
       <div className="mx-auto max-w-8xl px-2 sm:px-6 lg:px-8">
         <div className="relative flex h-16 items-center   ">
           <div className="absolute inset-y-0 left-0 flex items-center md:hidden">
-            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary">
               <span className="absolute -inset-0.5" />
               <span className="sr-only">Open main menu</span>
               <Bars3Icon
@@ -324,9 +324,9 @@ const Navbar = () => {
                       href={item.href}
                       className={classNames(
                         item.name === picked
-                          ? "bg-gray-900 text-gray-200 text-l "
-                          : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                        "rounded-md px-3 py-2 text-sm font-medium",
+                          ? "bg-muted text-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       )}
                       aria-current={item.current ? "page" : undefined}
                     >
@@ -339,18 +339,18 @@ const Navbar = () => {
 
           <div className="absolute inset-y-0 right-0 flex items-center gap-2 pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 flex-nowrap">
             {session?.user && (
-              <div className="flex items-center gap-3 text-white whitespace-nowrap shrink-0">
+              <div className="flex items-center gap-3 text-foreground whitespace-nowrap shrink-0">
                 <div className="flex flex-col items-center gap-0">
                   <img
                     src={`/tiers/${tierName}.png`}
                     className="h-7 w-7 rounded-full object-cover"
                     alt={`${tierName} tier icon`}
                   />
-                  <span className="text-xs font-semibold capitalize text-white" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  <span className="text-xs font-semibold capitalize text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     {tierName}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 border border-gray-600 rounded-lg px-1 py-1 bg-gray-900" style={{ backgroundColor: 'rgb(24 32 47)' }}>
+                <div className="flex items-center gap-1 border border-border rounded-lg px-1 py-1 bg-muted">
                   <img src="/flame.png" className="h-6 w-6" />
                   <span className="text-sm font-semibold">{streak}</span>
                 </div>
@@ -364,38 +364,37 @@ const Navbar = () => {
                   inputRef.current?.focus();
                 }, 0);
               }}
-              className="h-6 w-6 text-gray-400 cursor-pointer shrink-0"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
             />
             {session?.user ? (
               <div className="flex">
                 <Menu>
                   <MenuButton
                     onClick={() => handleView()}
-                    className="relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden "
+                    className="relative ml-auto shrink-0 rounded-full p-1 text-muted-foreground hover:text-foreground focus:ring-2 focus:ring-primary focus:outline-none transition-colors"
                   >
                     <BellIcon aria-hidden="true" className="size-6" />
                     {neww && (
-                      <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                      <span className="absolute top-0 right-0 h-2 w-2 bg-destructive rounded-full"></span>
                     )}
                   </MenuButton>
                   <MenuItems
                     style={{ width: "320px" }}
-                    className="absolute right-0 z-10 mt-10  origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                    className="absolute right-0 z-10 mt-10 origin-top-right rounded-md bg-popover border border-border py-1 shadow-lg focus:outline-none"
                   >
                     {notifs.map((item, index) => (
                       <MenuItem key={index}>
                         {({ focus }) => (
                           <div
                             className={classNames(
-                              focus ? "bg-gray-100" : "",
-                              "block w-full text-left px-6 py-3 text-sm text-gray-700 rounded-md transition-colors duration-200",
-                              "hover:bg-gray-200 hover:text-gray-900",
+                              focus ? "bg-muted" : "",
+                              "block w-full text-left px-6 py-3 text-sm text-popover-foreground rounded-md transition-colors duration-200",
                             )}
                           >
-                            <div className="font-semibold text-gray-800">
+                            <div className="font-semibold">
                               {item.type} notification
                             </div>
-                            <p className="text-gray-600 text-sm mt-1">
+                            <p className="text-muted-foreground text-sm mt-1">
                               {item.content.length > 35
                                 ? `${item.content.slice(0, 35)}...`
                                 : item.content}
@@ -409,13 +408,12 @@ const Navbar = () => {
                         <button
                           onClick={() => router.push("/notifications")}
                           className={classNames(
-                            focus ? "bg-gray-100 text-center " : "",
-                            "block w-full text-center border-t-2   px-6 py-2 text-sm text-gray-700 rounded-md transition-colors duration-200",
-                            "hover:bg-gray-200 hover:text-gray-900",
+                            focus ? "bg-muted" : "",
+                            "block w-full text-center border-t border-border px-6 py-2 text-sm text-popover-foreground transition-colors duration-200",
                           )}
                         >
-                          <div className="font-semibold  text-gray-800">
-                            view All notifications
+                          <div className="font-semibold">
+                            View all notifications
                           </div>
                         </button>
                       )}
@@ -425,18 +423,18 @@ const Navbar = () => {
 
                 <Menu as="div" className="relative ml-3">
                   <div>
-                    <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                    <MenuButton className="relative flex rounded-full bg-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background">
                       <span className="absolute -inset-1.5" />
                       <span className="sr-only">Open user menu</span>
                       <img
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-full border border-border"
                         src={session.user.image || "/default-avatar.png"}
                         alt="User profile"
                       />
                     </MenuButton>
                   </div>
 
-                  <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-popover border border-border py-1 shadow-lg focus:outline-none">
                     {session?.user?.role === "admin" && (
                       <>
                         <MenuItem>
@@ -444,11 +442,11 @@ const Navbar = () => {
                             <button
                               onClick={() => router.push("/addNotification")}
                               className={classNames(
-                                focus ? "bg-gray-100" : "",
-                                "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                                focus ? "bg-muted" : "",
+                                "block w-full text-left px-4 py-2 text-sm text-popover-foreground",
                               )}
                             >
-                              add notification
+                              Add notification
                             </button>
                           )}
                         </MenuItem>
@@ -457,11 +455,11 @@ const Navbar = () => {
                             <button
                               onClick={() => router.push("/addAchievement")}
                               className={classNames(
-                                focus ? "bg-gray-100" : "",
-                                "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                                focus ? "bg-muted" : "",
+                                "block w-full text-left px-4 py-2 text-sm text-popover-foreground",
                               )}
                             >
-                              add achievement
+                              Add achievement
                             </button>
                           )}
                         </MenuItem>
@@ -474,8 +472,8 @@ const Navbar = () => {
                           <Link
                             href={`/${path}`}
                             className={classNames(
-                              focus ? "bg-gray-100" : "",
-                              "block px-4 py-2 text-sm text-gray-700",
+                              focus ? "bg-muted" : "",
+                              "block px-4 py-2 text-sm text-popover-foreground capitalize",
                             )}
                           >
                             {path}
@@ -488,11 +486,11 @@ const Navbar = () => {
                         <Link
                           href="/settings"
                           className={classNames(
-                            focus ? "bg-gray-100" : "",
-                            "block px-4 py-2 text-sm text-gray-700",
+                            focus ? "bg-muted" : "",
+                            "block px-4 py-2 text-sm text-popover-foreground capitalize",
                           )}
                         >
-                          settings
+                          Settings
                         </Link>
                       )}
                     </MenuItem>
@@ -501,8 +499,8 @@ const Navbar = () => {
                         <button
                           onClick={() => setNotification(true)}
                           className={classNames(
-                            focus ? "bg-gray-100" : "",
-                            "block w-full text-left px-4 py-2 text-sm text-gray-700",
+                            focus ? "bg-muted" : "",
+                            "block w-full text-left px-4 py-2 text-sm text-popover-foreground",
                           )}
                         >
                           Sign out
@@ -515,7 +513,7 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => router.push("/login")}
-                className="rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background transition-colors"
               >
                 Login
               </button>
@@ -524,7 +522,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      <DisclosurePanel className="md:hidden z-0 absolute  w-full bg-gray-800">
+      <DisclosurePanel className="md:hidden z-0 absolute w-full bg-background border-b">
         <div className="space-y-1 px-2 pt-2 pb-3">
           {session?.user &&
             navigation.map((item) => (
@@ -534,9 +532,9 @@ const Navbar = () => {
                 href={item.href}
                 className={classNames(
                   item.current
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                  "block rounded-md px-3 py-2 text-base font-medium",
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  "block rounded-md px-3 py-2 text-base font-medium transition-colors",
                 )}
                 aria-current={item.current ? "page" : undefined}
               >
@@ -547,7 +545,7 @@ const Navbar = () => {
             <DisclosureButton
               as="button"
               onClick={() => setNotification(true)}
-              className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-gray-300 hover:bg-gray-700 hover:text-white"
+              className="block w-full text-left rounded-md px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
             >
               Sign Out
             </DisclosureButton>

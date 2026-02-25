@@ -1,9 +1,12 @@
 "use client";
 
 import React from "react";
-import { FaArrowLeft, FaMicrophone } from "react-icons/fa";
+import { ArrowLeft, Mic, MicOff } from "lucide-react";
 import type { StudyCardTermDTO } from "@/types";
 import { SpeakButton } from "./SpeakButton";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
 
 interface OralModeProps {
   activeCard: StudyCardTermDTO;
@@ -134,117 +137,124 @@ export const OralMode: React.FC<OralModeProps> = ({
 
   return (
     <>
-      <div className="mt-6 text-center flex flex-col items-center justify-center w-full max-w-2xl rounded-xl p-8 transition-transform hover:scale-105 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg border border-gray-600 relative">
+      <Card className="w-full max-w-2xl relative">
         {studyMode === "spaced_repetition" && currentDue && (
-          <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-teal-500 text-white text-xs font-bold uppercase tracking-wider animate-pulse transition-all">
-            Due
+          <div className="absolute top-4 right-4">
+            <Badge variant="default" className="animate-pulse">
+              Due
+            </Badge>
           </div>
         )}
-        {activeCard?.[4] ? (
-          <img
-            src={String(activeCard[4])}
-            alt="Expression visual"
-            className="w-full max-w-md h-44 object-cover rounded-xl border border-white/20 shadow-md mb-5"
-          />
-        ) : null}
-        <div className="w-full flex items-center justify-between">
-          <h2
-            className="mb-4 text-2xl font-semibold text-gray-200"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
+        
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+           <CardTitle className="text-2xl font-semibold">
             Speak the word aloud:
-          </h2>
+          </CardTitle>
           <SpeakButton text={String(activeCard[0] ?? "")} label="Play pronunciation" />
-        </div>
-        <div
-          className="mb-4 text-3xl font-bold text-teal-300"
-          style={{ fontFamily: "'Montserrat', sans-serif" }}
-        >
-          {activeCard[0]}
-        </div>
-
-        {hintsEnabled ? (
-          <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
-            Hint: {buildHint(String(activeCard[1] ?? ""))}
+        </CardHeader>
+        
+        <CardContent className="flex flex-col items-center space-y-6">
+          {activeCard?.[4] ? (
+            <img
+              src={String(activeCard[4])}
+              alt="Expression visual"
+              className="w-full max-w-md h-44 object-cover rounded-xl border shadow-md"
+            />
+          ) : null}
+          
+          <div className="text-3xl font-bold text-primary">
+            {activeCard[0]}
           </div>
-        ) : null}
 
-        {!supported ? (
-          <div className="w-full rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            Speech recognition is not supported in this browser.
+          {hintsEnabled && (
+            <div className="w-full rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-600 dark:text-amber-400">
+              Hint: {buildHint(String(activeCard[1] ?? ""))}
+            </div>
+          )}
+
+          {!supported && (
+            <div className="w-full rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              Speech recognition is not supported in this browser.
+            </div>
+          )}
+          
+          {permissionDenied && (
+             <div className="w-full rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              Microphone permission denied. Enable microphone access or use another learning mode.
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              onClick={startListening}
+              disabled={!supported || permissionDenied || isListening}
+              className="gap-2"
+            >
+              <Mic className="h-4 w-4" />
+              {isListening ? "Listening..." : "Start speaking"}
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={stopListening}
+              disabled={!isListening}
+            >
+              <MicOff className="h-4 w-4 mr-2" />
+              Stop
+            </Button>
           </div>
-        ) : permissionDenied ? (
-          <div className="w-full rounded-lg border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            Microphone permission denied. Enable microphone access or use another learning mode.
-          </div>
-        ) : null}
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={startListening}
-            disabled={!supported || permissionDenied || isListening}
-            className="inline-flex items-center gap-2 rounded-lg bg-teal-500 px-4 py-2 text-white font-semibold shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <FaMicrophone />
-            {isListening ? "Listening..." : "Start speaking"}
-          </button>
-          <button
-            type="button"
-            onClick={stopListening}
-            disabled={!isListening}
-            className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Stop
-          </button>
-        </div>
+          {transcript && (
+            <div className="w-full rounded-lg border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
+              You said: <span className="font-semibold text-foreground">{transcript}</span>
+            </div>
+          )}
 
-        {transcript ? (
-          <div className="mt-4 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-200 w-full">
-            You said: <span className="font-semibold text-white">{transcript}</span>
-          </div>
-        ) : null}
+          {isCorrect !== null && (
+            <div
+              role="status"
+              aria-live="polite"
+              className={`w-full rounded-lg px-4 py-2 text-sm font-semibold text-center ${
+                isCorrect 
+                  ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400" 
+                  : "bg-destructive/20 text-destructive dark:text-red-400"
+              }`}
+            >
+              {isCorrect ? "Correct pronunciation!" : "Not quite. Try again."}
+            </div>
+          )}
+        </CardContent>
 
-        {isCorrect !== null ? (
-          <div
-            role="status"
-            aria-live="polite"
-            className={`mt-4 rounded-lg px-4 py-2 text-sm font-semibold ${
-              isCorrect ? "bg-emerald-500/20 text-emerald-200" : "bg-red-500/20 text-red-200"
-            }`}
-          >
-            {isCorrect ? "Correct pronunciation!" : "Not quite. Try again."}
-          </div>
-        ) : null}
-
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <button
-            type="button"
+        <CardFooter className="flex flex-wrap items-center justify-center gap-3 pt-2 pb-6">
+          <Button
             onClick={() => void onNext(Boolean(isCorrect))}
             disabled={isCorrect === null}
-            className="rounded-2xl border border-teal-500/50 bg-teal-500 px-6 py-3 font-bold text-white transition-all hover:scale-105 hover:shadow-lg hover:shadow-teal-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto"
+            size="lg"
           >
             Submit result
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="destructive"
             onClick={() => void onNext(false)}
-            className="rounded-2xl border border-red-500/50 bg-red-500/10 px-6 py-3 font-bold text-red-100 transition-all hover:bg-red-500 hover:text-white"
+            className="w-full sm:w-auto"
+             size="lg"
           >
             Mark incorrect
-          </button>
-        </div>
-      </div>
+          </Button>
+        </CardFooter>
+      </Card>
 
       <div className="mt-4">
-        <button
+        <Button
+          variant="secondary"
+          size="icon"
           onClick={onBack}
           disabled={!canGoBack || timeLimitSeconds !== null}
-          className="p-3 rounded-full transition-all bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
+          className="rounded-full shadow-md w-12 h-12"
         >
-          <FaArrowLeft className="h-8 w-8 text-teal-300" />
-        </button>
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
       </div>
     </>
   );

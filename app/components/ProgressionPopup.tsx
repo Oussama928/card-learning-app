@@ -2,6 +2,8 @@
 
 import React from "react";
 import type { ProgressionPopupProps } from "@/types";
+import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 
 export default function ProgressionPopup({
   title,
@@ -10,41 +12,35 @@ export default function ProgressionPopup({
   onClose,
 }: ProgressionPopupProps) {
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-      <div
-        className="w-full max-w-md rounded-xl p-6"
-        style={{
-          background: "linear-gradient(145deg, #1e2b3a 0%, #2a3f54 100%)",
-          border: "1px solid rgba(127,202,201,0.35)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
-        }}
-      >
-        <h3 className="text-xl font-semibold" style={{ color: "#7fcac9" }}>
-          {title}
-        </h3>
-        <p className="mt-3 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
-          {message}
-        </p>
-
-        {metadata?.tierName && (
-          <p className="mt-2 text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
-            New tier: {metadata.tierName}
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-background/80 backdrop-blur-sm px-4">
+      <Card className="w-full max-w-md border-primary/30 shadow-2xl shadow-primary/10 bg-gradient-to-br from-background to-muted">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold text-primary">
+            {title}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-foreground/85">
+            {message}
           </p>
-        )}
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-5 w-full rounded-lg py-2 text-sm font-medium"
-          style={{
-            background: "rgba(127,202,201,0.15)",
-            border: "1px solid rgba(127,202,201,0.35)",
-            color: "#7fcac9",
-          }}
-        >
-          Continue
-        </button>
-      </div>
+          {metadata?.tierName && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              New tier: <span className="font-semibold text-foreground">{metadata.tierName}</span>
+            </p>
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button
+            type="button"
+            onClick={onClose}
+            className="w-full"
+            variant="outline"
+          >
+            Continue
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

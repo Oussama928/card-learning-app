@@ -1,9 +1,13 @@
 "use client";
 
 import React from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import { ArrowLeft } from "lucide-react";
 import type { StudyCardTermDTO } from "@/types";
 import { SpeakButton } from "./SpeakButton";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Badge } from "../ui/badge";
 
 interface FillModeProps {
   activeCard: StudyCardTermDTO;
@@ -22,7 +26,7 @@ export const FillMode: React.FC<FillModeProps> = ({
   activeCard,
   fillAnswer,
   setFillAnswer,
-  studyMode,
+  studyMode: _studyMode,
   currentDue,
   onNext,
   onBack,
@@ -43,69 +47,78 @@ export const FillMode: React.FC<FillModeProps> = ({
 
   return (
     <>
-      <div className="mt-6 text-center flex flex-col items-center justify-center w-full max-w-2xl rounded-xl p-8 transition-transform hover:scale-105 bg-gradient-to-br from-gray-800 to-gray-700 shadow-lg border border-gray-600 relative">
-        {studyMode === "spaced_repetition" && currentDue && (
-          <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-teal-500 text-white text-xs font-bold uppercase tracking-wider animate-pulse transition-all">
-            Due
-          </div>
+      <Card className="mt-6 w-full max-w-2xl text-center relative overflow-hidden">
+        {_studyMode === "spaced_repetition" && currentDue && (
+           <Badge variant="secondary" className="absolute top-4 right-4 animate-pulse">
+            DUE
+          </Badge>
         )}
-        {activeCard?.[4] ? (
-          <img
-            src={String(activeCard[4])}
-            alt="Expression visual"
-            className="w-full max-w-md h-44 object-cover rounded-xl border border-white/20 shadow-md mb-5"
-          />
-        ) : null}
-        <div className="w-full flex items-center justify-between">
-          <h2
-            className="mb-4 text-2xl font-semibold text-gray-200"
-            style={{ fontFamily: "'Montserrat', sans-serif" }}
-          >
-            Translate the following:
-          </h2>
-          <SpeakButton text={String(activeCard?.[0] ?? "")} label="Play pronunciation" />
-        </div>
-        <div
-          className="mb-6 text-3xl font-bold text-teal-300"
-          style={{ fontFamily: "'Montserrat', sans-serif" }}
-        >
-          {activeCard[0]}
-        </div>
-        {hintsEnabled && hintText ? (
-          <div className="mb-4 rounded-lg border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-200">
-            Hint: {hintText}
-          </div>
-        ) : null}
-        <input
-          type="text"
-          value={fillAnswer}
-          onChange={(e) => setFillAnswer(e.target.value)}
-          placeholder="Your translation"
-          className="p-3 w-full max-w-md rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-400 text-black"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        />
-        <button
-          onClick={() =>
-            void onNext(
-              fillAnswer.trim().toLowerCase() ===
-                String(activeCard?.[1] ?? "").toLowerCase()
-            )
-          }
-          className="mt-6 px-6 py-3 rounded-lg bg-teal-500 hover:bg-teal-600 transition duration-200 text-white font-medium shadow-md"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        >
-          Submit
-        </button>
-      </div>
-      <div className="mt-4">
-        <button
+        
+        <CardHeader className="space-y-4 pb-2">
+            {activeCard?.[4] && (
+                <div className="w-full h-44 rounded-md overflow-hidden bg-muted/20 mb-4 border border-border">
+                    <img
+                        src={String(activeCard[4])}
+                        alt="Expression visual"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+            )}
+            <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl font-semibold text-muted-foreground">
+                    Translate the following:
+                </CardTitle>
+                 <SpeakButton text={String(activeCard?.[0] ?? "")} label="Play pronunciation" />
+            </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+            <div className="text-3xl font-bold text-primary">
+                {activeCard[0]}
+            </div>
+            
+            {hintsEnabled && hintText && (
+                 <div className="flex justify-center">
+                    <Badge variant="outline" className="text-amber-500 border-amber-500/20 px-3 py-1">
+                        Hint: {hintText}
+                    </Badge>
+                 </div>
+            )}
+            
+            <div className="flex flex-col items-center gap-4 max-w-md mx-auto">
+                <Input
+                    type="text"
+                    value={fillAnswer}
+                    onChange={(e) => setFillAnswer(e.target.value)}
+                    placeholder="Your translation"
+                    className="text-center text-lg h-12"
+                />
+                <Button
+                    onClick={() =>
+                        void onNext(
+                        fillAnswer.trim().toLowerCase() ===
+                            String(activeCard?.[1] ?? "").toLowerCase()
+                        )
+                    }
+                    className="w-full h-12 font-medium"
+                    size="lg"
+                >
+                    Submit
+                </Button>
+            </div>
+        </CardContent>
+      </Card>
+      
+      <div className="mt-6">
+        <Button
+          variant="outline"
+          size="icon"
           onClick={onBack}
           disabled={!canGoBack || timeLimitSeconds !== null}
-          className="p-3 rounded-full transition-all bg-gray-600 hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
+          className="h-14 w-14 rounded-full border-border hover:border-primary disabled:opacity-50"
         >
-          <FaArrowLeft className="h-8 w-8 text-teal-300" />
-        </button>
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
       </div>
     </>
   );

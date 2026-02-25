@@ -3,11 +3,15 @@
 import React from "react";
 import { formatDuration } from "@/lib/spacedRepetition";
 import type { SpacedRepetitionStateDTO } from "@/types";
+import { Card, CardContent } from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Badge } from "@/app/components/ui/badge";
+import { Play, Pause, Timer, TimerOff } from "lucide-react";
 
 interface SessionStatsProps {
   elapsedSeconds: number;
   isTimerRunning: boolean;
-  setIsTimerRunning: (val: boolean | ((prev: boolean) => boolean)) => void;
+  setIsTimerRunning: React.Dispatch<React.SetStateAction<boolean>>;
   wantTimer: boolean;
   timeLimitSeconds: number | null;
   remainingSeconds: number | null;
@@ -39,82 +43,109 @@ export const SessionStats: React.FC<SessionStatsProps> = ({
 }) => {
   return (
     <div className="w-full max-w-3xl flex flex-col gap-4">
-      <div className="w-full bg-gray-800/60 border border-gray-700 rounded-xl p-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          {wantTimer ? (
-            <>
-              <div>
-                <div className="text-sm text-gray-300">Session Time</div>
-                <div className="text-2xl font-bold text-white">
-                  {formatDuration(elapsedSeconds)}
+      <Card>
+        <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {wantTimer ? (
+              <div className="flex items-center gap-4">
+                <div>
+                  <div className="text-sm text-muted-foreground flex items-center gap-1">
+                    <Timer className="h-3 w-3" /> Session Time
+                  </div>
+                  <div className="text-2xl font-bold tabular-nums">
+                    {formatDuration(elapsedSeconds)}
+                  </div>
+                </div>
+                <Button
+                  variant={isTimerRunning ? "destructive" : "default"}
+                  size="sm"
+                  onClick={() => setIsTimerRunning((prev) => !prev)}
+                >
+                  {isTimerRunning ? <Pause className="h-4 w-4 mr-1" /> : <Play className="h-4 w-4 mr-1" />}
+                  {isTimerRunning ? "Pause" : "Start"}
+                </Button>
+              </div>
+            ) : (
+              <div className="text-sm text-muted-foreground flex items-center gap-2">
+                <TimerOff className="h-4 w-4" />
+                Timer disabled
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 ml-auto">
+            {hintsEnabled && (
+              <Badge variant="outline" className="border-amber-500/50 text-amber-500 bg-amber-500/10">
+                Hints on (-50% XP)
+              </Badge>
+            )}
+            
+            {timeLimitSeconds && remainingSeconds !== null && !isSessionComplete && (
+              <div className="text-right">
+                <div className="text-sm text-muted-foreground">Time left</div>
+                <div className="text-lg font-bold tabular-nums text-amber-500">
+                  {formatDuration(remainingSeconds)}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsTimerRunning((prev) => !prev)}
-                className={`px-3 py-2 rounded text-sm font-semibold ${
-                  isTimerRunning ? "bg-red-500/80" : "bg-teal-500"
-                }`}
-              >
-                {isTimerRunning ? "Pause" : "Start"}
-              </button>
-            </>
-          ) : (
-            <div className="text-sm text-gray-300">
-              Timer disabled for this session
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-6">
-          {hintsEnabled ? (
-            <div className="rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
-              Hints on -  XP taxed at 50%
-            </div>
-          ) : null}
-          {timeLimitSeconds && remainingSeconds !== null && !isSessionComplete ? (
-            <div className="text-right">
-              <div className="text-sm text-gray-300">Time left (card)</div>
-              <div className="text-lg font-semibold text-amber-300">
-                {formatDuration(remainingSeconds)}
-              </div>
-            </div>
-          ) : null}
-          <button
-            onClick={onEndSession}
-            className="px-3 py-2 rounded bg-gray-700 text-white"
-          >
-            End Session
-          </button>
-        </div>
-      </div>
+            )}
+            
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={onEndSession}
+            >
+              End Session
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {!isSessionComplete && studyMode === "spaced_repetition" && (
-        <div className="w-full rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-gray-200">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="text-xs uppercase tracking-[0.3em] text-teal-300">
-                Scheduling
-              </div>
-              <div className="mt-1">
-                Status: {currentDue ? "Due now" : "Not due"}
-              </div>
-              <div className="mt-1">Next review: {nextReviewLabel}</div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-xs text-gray-300">
-              <div>Interval: {currentProgress?.intervalDays ?? 0} day(s)</div>
+        <Card>
+          <CardContent className="p-4 text-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                Ease: {currentProgress?.easeFactor?.toFixed?.(2) ?? "2.50"}
+                <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  Scheduling
+                </div>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-muted-foreground">Status:</span>
+                  <Badge variant={currentDue ? "default" : "secondary"}>
+                    {currentDue ? "Due now" : "Not due"}
+                  </Badge>
+                </div>
+                <div className="mt-1 text-muted-foreground">
+                  Next review: <span className="text-foreground font-medium">{nextReviewLabel}</span>
+                </div>
               </div>
-              <div>Reps: {currentProgress?.repetitions ?? 0}</div>
-              <div>Correct: {currentProgress?.correctCount ?? 0}</div>
+              
+              <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                <div className="flex justify-between gap-2">
+                  <span>Interval:</span>
+                  <span className="font-medium text-foreground">{currentProgress?.intervalDays ?? 0}d</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span>Ease:</span>
+                  <span className="font-medium text-foreground">{currentProgress?.easeFactor?.toFixed?.(2) ?? "2.50"}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span>Reps:</span>
+                  <span className="font-medium text-foreground">{currentProgress?.repetitions ?? 0}</span>
+                </div>
+                <div className="flex justify-between gap-2">
+                  <span>Correct:</span>
+                  <span className="font-medium text-foreground">{currentProgress?.correctCount ?? 0}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          {progressError ? (
-            <div className="mt-3 rounded-md bg-red-500/10 px-3 py-2 text-xs text-red-300">
-              {progressError}
-            </div>
-          ) : null}
-        </div>
+            
+            {progressError && (
+              <div className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive font-medium border border-destructive/20">
+                {progressError}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
     </div>
   );

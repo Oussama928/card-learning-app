@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { FaVolumeUp } from "react-icons/fa";
+import { Volume2 } from "lucide-react";
+import { Button } from "@/app/components/ui/button";
 
 interface SpeakButtonProps {
   text: string;
@@ -31,17 +32,16 @@ export const SpeakButton: React.FC<SpeakButtonProps> = ({
   };
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      size="icon"
       onClick={handleSpeak}
       disabled={!supported || !text}
       aria-label={label}
       title={supported ? label : "Text-to-speech not supported in this browser"}
-      className={`inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 p-2 text-white transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50 ${
-        className ?? ""
-      }`}
+      className={className}
     >
-      <FaVolumeUp className="h-4 w-4" />
-    </button>
+      <Volume2 className="h-4 w-4" />
+    </Button>
   );
 };
