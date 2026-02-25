@@ -1,15 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useFormik } from "formik";
-import { verifyEmailSchema } from "@/types/validationSchemas";
-import type {
-  ApiResponseDTO,
-  VerifyEmailResponseDTO,
-  ResendOtpResponseDTO,
-} from "@/types";
+import * as yup from "yup";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Mail, Key, AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
+import type { ApiResponseDTO, VerifyEmailResponseDTO, ResendOtpResponseDTO } from "@/types";
+
+const verifyEmailSchema = yup.object().shape({
+  email: yup.string().email("Invalid email").required("Email is required"),
+  otp: yup.string().length(6, "Code must be 6 digits").required("Code is required"),
+});
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -18,7 +31,7 @@ export default function VerifyEmailPage() {
 
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -26,39 +39,47 @@ export default function VerifyEmailPage() {
       otp: "",
     },
     validationSchema: verifyEmailSchema,
-    onSubmit: async (values) => {
+    enableReinitialize: true,
+    onSubmit: async (values, { setSubmitting }) => {
       setMessage("");
       setErrorMessage("");
-      setLoading(true);
 
       try {
         const res = await fetch("/api/auth/verify-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: values.email, otp: values.otp }),
+          body: JSON.stringify(values),
         });
 
         const data: ApiResponseDTO<VerifyEmailResponseDTO> = await res.json();
+
         if (!res.ok || !data.success) {
-          throw new Error(data.error || "Failed to verify email");
+          throw new Error(data.error || "Verification failed");
         }
 
-        setMessage(data.data?.message || "Email verified successfully");
-        router.push("/login");
-      } catch (error: unknown) {
-        setErrorMessage(
-          error instanceof Error ? error.message : "Verification failed"
-        );
+        setMessage(data.data?.message || "Email verified successfully!");
+        
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          router.push("/login?verified=true");
+        }, 2000);
+      } catch (error: any) {
+        setErrorMessage(error.message || "Verification failed");
       } finally {
-        setLoading(false);
+        setSubmitting(false);
       }
     },
   });
 
-  const handleResend = async () => {
+  const handleResendOtp = async () => {
+    if (!formik.values.email) {
+      setErrorMessage("Please enter your email address to resend code.");
+      return;
+    }
+
+    setResendLoading(true);
     setMessage("");
     setErrorMessage("");
-    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/resend-otp", {
@@ -68,108 +89,118 @@ export default function VerifyEmailPage() {
       });
 
       const data: ApiResponseDTO<ResendOtpResponseDTO> = await res.json();
+
       if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to resend OTP");
+        throw new Error(data.error || "Failed to resend code");
       }
 
-      setMessage(data.data?.message || "OTP sent");
-    } catch (error: unknown) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to resend OTP"
-      );
+      setMessage(data.data?.message || "Verification code sent!");
+    } catch (error: any) {
+      setErrorMessage(error.message || "Failed to resend code");
     } finally {
-      setLoading(false);
+      setResendLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <img
-          alt="Your Company"
-          src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600"
-          className="mx-auto h-10 w-auto"
-        />
-        <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-          Verify your email
-        </h2>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <Card className="w-full max-w-md border-border/50 shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-foreground">Verify Email</CardTitle>
+          <CardDescription className="text-center text-muted-foreground">
+            Enter the 6-digit code sent to your email
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            {message && (
+              <div className="flex items-center gap-2 rounded-md bg-green-500/15 p-3 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{message}</span>
+              </div>
+            )}
+            
+            {errorMessage && (
+              <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form onSubmit={formik.handleSubmit} className="space-y-6">
-          {message && (
-            <div className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
-              {message}
-            </div>
-          )}
-          {errorMessage && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm/6 font-medium text-gray-900" htmlFor="email">
-              Email
-            </label>
-            <div className="mt-2">
-              <input
-                id="email"
-                type="email"
-                required
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="pl-9 bg-background"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </div>
               {formik.touched.email && formik.errors.email && (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                <p className="text-sm text-destructive">{formik.errors.email}</p>
               )}
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm/6 font-medium text-gray-900" htmlFor="otp">
-              OTP Code
-            </label>
-            <div className="mt-2">
-              <input
-                id="otp"
-                type="text"
-                required
-                value={formik.values.otp}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="otp">Verification Code</Label>
+              <div className="relative">
+                <Key className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  placeholder="123456"
+                  className="pl-9 bg-background tracking-widest"
+                  maxLength={6}
+                  value={formik.values.otp}
+                  onChange={(e) => {
+                    // unexpected behavior fix: ensure only numbers
+                    const val = e.target.value.replace(/\D/g, "");
+                    formik.setFieldValue("otp", val);
+                  }}
+                  onBlur={formik.handleBlur}
+                />
+              </div>
               {formik.touched.otp && formik.errors.otp && (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.otp}</p>
+                <p className="text-sm text-destructive">{formik.errors.otp}</p>
               )}
             </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={formik.isSubmitting || resendLoading}
+            >
+              {formik.isSubmitting ? "Verifying..." : "Verify Email"}
+            </Button>
+          </form>
+          
+          <div className="mt-4 text-center">
+            <p className="text-sm text-muted-foreground">
+              Didn't receive code?{" "}
+              <button
+                type="button"
+                className="text-primary hover:underline font-medium disabled:opacity-50"
+                onClick={handleResendOtp}
+                disabled={resendLoading || formik.isSubmitting}
+              >
+                {resendLoading ? "Sending..." : "Resend Code"}
+              </button>
+            </p>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading || formik.isSubmitting}
-            className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading || formik.isSubmitting ? "Verifying..." : "Verify"}
-          </button>
-        </form>
-
-        <div className="mt-6 flex items-center justify-between text-sm">
-          <button
-            onClick={handleResend}
-            disabled={loading}
-            className="font-semibold text-indigo-600 hover:text-indigo-500"
-          >
-            Resend OTP
-          </button>
-          <Link href="/login" className="text-gray-600 hover:text-gray-900">
+        </CardContent>
+        <CardFooter className="flex justify-center border-t pt-4">
+          <Link href="/login" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             Back to login
           </Link>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

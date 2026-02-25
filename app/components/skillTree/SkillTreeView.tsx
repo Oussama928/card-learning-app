@@ -5,7 +5,7 @@ import { type SkillTreeDetailDTO, type SkillTreeNodeDTO } from "@/types";
 import SkillTreeNodeCard from "./SkillTreeNodeCard";
 import { useRouter } from "next/navigation";
 import { X, Trophy, AlertCircle, BookOpen } from "lucide-react";
-import { Badge } from "@/app/components/ui/Badge";
+import { Badge } from "@/app/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/app/components/ui/card";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/lib/utils";

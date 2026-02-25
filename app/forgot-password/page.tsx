@@ -1,9 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useFormik } from "formik";
 import { forgotPasswordSchema } from "@/types/validationSchemas";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Mail, AlertCircle, CheckCircle2, ArrowLeft } from "lucide-react";
 import type { ApiResponseDTO, ForgotPasswordResponseDTO } from "@/types";
 
 export default function ForgotPasswordPage() {
@@ -25,17 +37,19 @@ export default function ForgotPasswordPage() {
         const res = await fetch("/api/auth/forgot-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: values.email }),
+          body: JSON.stringify(values),
         });
 
         const data: ApiResponseDTO<ForgotPasswordResponseDTO> = await res.json();
+        
         if (!res.ok || !data.success) {
-          throw new Error(data.error || "Failed to request password reset");
+          throw new Error(data.error || "Failed to send reset email");
         }
 
-        setMessage(data.data?.message || "If the email exists, a reset link has been sent");
-      } catch (error: unknown) {
-        setErrorMessage(error instanceof Error ? error.message : "Request failed");
+        setMessage(data.data?.message || "Password reset link sent to your email");
+        formik.resetForm();
+      } catch (error: any) {
+        setErrorMessage(error.message || "Failed to send reset email");
       } finally {
         setLoading(false);
       }
@@ -43,66 +57,66 @@ export default function ForgotPasswordPage() {
   });
 
   return (
-    <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <img
-          alt="Your Company"
-          src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600"
-          className="mx-auto h-10 w-auto"
-        />
-        <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-          Forgot password
-        </h2>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <Card className="w-full max-w-md border-border/50 shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-foreground">Forgot Password</CardTitle>
+          <CardDescription className="text-center text-muted-foreground">
+            Enter your email to receive a reset link
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            {message && (
+              <div className="flex items-center gap-2 rounded-md bg-green-500/15 p-3 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle2 className="h-4 w-4" />
+                <span>{message}</span>
+              </div>
+            )}
+            
+            {errorMessage && (
+              <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form onSubmit={formik.handleSubmit} className="space-y-6">
-          {message && (
-            <div className="rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
-              {message}
-            </div>
-          )}
-          {errorMessage && (
-            <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-              {errorMessage}
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm/6 font-medium text-gray-900" htmlFor="email">
-              Email
-            </label>
-            <div className="mt-2">
-              <input
-                id="email"
-                type="email"
-                required
-                value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  className="pl-9 bg-background"
+                  value={formik.values.email}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                />
+              </div>
               {formik.touched.email && formik.errors.email && (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                <p className="text-sm text-destructive">{formik.errors.email}</p>
               )}
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading || formik.isSubmitting}
-            className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading || formik.isSubmitting ? "Sending..." : "Send reset link"}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center text-sm">
-          <Link href="/login" className="text-indigo-600 hover:text-indigo-500">
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || formik.isSubmitting}
+            >
+              {loading || formik.isSubmitting ? "Sending Link..." : "Send Reset Link"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex justify-center border-t pt-4">
+          <Link href="/login" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
             Back to login
           </Link>
-        </div>
-      </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 }

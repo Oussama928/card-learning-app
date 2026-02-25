@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Badge } from "@/app/components/ui/Badge";
+import { Badge } from "@/app/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Lock, CheckCircle2, Unlock, ArrowRight } from "lucide-react";
 import type { SkillTreeNodeDTO } from "@/types";

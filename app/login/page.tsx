@@ -1,18 +1,29 @@
 "use client";
+
 import React from "react";
 import Link from "next/link";
-import { signIn, useSession } from "next-auth/react";
-import { redirect } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import { loginSchema } from "@/types/validationSchemas";
-import { route } from "sanity/router";
-import {useRouter} from "next/navigation";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/app/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import { Mail, Lock, Github, AlertCircle } from "lucide-react";
 
-export default function Example() {
-  const [isHovered, setIsHovered] = React.useState([false,false]);
+export default function LoginPage() {
   const [errorMessage, setErrorMessage] = React.useState("");
-  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
+
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -21,223 +32,159 @@ export default function Example() {
     validationSchema: loginSchema,
     onSubmit: async (values) => {
       setErrorMessage("");
-      const result = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-      });
-      if (result?.error) {
-        if (result.error === "EMAIL_NOT_VERIFIED") {
-          setErrorMessage("Email not verified. Please verify your email first.");
+      setIsLoading(true);
+      try {
+        const result = await signIn("credentials", {
+          email: values.email,
+          password: values.password,
+          redirect: false,
+        });
+
+        if (result?.error) {
+          if (result.error === "EMAIL_NOT_VERIFIED") {
+            setErrorMessage("Email not verified. Please check your inbox.");
+          } else {
+            setErrorMessage("Invalid email or password.");
+          }
         } else {
-          setErrorMessage("Invalid email or password.");
+          router.push("/");
+          router.refresh(); 
         }
-      } else {
-        console.log(result);
-        router.push("/"); 
-        alert("Login successful ?");
+      } catch (error) {
+        setErrorMessage("An unexpected error occurred.");
+      } finally {
+        setIsLoading(false);
       }
     },
   });
 
   const handleSignInGithub = async () => {
+    setIsLoading(true);
     await signIn("github", { callbackUrl: "/callback" });
   };
+
   const handleSignInGoogle = async () => {
+    setIsLoading(true);
     await signIn("google", { callbackUrl: "/callback" });
   };
 
   return (
-    <>
-      <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <img
-            alt="Your Company"
-            src="https://tailwindui.com/plus/img/logos/mark.svg?color=indigo&shade=600"
-            className="mx-auto h-10 w-auto"
-          />
-          <h2 className="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
-
-        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form onSubmit={formik.handleSubmit} className="space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <Card className="w-full max-w-md border-border/50 shadow-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-foreground">Welcome back</CardTitle>
+          <CardDescription className="text-center text-muted-foreground">
+            Enter your email to sign in to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
             {errorMessage && (
-              <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                {errorMessage}
+              <div className="flex items-center gap-2 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <span>{errorMessage}</span>
               </div>
             )}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-sm/6 font-medium text-gray-900"
-              >
-                Email address
-              </label>
-              <div className="mt-2">
-                <input
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
                   id="email"
                   name="email"
                   type="email"
+                  placeholder="m@example.com"
+                  className="pl-9 bg-background"
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  required
-                  autoComplete="email"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                 />
-                {formik.touched.email && formik.errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
-                )}
               </div>
+              {formik.touched.email && formik.errors.email && (
+                <p className="text-sm text-destructive">{formik.errors.email}</p>
+              )}
             </div>
 
-            <div>
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm/6 font-medium text-gray-900"
+                <Label htmlFor="password">Password</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm font-medium text-primary hover:underline"
                 >
-                  Password
-                </label>
-                <div className="text-sm">
-                  <Link
-                    href="/forgot-password"
-                    className="font-semibold text-indigo-600 hover:text-indigo-500"
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
+                  Forgot password?
+                </Link>
               </div>
-              <div className="mt-2">
-                <input
-                  value={formik.values.password}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
+              <div className="relative">
+                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
                   id="password"
                   name="password"
                   type="password"
-                  required
-                  autoComplete="current-password"
-                  className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                  className="pl-9 bg-background"
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
                 />
-                {formik.touched.password && formik.errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
-                )}
               </div>
+              {formik.touched.password && formik.errors.password && (
+                <p className="text-sm text-destructive">{formik.errors.password}</p>
+              )}
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={formik.isSubmitting}
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {formik.isSubmitting ? "Signing in..." : "Sign in"}
-              </button>
-            </div>
-          </form>
-          <p className="mt-10 text-center text-sm/6 text-gray-500">
-            don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-indigo-600 hover:text-indigo-500"
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={formik.isSubmitting || isLoading}
             >
-              sign up here
+              {formik.isSubmitting ? "Signing in..." : "Sign in"}
+            </Button>
+          </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              onClick={handleSignInGithub}
+              className="w-full border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            >
+              <Github className="mr-2 h-4 w-4" />
+              Github
+            </Button>
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              onClick={handleSignInGoogle}
+              className="w-full border-input bg-background hover:bg-accent hover:text-accent-foreground"
+            >
+              <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+              </svg>
+              Google
+            </Button>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-center">
+          <p className="text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-primary hover:underline font-medium">
+              Sign up
             </Link>
           </p>
-
-          <div className="border-t mt-10 space-y-4 flex-col border-black pt-10 text-gray-900 flex justify-center items-center">
-            <button
-              onClick={handleSignInGithub}
-              onMouseEnter={() => setIsHovered((prev)=>[true,prev[1]])}
-              onMouseLeave={() => setIsHovered((prev)=>[false,prev[1]])}
-              style={{
-                backgroundColor: isHovered[0] ? "#f0f0f0" : "white",
-                color: "#111827",
-                border: "1px solid #e5e7eb",
-                padding: "0.375rem 0.75rem",
-                borderRadius: "0.375rem",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                width: "100%",
-                transition: "all 0.2s ease",
-                cursor: "pointer",
-                boxShadow: isHovered[0]
-                  ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
-                  : "none",
-              }}
-            >
-              {" "}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                x="0px"
-                y="0px"
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
-              >
-                <path d="M10.9,2.1c-4.6,0.5-8.3,4.2-8.8,8.7c-0.5,4.7,2.2,8.9,6.3,10.5C8.7,21.4,9,21.2,9,20.8v-1.6c0,0-0.4,0.1-0.9,0.1 c-1.4,0-2-1.2-2.1-1.9c-0.1-0.4-0.3-0.7-0.6-1C5.1,16.3,5,16.3,5,16.2C5,16,5.3,16,5.4,16c0.6,0,1.1,0.7,1.3,1c0.5,0.8,1.1,1,1.4,1 c0.4,0,0.7-0.1,0.9-0.2c0.1-0.7,0.4-1.4,1-1.8c-2.3-0.5-4-1.8-4-4c0-1.1,0.5-2.2,1.2-3C7.1,8.8,7,8.3,7,7.6C7,7.2,7,6.6,7.3,6 c0,0,1.4,0,2.8,1.3C10.6,7.1,11.3,7,12,7s1.4,0.1,2,0.3C15.3,6,16.8,6,16.8,6C17,6.6,17,7.2,17,7.6c0,0.8-0.1,1.2-0.2,1.4 c0.7,0.8,1.2,1.8,1.2,3c0,2.2-1.7,3.5-4,4c0.6,0.5,1,1.4,1,2.3v2.6c0,0.3,0.3,0.6,0.7,0.5c3.7-1.5,6.3-5.1,6.3-9.3 C22,6.1,16.9,1.4,10.9,2.1z"></path>
-              </svg>
-              continue with github
-            </button>
-            <button
-              onClick={handleSignInGoogle}
-              onMouseEnter={() => setIsHovered((prev)=>[prev[0],true])}
-              onMouseLeave={() => setIsHovered((prev)=>[prev[0],false])}
-              style={{
-                backgroundColor: isHovered[1] ? "#f0f0f0" : "white",
-                color: "#111827",
-                border: "1px solid #e5e7eb",
-                padding: "0.375rem 0.75rem",
-                borderRadius: "0.375rem",
-                fontSize: "0.875rem",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                width: "100%",
-                transition: "all 0.2s ease",
-                cursor: "pointer",
-                boxShadow: isHovered[1]
-                  ? "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
-                  : "none",
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                x="0px"
-                y="0px"
-                width="40"
-                height="40"
-                viewBox="0 0 48 48"
-              >
-                <path
-                  fill="#FFC107"
-                  d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"
-                ></path>
-                <path
-                  fill="#FF3D00"
-                  d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"
-                ></path>
-                <path
-                  fill="#4CAF50"
-                  d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"
-                ></path>
-                <path
-                  fill="#1976D2"
-                  d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"
-                ></path>
-              </svg>
-              Continue with Google
-            </button>
-          </div>
-        </div>
-      </div>
-    </>
+        </CardFooter>
+      </Card>
+    </div>
   );
 }

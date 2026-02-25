@@ -1,6 +1,5 @@
 
 import type {
-  RegisterRequestDTO,
   CreateCardRequestDTO,
   CardResponseDTO,
   CardWithOwnerDTO,
@@ -81,7 +80,6 @@ import type {
 
 
 // Auth
-export type RegisterRequest = RegisterRequestDTO;
 export type SignupResponse = SignupResponseDTO;
 export type VerifyEmailRequest = VerifyEmailRequestDTO;
 export type VerifyEmailResponse = VerifyEmailResponseDTO;

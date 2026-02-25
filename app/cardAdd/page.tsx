@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDownIcon } from "@heroicons/react/16/solid";
-import { Field, Label, Switch } from "@headlessui/react";
+import { Field, Switch } from "@headlessui/react";
 import CardAddmini from "../components/cardAddmini";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { useSession } from "next-auth/react";
@@ -17,6 +17,7 @@ import { CardAddPageProps, CreateCardRequestDTO } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
 
 const validationSchema = cardAddSchema;

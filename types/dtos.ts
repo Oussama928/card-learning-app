@@ -79,11 +79,6 @@ export interface NotificationMetadataDTO {
   certificateUrl?: string;
 }
 
-export interface RegisterRequestDTO {
-  email: string;
-  username: string;
-}
-
 export interface SignupResponseDTO {
   message: string;
   userId?: string;
